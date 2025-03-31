@@ -1,5 +1,7 @@
 <?php
-session_start(); 
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
 
 $current_page = basename($_SERVER['PHP_SELF']);
 $is_category_page = in_array($current_page, ['category.php', 'posts.php']);
