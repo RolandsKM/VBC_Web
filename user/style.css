@@ -8,9 +8,10 @@
 }
 
 body {
-    background-color: #fffff4;
+    background-color: #f4f4f4;
     color: #383838;
     line-height: 1.6;
+    padding: 1.5rem 12%;
 }
 
 .hidden {
@@ -83,12 +84,19 @@ header nav ul li a {
   }
   
   .card {
-    border-radius: 10px;
+    
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     background-color: #fff;
     margin-bottom: 20px;
   }
-  
+  .card {
+    border-radius: 0 !important;
+}
+
+.card-body {
+    border-radius: 0 !important;
+}
+
   .card-body {
     padding: 20px;
   }
@@ -121,22 +129,23 @@ header nav ul li a {
   }
   
   .progress-bar {
-    background-color: #007bff;
+    background-color: #4CAF50;
   }
   
   .btn-primary {
-    background-color: #007bff;
-    border-color: #007bff;
+    background-color: #4CAF50 !important;
+    border-color: #4CAF50 !important;
   }
   
   .btn-outline-primary {
-    border-color: #007bff;
-    color: #007bff;
+    border-color: #4CAF50 !important;
+    color: #4CAF50 !important;
+    border-radius: .1rem !important;
   }
   
   .btn-outline-primary:hover {
-    background-color: #007bff;
-    color: #fff;
+    background-color: #4CAF50 !important;
+    color: #fff !important;
   }
   
   .col-lg-4 {
@@ -144,7 +153,194 @@ header nav ul li a {
     flex-direction: column;
     align-items: center;
   }
-  
+
+  /* info */
+  .info{
+    background: #fff !important;
+    /* width: 10rem !important; */
+  }
+  .info {
+    position: relative;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
+    margin: auto;
+}
+
+.settings-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 3px;
+}
+
+.settings-btn:hover {
+    background-color: #45a049;
+}
+
+.user-info p {
+    margin: 10px 0;
+}
+
+.social-links a {
+    margin-right: 10px;
+    color: #4CAF50;
+    text-decoration: none;
+}
+
+.social-links a:hover {
+    text-decoration: underline;
+}
+
+/* sludinajumi */
+/* event */
+.event {
+  background: #eeeeee;
+}
+
+.event-card {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  background: #fff;
+  margin-bottom: 20px; /* Adds space between events */
+}
+
+.event-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.event-title {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.event-date {
+  background: #4caf4fad;
+  color: white;
+  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 5px;
+  white-space: nowrap;
+}
+
+.event-icons {
+  margin-left: auto; /* Push icons to the far right */
+  display: flex;
+  gap: 10px;
+}
+
+.event-description {
+  background: #4caf4f17;
+  padding: .6rem;
+  border-radius: .1rem;
+  font-size: .8rem;
+  color: #333;
+  width: 100%; /* Ensure it uses full width of the card */
+  margin-top: .6rem; /* Adds spacing below the header */
+  border-left: .1rem solid #4CAF50;
+}
+.sidebar {
+  position: sticky;
+  top: 0;
+  left: 0;
+  padding: 10px 0;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  background-color: #fff;
+  z-index: 600;
+  height: 100%;
+}
+
+.sidebar .list-group-item {
+  border: none;
+}
+
+.sidebar .list-group-item .btn {
+  display: flex;
+  justify-content: start;
+  align-items: center;
+  text-align: left;
+  padding: 10px 20px;
+  width: 100%;
+}
+
+.sidebar .list-group-item .btn i {
+  font-size: 1.1rem;
+}
+
+.sidebar .list-group-item .btn:hover {
+  background-color: #f1f1f1;
+}
+
+.sidebar .active {
+  background-color: #007bff;
+  color: white;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.sidebar-sticky {
+  position: relative;
+  top: 0;
+  height: 100vh;
+  padding-top: 0.5rem;
+  overflow-y: auto;
+}
+
+/* Content area */
+#settingsContent {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+#settingsContent .sidebar {
+  flex: 0 0 240px;
+}
+
+#settingsContent .col-md-9 {
+  flex: 1;
+  padding-left: 20px;
+}
+
+@media (max-width: 991.98px) {
+  .sidebar {
+      width: 100%;
+      position: relative;
+      height: auto;
+  }
+
+  #settingsContent .sidebar {
+      flex: 0 0 100%;
+  }
+
+  #settingsContent .col-md-9 {
+      padding-left: 0;
+  }
+}
+
+/* #profileInfoBtn{
+  border: none;
+  background: #fff;
+  padding: .2rem;
+}
+.nav-item{
+  width: 100%;
+} */
+
+/* #eventForm {
+  display: none;
+}
+
+#eventForm.show {
+  display: block;
+} */
+
   @media (max-width: 768px) {
     .row {
       flex-direction: column;
