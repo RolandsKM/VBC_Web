@@ -10,7 +10,7 @@ $result = $savienojums->query("SELECT e.*,
     GROUP BY e.ID_Event");
 
 $event = $result->fetch_assoc();
-$event['categories'] = explode(',', $event['category_ids']); // Convert comma-separated string to an array
+$event['categories'] = explode(',', $event['category_ids']);
 
 echo json_encode($event);
 ?>

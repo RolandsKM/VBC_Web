@@ -27,6 +27,6 @@ while ($row = $result->fetch_assoc()) {
 $query->close();
 $savienojums->close();
 
-// Return events as JSON
+
 echo json_encode(['events' => $events]);
 ?>

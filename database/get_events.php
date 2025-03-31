@@ -1,5 +1,5 @@
 <?php
-include 'con_db.php'; // Database connection
+include 'con_db.php'; 
 
 function getEventsByCategory($category_id) {
     global $savienojums;

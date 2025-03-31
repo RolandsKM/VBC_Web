@@ -1,5 +1,5 @@
 <?php
-include 'con_db.php'; // Include the database connection
+include 'con_db.php'; 
 
 $sql = "SELECT vk.Kategorijas_ID, vk.Nosaukums, vk.Datums, vk.color, 
                COUNT(ec.event_id) AS amount
