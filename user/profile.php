@@ -1,21 +1,21 @@
 <?php
 session_start();
 
-// Check if the user is logged in, otherwise redirect to the login page
+
 if (!isset($_SESSION['username'])) {
-    header("Location: ../main/login.php"); // Redirect to login page
+    header("Location: ../main/login.php"); 
     exit();
 }
 
-include '../database/con_db.php'; // Include database connection
+include '../database/con_db.php';
 
-// Fetch user data from the database based on the logged-in username
+
 $username = $_SESSION['username'];
 $query = "SELECT * FROM users WHERE username = '$username'";
 $result = $savienojums->query($query);
 $user = $result->fetch_assoc();
 
-include '../main/header.php'; // Include the header
+include '../main/header.php';
 ?>
 
 <!DOCTYPE html>
@@ -64,7 +64,7 @@ include '../main/header.php'; // Include the header
         <div class="col-md-4">
           <div class="card mb-4">
             <div class="card-body text-center">
-              <!-- Display user's profile picture or a default one if not set -->
+            
               <img src="<?= $user['profile_pic'] ? $user['profile_pic'] : 'default-profile.png' ?>" 
                 alt="avatar" class="rounded-circle img-fluid" style="width: 150px;">
               <h5 class="my-3"><?= htmlspecialchars($user['name'] . ' ' . $user['surname']) ?></h5>
@@ -109,7 +109,7 @@ include '../main/header.php'; // Include the header
     </div>
   </section>
 
-  <!-- Custom Confirmation Modal -->
+  
   <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -128,7 +128,7 @@ include '../main/header.php'; // Include the header
     </div>
   </div>
 
-  <!-- Create Event Form (Initially hidden) -->
+  
   <h2>Create Event</h2>
   <form id="eventForm" style="display: none;">
     <div class="mb-3">
@@ -165,7 +165,7 @@ include '../main/header.php'; // Include the header
   <h2 class="mt-5">Events</h2>
   <div id="eventList" class="row"></div>
 
-  <!-- Edit Modal -->
+
   <div class="modal fade" id="editEventModal" tabindex="-1" aria-labelledby="editEventLabel" aria-hidden="true">
       <div class="modal-dialog">
           <div class="modal-content">
@@ -232,9 +232,9 @@ include '../main/header.php'; // Include the header
                                     </ul>
                                 </div>
                             </nav>
-                            <!-- Settings Content Area -->
+                         
                             <div class="col-md-9 col-lg-10">
-                                <!-- Profile Information Form -->
+                              
                                 <div id="profileInfoContent">
                                     <form id="editUserForm">
                                         <input type="hidden" name="user_id" value="<?= $user['ID_user'] ?>">
@@ -260,7 +260,7 @@ include '../main/header.php'; // Include the header
                                     </form>
                                 </div>
 
-                                <!-- Password Change Form (Initially hidden) -->
+                                
                                 <div id="passwordContent" style="display: none;">
                                     <form id="changePasswordForm">
                                         <div class="mb-3">
@@ -279,7 +279,7 @@ include '../main/header.php'; // Include the header
                                     </form>
                                 </div>
 
-                                <!-- Delete Account Form (Initially hidden) -->
+                              
                                 <div id="deleteAccountContent" style="display: none;">
                                     <p class="text-danger">Are you sure you want to delete your account? This action is irreversible.</p>
                                     <button class="btn btn-danger" id="confirmDeleteAccountBtn">Yes, Delete Account</button>

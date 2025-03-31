@@ -2,20 +2,19 @@
 include 'con_db.php';
 session_start();
 
-// Ensure the user is logged in
+
 if (!isset($_SESSION['username'])) {
-    header("Location: ../main/login.php"); // Redirect to login page if not logged in
+    header("Location: ../main/login.php"); 
     exit();
 }
 
-// Get the logged-in user's ID from the session
-$user_id = $_SESSION['ID_user']; // This is already set during login
 
-// Modify the query to fetch only events created by the logged-in user
+$user_id = $_SESSION['ID_user'];
+
 $query = "SELECT * FROM Events WHERE user_id = $user_id ORDER BY created_at DESC";
 $result = $savienojums->query($query);
 
-// Fetch and display events created by the logged-in user
+
 while ($row = $result->fetch_assoc()) {
     echo "<div class='event'>
             <div class='card event-card mb-3'>

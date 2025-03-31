@@ -10,22 +10,21 @@ if (!isset($_SESSION['username'])) {
 
 $username = $_SESSION['username'];
 
-// Get POSTed data
+
 $currentPassword = $_POST['current_password'];
 $newPassword = $_POST['new_password'];
 
-// Fetch the user's data to validate the current password
+
 $query = "SELECT * FROM users WHERE username = '$username'";
 $result = $savienojums->query($query);
 $user = $result->fetch_assoc();
 
 if ($user) {
-    // Verify current password (assuming passwords are hashed)
+    
     if (password_verify($currentPassword, $user['password'])) {
-        // Hash the new password
+       
         $newPasswordHash = password_hash($newPassword, PASSWORD_DEFAULT);
 
-        // Update the password in the database
         $updateQuery = "UPDATE users SET password = '$newPasswordHash' WHERE username = '$username'";
         if ($savienojums->query($updateQuery)) {
             echo 'success';

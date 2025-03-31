@@ -14,5 +14,5 @@ while ($row = $result->fetch_assoc()) {
     $categories[] = $row;
 }
 
-echo json_encode($categories);  // Return categories as JSON
+echo json_encode($categories);  
 ?>
