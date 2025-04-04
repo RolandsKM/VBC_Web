@@ -1,7 +1,4 @@
-// function showDetails(title, description) {
-//     document.getElementById("detail-title").innerText = title;
-//     document.getElementById("detail-description").innerText = description;
-// }
+
 
 function filterCategoriesByCity() {
   var city = document.getElementById('city_search').value;

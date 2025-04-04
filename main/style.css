@@ -9,7 +9,7 @@
 }
 
 body {
-    background-color: #fffff4;
+    background-color: #f4f4f4;
     color: #383838;
     line-height: 1.6;
 }
@@ -408,8 +408,96 @@ section h2 {
   
     padding: 1rem 12%;
 }
-#events{
-   
+/* Style for the event container */
+#events .event {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border: 1px solid #ddd;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+}
+#events .event:hover{
+
+transform: translateY(-5px);
+}
+
+.pagination {
+    display: flex;
+    justify-content: center; 
+    align-items: center;
+    margin-top: 20px; 
+}
+
+.pagination a {
+    text-decoration: none;
+    padding: 8px 16px; 
+    margin: 0 5px; 
+    border: 1px solid #ddd;
+    border-radius: 5px; 
+    color: #333; 
+    background-color: #fff; 
+}
+
+.pagination a:hover {
+    background-color: #b9e1bb; 
+    color: white;
+}
+
+.pagination a.active {
+    background-color: #45a049; 
+    color: #fff; 
+    font-weight: bold; 
+}
+
+#events .event-header {
+    display: flex;
+    align-items: center; 
+    justify-content: flex-start;
+    border-bottom: 1px solid #c6c6c6;
+}
+
+#events .event-header h2 {
+    margin-right: 2%; 
+    font-size: 1.5rem; 
+    color: #45a049;
+}
+
+#events .event-header .event-date {
+    font-size: 1rem; 
+    color: #555; 
+}
+
+/* Layout for the description */
+#events .event .description {
+    display: flex;
+    text-align: left;
+    color: #333;
+    padding-top: 1rem;
+}
+
+/* Layout for the "Izveidots" date */
+#events .event .dates {
+    margin-top: 15px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+#events .event .created-date {
+    font-size: 0.875rem;
+    color: #777;
+}
+
+/* Ensuring the entire container links properly */
+#events .event-link {
+    text-decoration: none;
+}
+
+/* Optional: Add some spacing between the event elements */
+#events .event h2, .event-date, .description {
+    margin-bottom: 10px;
 }
 
 

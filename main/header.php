@@ -16,26 +16,25 @@ $logged_in = isset($_SESSION['username']);
     <h1>Vietējais Brīvprātīgais Centrs</h1>
     <nav>
         <ul>
-            <li><a href="index.php" class="<?= $current_page == 'index.php' ? 'active' : '' ?>">Sākums</a></li>
-            <li><a href="category.php" class="<?= $is_category_page ? 'active' : '' ?>">Kategorijas</a></li>
+            <li><a href="<?= ($_SERVER['PHP_SELF'] == '/user/index.php' || strpos($_SERVER['PHP_SELF'], '/user/') !== false) ? '../main/index.php' : 'index.php' ?>" class="<?= $current_page == 'index.php' ? 'active' : '' ?>">Sākums</a></li>
+            <li><a href="<?= ($_SERVER['PHP_SELF'] == '/user/category.php' || strpos($_SERVER['PHP_SELF'], '/user/') !== false) ? '../main/category.php' : 'category.php' ?>" class="<?= $is_category_page ? 'active' : '' ?>">Kategorijas</a></li>
             <li><a href="about.php" class="<?= $current_page == 'about.php' ? 'active' : '' ?>">Par Mums</a></li>
 
             <?php if ($logged_in): ?>
-              
                 <li class="dropdown">
                     <a href="#" class="dropbtn"><?= htmlspecialchars($_SESSION['username']) ?> ▼</a>
                     <div class="dropdown-content">
-                        <a href="../user/profile.php">Profils</a>
+                        <a href="../user/user.php">Profils</a>
                         <a href="../database/logout.php" class="text-danger">Izlogoties</a>
                     </div>
                 </li>
             <?php else: ?>
-              
                 <li><a href="login.php" class="<?= $current_page == 'login.php' ? 'active' : '' ?>">Pieslēgties</a></li>
             <?php endif; ?>
         </ul>
     </nav>
 </header>
+
 
 
 <style>

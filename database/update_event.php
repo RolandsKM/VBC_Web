@@ -1,19 +1,32 @@
 <?php
-include 'con_db.php';
+require_once 'con_db.php';
+session_start();
 
-$event_id = $_POST['event_id'];
-$title = $_POST['title'];
-$description = $_POST['description'];
-$location = $_POST['location'];
-$date = $_POST['date'];
-// $categories = $_POST['categories'];
+if (!isset($_SESSION['username'])) {
+    echo json_encode(["status" => "error", "message" => "Neautorizēta piekļuve!"]);
+    exit;
+}
 
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $event_id = $_POST['event_id'];
+    $title = $_POST['title'];
+    $description = $_POST['description'];
+    $location = $_POST['location'];
+    $city = $_POST['city'];
+    $zip = $_POST['zip'];
+    $date = $_POST['date'];
 
-$savienojums->query("UPDATE Events SET title = '$title', description = '$description', location = '$location', date = '$date' WHERE ID_Event = '$event_id'");
+    $query = "UPDATE Events SET title=?, description=?, location=?, city=?, zip=?, date=? WHERE ID_Event=?";
+    $stmt = $savienojums->prepare($query);
+    $stmt->bind_param("ssssssi", $title, $description, $location, $city, $zip, $date, $event_id);
 
+    if ($stmt->execute()) {
+        echo json_encode(["status" => "success"]);
+    } else {
+        echo json_encode(["status" => "error", "message" => "Neizdevās atjaunināt datus."]);
+    }
 
-// $savienojums->query("DELETE FROM Event_Categories WHERE event_id = '$event_id'");
-// foreach ($categories as $category) {
-//     $savienojums->query("INSERT INTO Event_Categories (event_id, category_id) VALUES ('$event_id', '$category')");
-// }
+    $stmt->close();
+    $savienojums->close();
+}
 ?>

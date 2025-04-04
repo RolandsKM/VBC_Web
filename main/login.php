@@ -1,4 +1,15 @@
-<?php include 'header.php'; ?>
+<?php 
+include 'header.php';
+session_start();
+
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+$login_error = $_SESSION['login_error'] ?? '';
+$login_email = $_SESSION['login_email'] ?? '';
+?>
+
 
 <!DOCTYPE html>
 <html lang="lv">
@@ -20,37 +31,30 @@
         <div class="card p-4 shadow-lg" style="width: 350px;">
             <h3 class="text-center">Pieslēgties</h3>
             <form action="../database/login_function.php" method="POST">
-    <div class="mb-3">
-        <label class="form-label">E-pasts</label>
-        <input type="email" name="epasts" class="form-control" required>
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Parole</label>
-        <input type="password" name="parole" class="form-control" required>
-    </div>
-    <button type="submit" name="ielogoties" class="btn btn-custom w-100">Ielogoties</button>
+                <div class="mb-3">
+                    <label class="form-label">E-pasts</label>
+                    <input type="email" name="epasts" class="form-control" required value="<?= htmlspecialchars($login_email) ?>">
+                </div>
 
-</form>
+                <div class="mb-3">
+                    <label class="form-label">Parole</label>
+                    <input type="password" name="parole" class="form-control" required>
+                </div>
+                <?php if ($login_error): ?>
+                    <div class="alert alert-danger text-center"><?= $login_error ?></div>
+                <?php endif; ?>
+
+                <button type="submit" name="ielogoties" class="btn btn-custom w-100">Ielogoties</button>
+                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
+            </form>
 
             <p class="text-center mt-3"><a href="register.php">Reģistrēties</a></p>
         </div>
     </div>
-    <!-- <script src="https://accounts.google.com/gsi/client" async defer></script>
 
-<div id="g_id_onload"
-     data-client_id="661811357054-b2p41vqn7o2u99t48ujfu68anrkcg7sj.apps.googleusercontent.com"
-     data-login_uri="https://kristovskis.lv/3pt2/makarovs/Local_V_Center/main/google_callback.php"
-     data-auto_prompt="false">
-</div>
-
-<div class="g_id_signin"
-     data-type="standard"
-     data-size="large"
-     data-theme="outline"
-     data-text="sign_in_with"
-     data-shape="rectangular"
-     data-logo_alignment="left">
-</div> -->
 
 </body>
 </html>
+<?php
+unset($_SESSION['login_error'], $_SESSION['login_email']);
+?>
