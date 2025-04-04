@@ -1,4 +1,10 @@
-<?php include '../main/header.php'; ?>
+<?php 
+session_start();
+if (!isset($_SESSION['ID_user'])) {
+    header("Location: ../main/login.php");
+    exit();
+}
+include '../main/header.php'; ?>
 
 <!DOCTYPE html>
 <html lang="lv">

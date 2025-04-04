@@ -27,7 +27,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['ielogoties'])) {
         $user = $result->fetch_assoc();
 
         if ($user && password_verify($password, $user['password'])) {
-            // Set session variables
+            
             $_SESSION['username'] = $user['username'];
             $_SESSION['name'] = $user['name'];
             $_SESSION['surname'] = $user['surname'];

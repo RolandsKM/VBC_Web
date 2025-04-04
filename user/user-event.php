@@ -1,4 +1,9 @@
 <?php 
+session_start();
+if (!isset($_SESSION['ID_user'])) {
+    header("Location: ../main/login.php");
+    exit();
+}
 include '../main/header.php';
 require_once '../database/con_db.php';
 
