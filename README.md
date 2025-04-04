@@ -4,3 +4,5 @@
 ### Lietotājs
 * Epasts: lietotajs@gmail.com
 * Parole: Parole123 
+
+<- Readme tiks papildināts ->
