@@ -9,7 +9,8 @@ if (!isset($_SESSION['username'])) {
 
 $user_id = $_SESSION['ID_user'];
 
-$query = "SELECT * FROM Events WHERE user_id = ? ORDER BY created_at DESC";
+$query = "SELECT * FROM Events WHERE user_id = ? AND deleted = 0 ORDER BY created_at DESC";
+
 $stmt = $savienojums->prepare($query);
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
