@@ -1,11 +1,11 @@
 <?php
 require_once 'con_db.php';
 
-
 $sql = "SELECT vk.Kategorijas_ID, vk.Nosaukums, vk.Datums, vk.color, 
                COUNT(ec.event_id) AS amount
         FROM VBC_Kategorijas vk
         LEFT JOIN Event_Categories ec ON vk.Kategorijas_ID = ec.category_id
+        LEFT JOIN Events e ON ec.event_id = e.ID_Event AND e.deleted = 0
         GROUP BY vk.Kategorijas_ID, vk.Nosaukums, vk.Datums, vk.color
         ORDER BY vk.Datums ASC, vk.Kategorijas_ID ASC, vk.color ASC, vk.Nosaukums ASC";
 

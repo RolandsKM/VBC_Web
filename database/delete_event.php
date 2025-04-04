@@ -1,5 +1,5 @@
 <?php
-include '../database/con_db.php';
+require_once '../database/con_db.php';
 session_start();
 
 if (!isset($_SESSION['username'])) {
@@ -10,11 +10,11 @@ if (!isset($_SESSION['username'])) {
 if (isset($_POST['event_id'])) {
     $event_id = $_POST['event_id'];
 
-    // Update the event's 'deleted' field to 1
+    
     $query = "UPDATE Events SET deleted = 1 WHERE ID_Event = ? AND user_id = ?";
     $stmt = $savienojums->prepare($query);
     
-    // Assuming the user can only delete their own events
+  
     $stmt->bind_param("ii", $event_id, $_SESSION['ID_user']);
     
     if ($stmt->execute()) {
