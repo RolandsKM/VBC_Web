@@ -8,7 +8,7 @@
 <- Readme tiks papildināts ->
 
 ### kas jāizdara
-[ ] Jāuzlabo un jāpiestrādā pie dizaina
-[ ] Jāpabeidz lietotāja profils
-[ ] Jāpabeidz un jāuzlabo sludinājuma pieteikšanās
-[ ] ...
+- [ ] Jāuzlabo un jāpiestrādā pie dizaina
+- [ ] Jāpabeidz lietotāja profils
+- [ ] Jāpabeidz un jāuzlabo sludinājuma pieteikšanās
+- [ ] ...
