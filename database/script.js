@@ -12,7 +12,7 @@ $(document).ready(function () {
         });
     }
 
-    // Initially show event-container
+  
     $(".event-container").show();
     $(".joined-container").hide();
     $(".action-btn button").removeClass("active");
@@ -27,7 +27,7 @@ $(document).ready(function () {
         loadEvents();
     });
 
-    // Click event for "Pieteicies"
+    
     $(".pieteicies-btn").click(function () {
         $(".event-container").hide();
         $(".joined-container").show();
@@ -35,10 +35,10 @@ $(document).ready(function () {
         $(this).addClass("active");
     });
 
-    // Load events on page load
+   
     loadEvents();
 
-    // Auto-refresh events every 30 seconds
+    
     setInterval(loadEvents, 30000);
 });
 $(document).ready(function () {
@@ -64,7 +64,7 @@ $(document).ready(function () {
             url: '../database/get_categories.php',
             type: 'GET',
             success: function (response) {
-                // Insert the received HTML options into the select dropdown
+                
                 $("#event-categories").html(response);
             },
             error: function () {
@@ -157,7 +157,7 @@ $(document).ready(function () {
                 if (response.status === "success") {
                     alert("Notikums veiksmīgi atjaunināts!");
 
-                    // ✅ Update event details in the DOM without refreshing
+                
                     $(".title").text(formData.title);
                     $(".description p").text(formData.description);
                     $(".location").text(formData.location + ", " + formData.zip);
@@ -175,7 +175,6 @@ $(document).ready(function () {
         });
     });
 
-    // Function to format the date correctly
     function formatDate(inputDate) {
         let dateObj = new Date(inputDate);
         return dateObj.toLocaleDateString("lv-LV", { year: 'numeric', month: '2-digit', day: '2-digit' });
@@ -184,7 +183,7 @@ $(document).ready(function () {
 $(document).ready(function () {
     $(".edit-pop-up").hide();
 
-    // Click event for editing the event
+    
     $(".edit-event-btn").click(function () {
         $(".edit-pop-up").fadeIn();
     });
@@ -193,13 +192,13 @@ $(document).ready(function () {
         $(".edit-pop-up").fadeOut();
     });
 
-    // Click event for deleting the event
+    
     $(".bi-trash").click(function () {
-        var eventId = $("#edit-event-id").val(); // Get the event ID
+        var eventId = $("#edit-event-id").val();
 
         if (confirm("Vai jūs tiešām vēlaties dzēst šo notikumu?")) {
             $.ajax({
-                url: '../database/delete_event.php',  // Add the delete_event.php file
+                url: '../database/delete_event.php',  
                 type: 'POST',
                 data: { event_id: eventId },
                 dataType: 'json',
@@ -222,15 +221,15 @@ $(document).ready(function () {
 });
 // posts.php sludinājuma filtrēšana 
 $(document).ready(function () {
-    // Read URL parameters to preserve the filters on page reload
+    
     const urlParams = new URLSearchParams(window.location.search);
     const categoryId = urlParams.get('category_id');
     const city = urlParams.get('city');
     const dateFrom = urlParams.get('date_from');
     const dateTo = urlParams.get('date_to');
-    let page = urlParams.get('page') || 1; // Default to 1 if no page param exists
+    let page = urlParams.get('page') || 1; 
 
-    // Set the filters based on the URL parameters
+   
     if (categoryId) {
         $('#filter_category').val(categoryId);
     }
@@ -247,7 +246,7 @@ $(document).ready(function () {
         $('#date_to').val(dateTo);
     }
 
-    // Populate categories
+   
     $.ajax({
         url: '../database/get_categories.php',
         method: 'GET',
@@ -255,7 +254,7 @@ $(document).ready(function () {
         success: function (data) {
             $('#filter_category').append(data);
             if (categoryId) {
-                $('#filter_category').val(categoryId); // Keep selected category
+                $('#filter_category').val(categoryId); 
                 $('#filter_category').trigger('change');
             }
         },
@@ -264,30 +263,28 @@ $(document).ready(function () {
         }
     });
 
-    // Trigger on any filter change (including city and dates)
+    
     $('#filter_category, #city, #date_from, #date_to').on('change', function () {
         const selectedCatId = $('#filter_category').val();
         const selectedCity = $('#city').val();
         const dateFrom = $('#date_from').val();
         const dateTo = $('#date_to').val();
 
-        // Update the URL with the selected filters
         const newUrl = new URL(window.location);
         newUrl.searchParams.set('category_id', selectedCatId);
         newUrl.searchParams.set('city', selectedCity);
         newUrl.searchParams.set('date_from', dateFrom);
         newUrl.searchParams.set('date_to', dateTo);
-        newUrl.searchParams.set('page', 1); // Reset to page 1 when filters change
-        window.history.pushState({}, '', newUrl);  // Update URL without reloading the page
+        newUrl.searchParams.set('page', 1); 
+        window.history.pushState({}, '', newUrl);  
 
-        loadEvents(selectedCatId, selectedCity, dateFrom, dateTo, 1); // Load page 1 initially
+        loadEvents(selectedCatId, selectedCity, dateFrom, dateTo, 1);
     });
 
-    // Clear all filters when the "Clear Filters" button is clicked
+   
     $('#clear_filters').on('click', function () {
         $('#filter_form')[0].reset();
         
-        // Clear URL parameters
         const newUrl = new URL(window.location);
         newUrl.searchParams.delete('category_id');
         newUrl.searchParams.delete('city');
@@ -295,30 +292,29 @@ $(document).ready(function () {
         newUrl.searchParams.delete('date_to');
         window.history.pushState({}, '', newUrl);
 
-        loadEvents('', '', '', '', 1); // Reset to page 1
+        loadEvents('', '', '', '', 1);
     });
 
-    // Handle pagination link clicks
+    
     $(document).on('click', '.page-link', function () {
-        const selectedPage = $(this).data('page'); // Get the page number from the data-page attribute
+        const selectedPage = $(this).data('page'); 
         const selectedCatId = $('#filter_category').val();
         const selectedCity = $('#city').val();
         const dateFrom = $('#date_from').val();
         const dateTo = $('#date_to').val();
 
-        // Update the URL with the selected page
+        
         const newUrl = new URL(window.location);
         newUrl.searchParams.set('category_id', selectedCatId);
         newUrl.searchParams.set('city', selectedCity);
         newUrl.searchParams.set('date_from', dateFrom);
         newUrl.searchParams.set('date_to', dateTo);
-        newUrl.searchParams.set('page', selectedPage); // Set the page in the URL
-        window.history.pushState({}, '', newUrl);  // Update URL without reloading the page
+        newUrl.searchParams.set('page', selectedPage);
+        window.history.pushState({}, '', newUrl);  
 
-        loadEvents(selectedCatId, selectedCity, dateFrom, dateTo, selectedPage); // Load events for the selected page
+        loadEvents(selectedCatId, selectedCity, dateFrom, dateTo, selectedPage); 
     });
 
-    // Load events based on the filters and page number
     function loadEvents(catId, city, dateFrom, dateTo, page) {
         $.ajax({
             url: '../database/get_events_by_category.php',
@@ -339,8 +335,9 @@ $(document).ready(function () {
         });
     }
 
-    // Trigger the initial load of events
+
     if (categoryId) {
         loadEvents(categoryId, city, dateFrom, dateTo, page);
     }
 });
+

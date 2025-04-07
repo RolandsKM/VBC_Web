@@ -1,22 +1,22 @@
 
 
-function filterCategoriesByCity() {
-  var city = document.getElementById('city_search').value;
+// function filterCategoriesByCity() {
+//   var city = document.getElementById('city_search').value;
 
   
-  if (city.length > 0) {
+//   if (city.length > 0) {
      
-      var xhr = new XMLHttpRequest();
-      xhr.open('GET', 'get_categories_count.php?city=' + encodeURIComponent(city), true);
-      xhr.onreadystatechange = function () {
-          if (xhr.readyState == 4 && xhr.status == 200) {
+//       var xhr = new XMLHttpRequest();
+//       xhr.open('GET', 'get_categories_count.php?city=' + encodeURIComponent(city), true);
+//       xhr.onreadystatechange = function () {
+//           if (xhr.readyState == 4 && xhr.status == 200) {
               
-              document.getElementById('categories-container').innerHTML = xhr.responseText;
-          }
-      };
-      xhr.send();
-  }
-}
+//               document.getElementById('categories-container').innerHTML = xhr.responseText;
+//           }
+//       };
+//       xhr.send();
+//   }
+// }
 
 
 
