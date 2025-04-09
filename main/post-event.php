@@ -1,50 +1,88 @@
 <?php
-include 'header.php'
+session_start();
+require_once '../database/fetch_events_from_categories.php';
+include 'header.php';
+
+$eventId = isset($_GET['id']) ? intval($_GET['id']) : 0;
+
+if ($eventId <= 0) {
+    echo "<p>Pasākums nav atrasts.</p>";
+    exit;
+}
+
+$event = fetchEventData($eventId);
+
+if (!$event) {
+    echo "<p>Pasākums nav atrasts.</p>";
+    exit;
+}
+
+$eventDate = date("d.m.Y", strtotime($event['date']));
+$isLoggedIn = isset($_SESSION['ID_user']);
+
 ?>
+
 <!DOCTYPE html>
 <html lang="lv">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vietējais Brīvprātīgais Centrs</title>
-   
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;600&display=swap">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="../database/script.js" defer></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <title><?= htmlspecialchars($event['title']) ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style2.css">
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link rel="stylesheet" href="style-post.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+    <script>
+        var userId = <?= $isLoggedIn ? $_SESSION['ID_user'] : 'null' ?>;
+        var eventId = <?= $eventId ?>;
+    </script>
+
+    <script src="../database/script.js" defer></script> 
 </head>
 <body>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-<section id="my-event">
+    <div class="container">
+        <a href="javascript:history.back()" class="btn mb-3">⬅ Atpakaļ</a>
 
-    <div class="col-md-4 col-12">
-        <div class="box bg-white p-3 text-center h-100 d-flex flex-column align-items-center">
-            <div class="avatar mb-3">
-                <img src="avatar.png" class="img-fluid rounded-circle" alt="Avatar" width="100">
+        <div class="card shadow p-4">
+            <h1><?= htmlspecialchars($event['title']) ?></h1>
+            <p><strong>🏷️ Kategorija:</strong> <?= htmlspecialchars($event['category_name']) ?></p>
+            <p><strong>📍 Pilsēta:</strong> <?= htmlspecialchars($event['city']) ?> | Zip: <?= htmlspecialchars($event['zip']) ?></p>
+            <hr>
+            <p><?= nl2br(htmlspecialchars($event['description'])) ?></p>
+            <hr>
+            <p><strong>🗓 Datums:</strong> <?= $eventDate ?></p>
+        </div>
+    </div>
+
+    <section id="info">
+        <div class="container">
+            <div class="row">
+                
+                <div class="col-md-6">
+                    <div class="card shadow p-3">
+                        <div class="d-flex align-items-center">
+                            <img src="<?= htmlspecialchars($event['profile_pic']) ?>" alt="User Profile Picture" class="rounded-circle" width="100" height="100">
+                            <div class="ms-3">
+                                <h5 class="mb-0 text-start"><?= htmlspecialchars($event['username']) ?></h5>
+                                <p class="text-muted mb-0 text-start"><?= htmlspecialchars($event['email']) ?></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div class="col-md-6">
+                    <div class="card p-3 text-center">
+                    
+                        <?php if (!$isLoggedIn): ?>
+                            <p class="text-danger">Lūdzu, piesakieties, lai pievienotos pasākumam.</p>
+                        <?php else: ?>
+                            <button id="applyButton" class="btn btn-success">Pieteikties</button>
+                            <button id="msgButton" class="btn btn-msg">Rakstīt</button>
+                        <?php endif; ?>
+                    </div>
+                </div>
             </div>
-            <div class="user-name fw-bold">Lietotājvārds</div>
-            <button class="btn mt-3">Rakstīt</button>
         </div>
-    </div>
-
-    <div class="event-info">
-        <div class="event-header">
-            <h3 class="title">Pasākuma Nosaukums</h3>
-        </div>
-        <p>Pilsēta: Rīga</p>
-        <div class="description">
-            <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Sapiente fuga, culpa fugit assumenda expedita ipsum ut eligendi blanditiis animi at doloremque? Ipsam animi distinctio, neque quos tempora dolor ut officia.</p>
-        </div>
-        <div class="location">
-            Dzintaru iela 88
-        </div>
-        <p>Datums/Laiks: 2025-04-05 18:00</p>
-        <button class="join">Pieteikties</button>
-    </div>
-   
-</section>
+    </section>
 </body>
 </html>

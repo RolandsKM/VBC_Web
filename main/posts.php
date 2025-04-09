@@ -20,7 +20,7 @@ $dateTo = isset($_GET['date_to']) ? $_GET['date_to'] : '';
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body style="padding: 5rem 12% 0rem">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     const categoryId = "<?= $categoryId ?>";
@@ -31,7 +31,12 @@ $dateTo = isset($_GET['date_to']) ? $_GET['date_to'] : '';
       
 <aside class="col-md-3">
     <h4>Filtri</h4>
+    
     <form id="filter_form">
+<div class="mb-3">
+    <label for="search" class="form-label">Meklēt pēc nosaukuma vai apraksta</label>
+    <input type="text" class="form-control" id="search" placeholder="Ievadi atslēgvārdus...">
+</div>
 
     <div class="mb-3">
         <label for="filter_category" class="form-label">Kategorija</label>
@@ -42,8 +47,9 @@ $dateTo = isset($_GET['date_to']) ? $_GET['date_to'] : '';
     </div>
 
     <div class="mb-3">
-        <label class="form-label">Datums</label>
+        <label class="form-label">Datums no:</label>
         <input type="date" class="form-control" id="date_from" value="<?= $dateFrom ?>">
+        <label for="form-label">Lidz:</label>
         <input type="date" class="form-control mt-2" id="date_to" value="<?= $dateTo ?>">
     </div>
     
@@ -51,9 +57,83 @@ $dateTo = isset($_GET['date_to']) ? $_GET['date_to'] : '';
     <label for="city" class="form-label">Pilsēta</label>
     <select class="form-select" id="city">
         <option value="">Izvēlies pilsētu...</option>
-        <option value="riga" <?= $city == 'riga' ? 'selected' : '' ?>>Rīga</option>
+        <option value="ainazi" <?= $city == 'ainazi' ? 'selected' : '' ?>>Ainaži</option>
+        <option value="aizkraukle" <?= $city == 'aizkraukle' ? 'selected' : '' ?>>Aizkraukle</option>
+        <option value="aizpute" <?= $city == 'aizpute' ? 'selected' : '' ?>>Aizpute</option>
+        <option value="akniste" <?= $city == 'akniste' ? 'selected' : '' ?>>Aknīste</option>
+        <option value="aloja" <?= $city == 'aloja' ? 'selected' : '' ?>>Aloja</option>
+        <option value="aluksne" <?= $city == 'aluksne' ? 'selected' : '' ?>>Alūksne</option>
+        <option value="ape" <?= $city == 'ape' ? 'selected' : '' ?>>Ape</option>
+        <option value="auce" <?= $city == 'auce' ? 'selected' : '' ?>>Auce</option>
+        <option value="baldone" <?= $city == 'baldone' ? 'selected' : '' ?>>Baldone</option>
+        <option value="balozi" <?= $city == 'balozi' ? 'selected' : '' ?>>Baloži</option>
+        <option value="balvi" <?= $city == 'balvi' ? 'selected' : '' ?>>Balvi</option>
+        <option value="bauska" <?= $city == 'bauska' ? 'selected' : '' ?>>Bauska</option>
+        <option value="broceni" <?= $city == 'broceni' ? 'selected' : '' ?>>Brocēni</option>
+        <option value="cesis" <?= $city == 'cesis' ? 'selected' : '' ?>>Cēsis</option>
+        <option value="cesvaine" <?= $city == 'cesvaine' ? 'selected' : '' ?>>Cesvaine</option>
+        <option value="dagda" <?= $city == 'dagda' ? 'selected' : '' ?>>Dagda</option>
+        <option value="daugavpils" <?= $city == 'daugavpils' ? 'selected' : '' ?>>Daugavpils</option>
+        <option value="dobele" <?= $city == 'dobele' ? 'selected' : '' ?>>Dobele</option>
+        <option value="durbe" <?= $city == 'durbe' ? 'selected' : '' ?>>Durbe</option>
+        <option value="grobina" <?= $city == 'grobina' ? 'selected' : '' ?>>Grobiņa</option>
+        <option value="gulbene" <?= $city == 'gulbene' ? 'selected' : '' ?>>Gulbene</option>
+        <option value="ikskile" <?= $city == 'ikskile' ? 'selected' : '' ?>>Ikšķile</option>
+        <option value="ilukste" <?= $city == 'ilukste' ? 'selected' : '' ?>>Ilūkste</option>
+        <option value="jaunjelgava" <?= $city == 'jaunjelgava' ? 'selected' : '' ?>>Jaunjelgava</option>
+        <option value="jekabpils" <?= $city == 'jekabpils' ? 'selected' : '' ?>>Jēkabpils</option>
+        <option value="jelgava" <?= $city == 'jelgava' ? 'selected' : '' ?>>Jelgava</option>
+        <option value="jurmala" <?= $city == 'jurmala' ? 'selected' : '' ?>>Jūrmala</option>
+        <option value="kandava" <?= $city == 'kandava' ? 'selected' : '' ?>>Kandava</option>
+        <option value="karsava" <?= $city == 'karsava' ? 'selected' : '' ?>>Kārsava</option>
+        <option value="kegums" <?= $city == 'kegums' ? 'selected' : '' ?>>Ķegums</option>
+        <option value="kraslava" <?= $city == 'kraslava' ? 'selected' : '' ?>>Krāslava</option>
+        <option value="kuldiga" <?= $city == 'kuldiga' ? 'selected' : '' ?>>Kuldīga</option>
+        <option value="lielvarde" <?= $city == 'lielvarde' ? 'selected' : '' ?>>Lielvārde</option>
         <option value="liepaja" <?= $city == 'liepaja' ? 'selected' : '' ?>>Liepāja</option>
+        <option value="ligatne" <?= $city == 'ligatne' ? 'selected' : '' ?>>Līgatne</option>
+        <option value="limbazi" <?= $city == 'limbazi' ? 'selected' : '' ?>>Limbaži</option>
+        <option value="livani" <?= $city == 'livani' ? 'selected' : '' ?>>Līvāni</option>
+        <option value="lubana" <?= $city == 'lubana' ? 'selected' : '' ?>>Lubāna</option>
+        <option value="ludza" <?= $city == 'ludza' ? 'selected' : '' ?>>Ludza</option>
+        <option value="madona" <?= $city == 'madona' ? 'selected' : '' ?>>Madona</option>
+        <option value="mazsalaca" <?= $city == 'mazsalaca' ? 'selected' : '' ?>>Mazsalaca</option>
+        <option value="ogre" <?= $city == 'ogre' ? 'selected' : '' ?>>Ogre</option>
+        <option value="olaine" <?= $city == 'olaine' ? 'selected' : '' ?>>Olaine</option>
+        <option value="pavilosta" <?= $city == 'pavilosta' ? 'selected' : '' ?>>Pāvilosta</option>
+        <option value="piltene" <?= $city == 'piltene' ? 'selected' : '' ?>>Piltene</option>
+        <option value="plavinas" <?= $city == 'plavinas' ? 'selected' : '' ?>>Pļaviņas</option>
+        <option value="preili" <?= $city == 'preili' ? 'selected' : '' ?>>Preiļi</option>
+        <option value="priekule" <?= $city == 'priekule' ? 'selected' : '' ?>>Priekule</option>
+        <option value="rezekne" <?= $city == 'rezekne' ? 'selected' : '' ?>>Rēzekne</option>
+        <option value="riga" <?= $city == 'riga' ? 'selected' : '' ?>>Rīga</option>
+        <option value="rujiena" <?= $city == 'rujiena' ? 'selected' : '' ?>>Rūjiena</option>
+        <option value="sabile" <?= $city == 'sabile' ? 'selected' : '' ?>>Sabile</option>
+        <option value="salacgriva" <?= $city == 'salacgriva' ? 'selected' : '' ?>>Salacgrīva</option>
+        <option value="salaspils" <?= $city == 'salaspils' ? 'selected' : '' ?>>Salaspils</option>
+        <option value="saldus" <?= $city == 'saldus' ? 'selected' : '' ?>>Saldus</option>
+        <option value="saulkrasti" <?= $city == 'saulkrasti' ? 'selected' : '' ?>>Saulkrasti</option>
+        <option value="seda" <?= $city == 'seda' ? 'selected' : '' ?>>Seda</option>
+        <option value="sigulda" <?= $city == 'sigulda' ? 'selected' : '' ?>>Sigulda</option>
+        <option value="skrunda" <?= $city == 'skrunda' ? 'selected' : '' ?>>Skrunda</option>
+        <option value="smiltene" <?= $city == 'smiltene' ? 'selected' : '' ?>>Smiltene</option>
+        <option value="staicele" <?= $city == 'staicele' ? 'selected' : '' ?>>Staicele</option>
+        <option value="stende" <?= $city == 'stende' ? 'selected' : '' ?>>Stende</option>
+        <option value="strenci" <?= $city == 'strenci' ? 'selected' : '' ?>>Strenči</option>
+        <option value="subate" <?= $city == 'subate' ? 'selected' : '' ?>>Subate</option>
+        <option value="talsi" <?= $city == 'talsi' ? 'selected' : '' ?>>Talsi</option>
+        <option value="tukums" <?= $city == 'tukums' ? 'selected' : '' ?>>Tukums</option>
+        <option value="valdemarpils" <?= $city == 'valdemarpils' ? 'selected' : '' ?>>Valdemārpils</option>
+        <option value="valka" <?= $city == 'valka' ? 'selected' : '' ?>>Valka</option>
+        <option value="valmiera" <?= $city == 'valmiera' ? 'selected' : '' ?>>Valmiera</option>
+        <option value="vangazi" <?= $city == 'vangazi' ? 'selected' : '' ?>>Vangaži</option>
+        <option value="varaklani" <?= $city == 'varaklani' ? 'selected' : '' ?>>Varakļāni</option>
         <option value="ventspils" <?= $city == 'ventspils' ? 'selected' : '' ?>>Ventspils</option>
+        <option value="viesite" <?= $city == 'viesite' ? 'selected' : '' ?>>Viesīte</option>
+        <option value="vilaka" <?= $city == 'vilaka' ? 'selected' : '' ?>>Viļaka</option>
+        <option value="vilani" <?= $city == 'vilani' ? 'selected' : '' ?>>Viļāni</option>
+        <option value="zilupe" <?= $city == 'zilupe' ? 'selected' : '' ?>>Zilupe</option>
+
     </select>
 </div>
 
@@ -66,6 +146,7 @@ $dateTo = isset($_GET['date_to']) ? $_GET['date_to'] : '';
         
 
 <main class="col-md-9">
+    
     <section id="events">
         <p>Izvēlieties kategoriju, lai redzētu pasākumus.</p>
     </section>

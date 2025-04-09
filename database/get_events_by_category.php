@@ -2,6 +2,8 @@
 require_once 'con_db.php';
 
 $category_id = isset($_GET['category_id']) ? intval($_GET['category_id']) : 0;
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
+
 $city = isset($_GET['city']) ? trim($_GET['city']) : '';
 $date_from = isset($_GET['date_from']) ? $_GET['date_from'] : '';
 $date_to = isset($_GET['date_to']) ? $_GET['date_to'] : '';

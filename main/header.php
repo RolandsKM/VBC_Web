@@ -13,16 +13,17 @@ $logged_in = isset($_SESSION['username']);
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
 <header>
-    <h1>Vietējais Brīvprātīgais Centrs</h1>
-    <nav>
-        <ul>
+    <!-- <h1>Vietējais Brīvprātīgais Centrs</h1> -->
+    <nav class="d-flex justify-content-between align-items-center">
+        <ul class="nav-left">
             <li><a href="<?= ($_SERVER['PHP_SELF'] == '/user/index.php' || strpos($_SERVER['PHP_SELF'], '/user/') !== false) ? '../main/index.php' : 'index.php' ?>" class="<?= $current_page == 'index.php' ? 'active' : '' ?>">Sākums</a></li>
             <li><a href="<?= ($_SERVER['PHP_SELF'] == '/user/category.php' || strpos($_SERVER['PHP_SELF'], '/user/') !== false) ? '../main/category.php' : 'category.php' ?>" class="<?= $is_category_page ? 'active' : '' ?>">Kategorijas</a></li>
-            <li><a href="about.php" class="<?= $current_page == 'about.php' ? 'active' : '' ?>">Par Mums</a></li>
-
+            <li><a href="index.php#about" class="<?= $current_page == 'index.php#about' ? 'active' : '' ?>">Par Mums</a></li>
+        </ul>
+        <ul class="nav-right">
             <?php if ($logged_in): ?>
                 <li class="dropdown">
-                    <a href="#" class="dropbtn"><?= htmlspecialchars($_SESSION['username']) ?> ▼</a>
+                    <a href="#" class="dropbtn"><?= htmlspecialchars($_SESSION['username']) ?> <i class="fa-solid fa-angle-down"></i></a>
                     <div class="dropdown-content">
                         <a href="../user/user.php">Profils</a>
                         <a href="../database/logout.php" class="text-danger">Izlogoties</a>
@@ -33,6 +34,7 @@ $logged_in = isset($_SESSION['username']);
             <?php endif; ?>
         </ul>
     </nav>
+
 </header>
 
 
@@ -47,13 +49,17 @@ $logged_in = isset($_SESSION['username']);
         background: none;
         border: none;
         cursor: pointer;
-        font-size: 16px;
-        color: black;
-        padding: 10px 15px;
-        border-radius: 5px;
+        font-size: 1rem;
+        color: #fff;
+        padding: .5rem 1rem;
+        background: #45a049;
+        
         transition: 0.3s;
     }
-
+    .dropbtn:hover{
+        color: #fff;
+        font-weight: bold;
+    }
     .dropdown-content {
         display: none;
         position: absolute;
@@ -80,8 +86,9 @@ $logged_in = isset($_SESSION['username']);
         display: block;
     }
     nav ul li a.active {
-        background-color: #4CAF50;
-        color: white;
-        font-weight: bold;
-    }
+    border-bottom: .1rem solid #4CAF50;
+    color: #45a049;
+    font-weight: bold;
+}
+
 </style>

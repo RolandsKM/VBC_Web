@@ -339,5 +339,38 @@ $(document).ready(function () {
     if (categoryId) {
         loadEvents(categoryId, city, dateFrom, dateTo, page);
     }
+    
 });
+$(document).ready(function() {
+   
+    $('#applyButton').click(function() {
+ 
+        if (userId === null) {
+            alert("Lūdzu, piesakieties, lai pievienotos pasākumam.");
+            return;
+        }
 
+        
+        console.log('Sending data:', { user_id: userId, event_id: eventId });
+
+        
+        $.ajax({
+            url: '../database/join_event.php',
+            method: 'POST',
+            data: {
+                user_id: userId,
+                event_id: eventId
+            },
+            success: function(response) {
+                console.log('Response from server:', response);
+                if (response === 'success') {
+                    alert('Jūs esat veiksmīgi pieteicies uz šo pasākumu!');
+                } else if (response === 'already_joined') {
+                    alert('Jūs jau esat pieteicies uz šo pasākumu.');
+                } else {
+                    alert('Kļūda: nevarēja pieteikties. Atbilde no servera: ' + response);
+                }
+            }
+        });
+    });
+});
