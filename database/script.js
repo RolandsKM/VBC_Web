@@ -1,7 +1,8 @@
+// Lietotāja profila pieteiktie un izveidotie sludinājumi
 $(document).ready(function () {
     function loadEvents() {
         $.ajax({
-            url: '../database/fetch_events.php', 
+            url: '../database/fetch_events.php', //Izvediotie sludinājumi
             type: 'GET',
             success: function (response) {
                 $(".event-container").html(response);
@@ -12,13 +13,25 @@ $(document).ready(function () {
         });
     }
 
-  
+    function loadJoinedEvents() {
+        $.ajax({
+            url: '../database/fetch_joined_events.php', //Sludinājumi kur pieteicās
+            type: 'GET',
+            success: function (response) {
+                $(".joined-container").html(response);
+            },
+            error: function () {
+                alert("Kļūda: Neizdevās ielādēt pieteiktos notikumus.");
+            }
+        });
+    }
+
     $(".event-container").show();
     $(".joined-container").hide();
     $(".action-btn button").removeClass("active");
     $(".sludinajumi-btn").addClass("active");
 
-    // Click event for "Sludinājumi"
+// Parāda izveidotos sludinājumus
     $(".sludinajumi-btn").click(function () {
         $(".event-container").show();
         $(".joined-container").hide();
@@ -27,20 +40,22 @@ $(document).ready(function () {
         loadEvents();
     });
 
-    
+    //Parāda piteicies sludinājumus
     $(".pieteicies-btn").click(function () {
         $(".event-container").hide();
         $(".joined-container").show();
         $(".action-btn button").removeClass("active");
         $(this).addClass("active");
+        loadJoinedEvents(); 
     });
 
-   
+  
     loadEvents();
 
     
     setInterval(loadEvents, 30000);
 });
+
 $(document).ready(function () {
     $(".pop-up-creat").hide();
 
@@ -156,19 +171,18 @@ $(document).ready(function () {
             success: function (response) {
                 if (response.status === "success") {
                     alert("Notikums veiksmīgi atjaunināts!");
-
-                
+            
                     $(".title").text(formData.title);
-                    $(".description p").text(formData.description);
-                    $(".location").text(formData.location + ", " + formData.zip);
-                    $(".event-info p:first").text(formData.city);
-                    $(".event-info p:last").text("Datums/Laiks: " + formatDate(formData.date));
-
+                    $(".description").html(formData.description.replace(/\n/g, "<br>"));
+                    $(".location").html('<strong>📍 Pilsēta:</strong> ' + formData.city + ' | Zip: ' + formData.zip);
+                    $(".date").html('<strong>🗓 Datums:</strong> ' + formatDateTime(formData.date));
+            
                     $(".edit-pop-up").fadeOut();
                 } else {
                     alert("Kļūda: " + response.message);
                 }
             },
+            
             error: function () {
                 alert("Neizdevās atjaunināt notikumu.");
             }
@@ -341,6 +355,8 @@ $(document).ready(function () {
     }
     
 });
+
+// Pieteikties sluninājumam
 $(document).ready(function() {
    
     $('#applyButton').click(function() {
