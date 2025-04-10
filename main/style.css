@@ -483,19 +483,24 @@ section h2 {
 }
 /* Style for the event container */
 #events .event {
+    width: 100%;
+    max-width: 100%;
+    margin-left: 0;
+    background: #fff;
+}
+
+#events {
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    border: 1px solid #ddd;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    background-color: #fff;
-    
+    align-items: flex-start;
+    text-align: left;
+    padding: 1rem;
 }
-#events .event:hover{
 
+#events .event:hover{
+background: #f9f9f9;
 transform: translateY(-5px);
+
 }
 
 .pagination {
@@ -530,7 +535,7 @@ transform: translateY(-5px);
     display: flex;
     align-items: center; 
     justify-content: flex-start;
-    border-bottom: 1px solid #c6c6c6;
+   
 }
 
 #events .event-header h2 {
@@ -564,12 +569,12 @@ transform: translateY(-5px);
     color: #777;
 }
 
-/* Ensuring the entire container links properly */
+
 #events .event-link {
     text-decoration: none;
 }
 
-/* Optional: Add some spacing between the event elements */
+
 #events .event h2, .event-date, .description {
     margin-bottom: 10px;
 }
@@ -814,5 +819,5 @@ aside{
 
 main{
     background: #f0f0f0;
-
+    
 }

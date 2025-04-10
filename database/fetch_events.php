@@ -30,6 +30,7 @@ while ($row = $result->fetch_assoc()) {
         <div class='event'>
             <h2>$title</h2>
             <div class='description'>$description</div>
+            <hr>
             <div class='dates'>
                 <p class='event-date'>🗓 $event_date</p>
                 <p class='created-date'>Izveidots: $created_date</p>

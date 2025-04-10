@@ -85,7 +85,7 @@ header nav ul li a {
 /* Box Styling */
 .box {
     
-    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2); /* Stronger shadow */
+    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2); 
     background-color: white;
     padding: 20px;
     display: flex;
@@ -93,7 +93,7 @@ header nav ul li a {
     justify-content: center;
 }
 
-/* Ensure avatar box doesn't shrink */
+
 .avatar img {
     border: 3px solid #ccc;
     padding: 5px;
@@ -172,12 +172,12 @@ header nav ul li a {
     transition: 0.3s;
 }
 
-/* Hover Effect */
+
 .action-btn button:hover {
     background-color: #45a049;
     color: #fff;
 }
-/* Event Container */
+
 .event-container {
     display: flex;
     flex-direction: column;
@@ -186,7 +186,7 @@ header nav ul li a {
     padding: 1rem;
 }
 
-/* Event Box */
+
 .event {
     background-color: #fff;
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.5);
@@ -236,11 +236,13 @@ header nav ul li a {
 
 .event-link {
     text-decoration: none;
-    color: inherit;
+    color: #333;
     display: block;
 }
 
-
+.event-link:hover{
+    color: #45a049;
+}
 .event:hover {
     background: #f8f9fa;
 }

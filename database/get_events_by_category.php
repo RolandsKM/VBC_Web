@@ -15,10 +15,12 @@ $query = "
     SELECT e.ID_Event, e.title, e.description, e.date, e.created_at, e.city
     FROM Events e
     INNER JOIN Event_Categories ec ON e.ID_Event = ec.event_id
-    WHERE ec.category_id = ? AND e.deleted = 0
+    WHERE ec.category_id = ? 
+      AND e.deleted = 0 
+      AND DATE(e.date) >= CURDATE()
 ";
 
-// Build conditions dynamically
+
 $params = [$category_id];
 $types = 'i';
 
@@ -54,20 +56,23 @@ $output = '';
 while ($row = $result->fetch_assoc()) {
     $title = htmlspecialchars($row['title'], ENT_QUOTES, 'UTF-8');
     $description = htmlspecialchars($row['description'], ENT_QUOTES, 'UTF-8');
+    $city = htmlspecialchars($row['city'], ENT_QUOTES, 'UTF-8');
     $event_date = date("d.m.Y", strtotime($row['date']));
     $created_date = date("d.m.Y", strtotime($row['created_at']));
     $event_id = $row['ID_Event'];
 
-    // Limit description to 100 characters
+    
     $short_description = (strlen($description) > 100) ? substr($description, 0, 180) . '...' : $description;
 
     $output .= "
     <a href='post-event.php?id=$event_id' class='event-link text-decoration-none text-dark'>
-        <div class='event border p-3 mb-3 shadow-sm bg-white'>
+        <div class='event border p-3 mb-3 shadow-sm'>
             <div class='event-header'>
                 <h2>$title</h2>
                 <p class='event-date'>🗓 $event_date</p>
             </div>
+            <p<strong>📍 Pilsēta:</strong> $city</p>
+            <hr>
             <div class='description'>$short_description</div>
             <div class='dates mt-2'>
                 <p class='created-date text-muted'>Izveidots: $created_date</p>
@@ -111,15 +116,14 @@ $total_result = $total_stmt->get_result();
 $total_row = $total_result->fetch_assoc();
 $total_events = $total_row['total'];
 
-// Calculate total pages
 $total_pages = ceil($total_events / $limit);
 
-// Generate pagination links
+
 $pagination = '';
 if ($total_pages > 1) {
     $pagination .= '<div class="pagination">';
     for ($i = 1; $i <= $total_pages; $i++) {
-        // Adding a JavaScript click handler to prevent page reload
+        
         $pagination .= "<a href='javascript:void(0);' class='page-link' data-page='$i'>$i</a> ";
     }
     $pagination .= '</div>';

@@ -7,9 +7,6 @@ if (!isset($_SESSION['ID_user'])) {
 include '../main/header.php';
 require_once '../database/con_db.php';
 
-if (!isset($_GET['id'])) {
-    die("Kļūda: Notikuma ID nav norādīts!");
-}
 
 $event_id = $_GET['id'];
 
@@ -20,7 +17,7 @@ $stmt->execute();
 $result = $stmt->get_result();
 
 if ($result->num_rows === 0) {
-    die("Notikums nav atrasts!");
+    die("Sludinājums nav atrasts!");
 }
 
 $event = $result->fetch_assoc();
@@ -52,25 +49,25 @@ $savienojums->close();
             <table></table>
         </div>
     </div>
-    <div class="event-info">
-        <div class="event-header">
 
+    <div class="container">
+        <a href="javascript:history.back()" class="btn mb-3">⬅ Atpakaļ</a>
 
-            <h3 class="title"><?php echo htmlspecialchars($event['title']); ?></h3>
+        <div class="card shadow p-4">
             <div class="event-icons">
                 <i class="bi bi-pencil edit-event-btn btn btn-outline-primary"></i>
                 <i class="bi bi-trash edit-event-btn btn btn-outline-primary"></i>
             </div>
+
+            <h1 class="title"><?= htmlspecialchars($event['title']) ?></h1>
+            <p class="category"><strong>🏷️ Kategorija:</strong> <?= htmlspecialchars($event['category_name']) ?></p>
+            <p class="location"><strong>📍 Pilsēta:</strong> <?= htmlspecialchars($event['city']) ?> | Zip: <?= htmlspecialchars($event['zip']) ?></p>
+            <p class="description"><?= nl2br(htmlspecialchars($event['description'])) ?></p>
+            <p class="date"><strong>🗓 Datums:</strong> <?= date("d.m.Y H:i", strtotime($event['date'])); ?></p>
         </div>
-        <p><?php echo htmlspecialchars($event['city']); ?></p>
-        <div class="description">
-            <p><?php echo htmlspecialchars($event['description']); ?></p>
-        </div>
-        <div class="location">
-            <?php echo htmlspecialchars($event['location']) . ', ' . htmlspecialchars($event['zip']); ?>
-        </div>
-        <p>Datums/Laiks: <?php echo date("d.m.Y H:i", strtotime($event['date'])); ?></p>
     </div>
+
+    
 </section>
 <div class="edit-pop-up">
     <div class="edit-pop-up-content">
