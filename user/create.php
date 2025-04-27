@@ -24,64 +24,10 @@ include '../main/header.php'; ?>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script> 
 </head>
 <body>
-
-<section id="info" class="container py-5">
-    <div class="row g-4"> 
-     
-        <div class="col-md-4 col-12">
-            <div class="box bg-white p-3 text-center h-100 d-flex flex-column align-items-center">
-                <div class="avatar mb-3">
-                    <img src="avatar.png" class="img-fluid rounded-circle" alt="Avatar" width="100">
-                </div>
-                <div class="user-name fw-bold">Lietotājvārds</div>
-                <button class="btn mt-3">Rakstīt</button>
-            </div>
-        </div>
-
-       
-        <div class="col-md-8 col-12">
-            <div class="box bg-white p-3 position-relative h-100">
-                <a href="setting.php" class="btn btn-outline-secondary settings-btn">⚙</a>
-                <div class="user-info">
-                    <p><strong>E-pasts:</strong> example@mail.com</p>
-                    <p><strong>Vārds:</strong> Jānis</p>
-                    <p><strong>Uzvārds:</strong> Bērziņš</p>
-                    <p><strong>Pilsēta:</strong> Rīga</p>
-                    <p><strong>Bio:</strong> Brīvprātīgais un sabiedriskais darbinieks.</p>
-                    <p><strong>Social:</strong> @example</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-<section id="event">
-    <div class="button-box">
-        <div class="action-btn">
-            <button class="sludinajumi-btn active">Sludinājumi</button>
-            <button class="pieteicies-btn">Pieteicies</button>
-        </div>
-
-        <div class="create-btn">
-            <a href="create.php" class="btn btn-success">Izveidot</a>
-        </div>
-
-    </div>
-
-    <div class="event-container">
-    <!-- Sludinājumi -->
-    <p>Nav sludinājuma.</p>
-    </div>
-
-    <div class="joined-container" style="display: none;">
-        <p>Pagaidām nav pieteikumu.</p>
-    </div>
-
-</section>
-
-<div class="pop-up-creat">
-    <div class="pop-up-content">
-        <span class="close-btn">&times;</span>
-        <form id="event-form">
+    <section id="create" class="container">
+        <h1>Sadarbojies ar vietējiem!</h1>
+        <h2>Izveido sludinājumu/pasākumu!</h2>
+    <form id="event-form" class="shadow p-3">
             <div class="about-info">
                 <div class="col">
                     <label>Nosaukums</label>
@@ -89,14 +35,15 @@ include '../main/header.php'; ?>
                 </div>
                 <div class="col">
                     <label>Apraksts</label>
+                    <p>Apraksti savu sludinājumu/pasākumu plaši brīvprātīgajiem!</p>
                     <textarea id="event-description" class="form-control" rows="6" placeholder="Apraksts..." required></textarea>
                 </div>
-                <div class="form-group">
-                    <label>Adrese</label>
-                    <input type="text" id="event-location" class="form-control" placeholder="Adrese..." required>
-                </div>
-                <div class="form-row d-flex">
-                    <div class="form-group col-md-8 me-3">
+                <div class="row">
+                    <div class="form-group col-md-4">
+                        <label>Adrese</label>
+                        <input type="text" id="event-location" class="form-control" placeholder="Adrese..." required>
+                    </div>
+                    <div class="form-group col-md-4">
                         <label>Pilsēta/Novads</label>
                         <select id="event-city" class="form-control">
                             <option selected>Izvēlies...</option>
@@ -110,6 +57,7 @@ include '../main/header.php'; ?>
                         <input type="text" id="event-zip" class="form-control" placeholder="LV-0000" required>
                     </div>
                 </div>
+
                 <div class="form-group">
                     <label>Kategorijas</label>
                     <select id="event-categories" class="form-control">
@@ -125,13 +73,6 @@ include '../main/header.php'; ?>
             </div>
             <button type="submit">Izveidot</button>
         </form>
-    </div>
-</div>
-
-
-
-
-
-
+    </section>
 </body>
 </html>

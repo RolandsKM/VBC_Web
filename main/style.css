@@ -102,6 +102,68 @@ nav ul li a.active {
     font-weight: bold;
 }
 
+/* Navigation wrapper for mobile */
+.nav-links {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+
+
+.nav-right {
+    display: flex;
+    gap: 1rem;
+    margin-left: auto;
+}
+
+/* Hamburger Button */
+.hamburger {
+    display: none;
+    font-size: 2rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+@media (max-width: 768px) {
+    .hamburger {
+        display: block;
+        color: #333;
+        margin-left: auto;
+        z-index: 1001;
+    }
+
+    .nav-links {
+        display: none;
+        position: absolute;
+        flex-direction: column;
+        background-color: #f8f9fa;
+        top: 70px;
+        left: 0;
+        width: 100%;
+        padding: 1rem;
+        box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.1);
+    }
+
+    .nav-links.show {
+        display: flex;
+    }
+
+    .nav-left,
+    .nav-right {
+        flex-direction: column;
+        align-items: flex-start;
+        width: 100%;
+    }
+
+    .nav-right {
+        align-items: flex-end;
+        margin-top: 1rem;
+    }
+}
+
 
 
 /* hero section */
@@ -127,6 +189,7 @@ nav ul li a.active {
     font-size: 1.1rem;  
     line-height: 1.6;
     margin-bottom: 2rem;  
+    text-align: justify;
 }
 
 .hero a {
@@ -164,7 +227,7 @@ section h2 {
 #categories {
     /* padding: 5rem 12%; */
     position: relative;
-   margin-top: 5rem;
+  
 }
 
 .categories-container {
@@ -779,7 +842,15 @@ footer h3{
         flex-direction: column;
         text-align: center;
     }
-
+    .hero h1{
+        font-size: 2rem;
+       
+        
+    }
+    #posters h2{
+        text-align: center;
+        font-size: 1.5rem;
+    }
     .footer-icons {
         justify-content: center;
     }
@@ -791,7 +862,7 @@ footer h3{
     .hero {
         height: 25rem;
     }
-
+  
     .hero-content input {
         width: 300px;
         margin-right: 0.5rem;
