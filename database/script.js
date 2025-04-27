@@ -138,29 +138,61 @@ $(document).ready(function () {
     loadEvents();
     setInterval(loadEvents, 30000);
 });
-
+// Editot savu izveidoto sludinājuma informāciju
 $(document).ready(function () {
-    $(".edit-pop-up").hide();
+    let originalData = {};
 
-    $(".edit-event-btn").click(function () {
-        $(".edit-pop-up").fadeIn();
+    $(document).on("click", ".edit-event-btn.bi-pencil", function () {
+
+        const dateText = $(".date").text().replace("🗓 Datums:", "").trim();
+    
+        originalData = {
+            title: $(".title").text(),
+            description: $(".description").html().replace(/<br\s*\/?>/g, "\n"),
+            city: $(".location").text().split(":")[1]?.split("|")[0]?.trim(),
+            zip: $(".location").text().split("Zip:")[1]?.trim(),
+            date: dateText
+        };
+    
+        $(".title").replaceWith(`<input type="text" class="form-control title" value="${originalData.title}">`);
+        $(".description").replaceWith(`<textarea class="form-control description" rows="5">${originalData.description}</textarea>`);
+        $(".location").replaceWith(`
+            <div class="row location">
+                <div class="col-md-6">
+                    <input type="text" class="form-control city" placeholder="Pilsēta" value="${originalData.city}">
+                </div>
+                <div class="col-md-6">
+                    <input type="text" class="form-control zip" placeholder="Zip" value="${originalData.zip}">
+                </div>
+            </div>
+        `);
+        $(".date").replaceWith(`
+            <div class="date">
+                <input type="datetime-local" class="form-control date-input" value="${convertToInputDatetime(originalData.date)}">
+            </div>
+        `);
+    
+        $(".edit-actions").show();
+    });
+    
+    $(document).on("click", ".cancel-edit", function () {
+        
+        $(".title").replaceWith(`<h1 class="title">${originalData.title}</h1>`);
+        $(".description").replaceWith(`<p class="description">${originalData.description.replace(/\n/g, "<br>")}</p>`);
+        $(".location").replaceWith(`<p class="location"><strong>📍 Pilsēta:</strong> ${originalData.city} | Zip: ${originalData.zip}</p>`);
+        $(".date").replaceWith(`<p class="date"><strong>🗓 Datums:</strong> ${originalData.date}</p>`);
+        $(".edit-actions").hide();
     });
 
-    $(".close-edit-btn").click(function () {
-        $(".edit-pop-up").fadeOut();
-    });
-
-    $("#edit-event-form").submit(function (e) {
-        e.preventDefault();
-
-        let formData = {
+    $(document).on("click", ".save-edit", function () {
+        const formData = {
             event_id: $("#edit-event-id").val(),
-            title: $("#edit-event-title").val(),
-            description: $("#edit-event-description").val(),
-            location: $("#edit-event-location").val(),
-            city: $("#edit-event-city").val(),
-            zip: $("#edit-event-zip").val(),
-            date: $("#edit-event-date").val()
+            title: $(".title").val(),
+            description: $(".description").val(),
+            city: $(".city").val(),
+            zip: $(".zip").val(),
+            location: $(".city").val(), 
+            date: $(".date-input").val()
         };
 
         $.ajax({
@@ -171,67 +203,100 @@ $(document).ready(function () {
             success: function (response) {
                 if (response.status === "success") {
                     alert("Notikums veiksmīgi atjaunināts!");
-            
-                    $(".title").text(formData.title);
-                    $(".description").html(formData.description.replace(/\n/g, "<br>"));
-                    $(".location").html('<strong>📍 Pilsēta:</strong> ' + formData.city + ' | Zip: ' + formData.zip);
-                    $(".date").html('<strong>🗓 Datums:</strong> ' + formatDateTime(formData.date));
-            
-                    $(".edit-pop-up").fadeOut();
+
+                    $(".title").replaceWith(`<h1 class="title">${formData.title}</h1>`);
+                    $(".description").replaceWith(`<p class="description">${formData.description.replace(/\n/g, "<br>")}</p>`);
+                    $(".location").replaceWith(`<p class="location"><strong>📍 Pilsēta:</strong> ${formData.city} | Zip: ${formData.zip}</p>`);
+                    $(".date").replaceWith(`<p class="date"><strong>🗓 Datums:</strong> ${formatDateTime(formData.date)}</p>`);
+
+                    $(".edit-actions").hide();
                 } else {
                     alert("Kļūda: " + response.message);
                 }
             },
-            
             error: function () {
                 alert("Neizdevās atjaunināt notikumu.");
             }
         });
     });
 
-    function formatDate(inputDate) {
-        let dateObj = new Date(inputDate);
-        return dateObj.toLocaleDateString("lv-LV", { year: 'numeric', month: '2-digit', day: '2-digit' });
+    function formatDateTime(inputDate) {
+        const date = new Date(inputDate);
+        return date.toLocaleString("lv-LV", {
+            year: "numeric", month: "2-digit", day: "2-digit",
+            hour: "2-digit", minute: "2-digit"
+        });
+    }
+
+    function convertToInputDatetime(lvDateString) {
+     
+        const parts = lvDateString.match(/(\d{2})\.(\d{2})\.(\d{4}) (\d{2}):(\d{2})/);
+        if (!parts) return '';
+        const [, day, month, year, hour, minute] = parts;
+        return `${year}-${month}-${day}T${hour}:${minute}`;
     }
 });
+
+// Dzēst ārā sludinājumu (nomainīs 0 uz 1 datbāzē)
 $(document).ready(function () {
-    $(".edit-pop-up").hide();
+    $(document).on("click", ".edit-event-btn.bi-trash", function () {
 
-    
-    $(".edit-event-btn").click(function () {
-        $(".edit-pop-up").fadeIn();
-    });
+        if (!confirm("Vai tiešām vēlies dzēst šo notikumu?")) return;
 
-    $(".close-edit-btn").click(function () {
-        $(".edit-pop-up").fadeOut();
-    });
+        const eventId = $("#edit-event-id").val();
 
-    
-    $(".bi-trash").click(function () {
-        var eventId = $("#edit-event-id").val();
-
-        if (confirm("Vai jūs tiešām vēlaties dzēst šo notikumu?")) {
-            $.ajax({
-                url: '../database/delete_event.php',  
-                type: 'POST',
-                data: { event_id: eventId },
-                dataType: 'json',
-                success: function (response) {
-                    if (response.status === "success") {
-                        alert("Notikums ir veiksmīgi dzēsts!");
-                        window.location.href = 'user.php';  
-                    } else {
-                        alert("Kļūda: " + response.message);
-                    }
-                },
-                error: function () {
-                    alert("Neizdevās dzēst notikumu.");
+        $.ajax({
+            url: '../database/delete_event.php',
+            type: 'POST',
+            data: { event_id: eventId },
+            dataType: 'json',
+            success: function (response) {
+                if (response.status === "success") {
+                    alert("Notikums veiksmīgi dzēsts!");
+                    window.location.href = "user.php"; 
+                } else {
+                    alert("Kļūda: " + response.message);
                 }
+            },
+            error: function () {
+                alert("Neizdevās dzēst notikumu.");
+            }
+        });
+    });
+});
+// uer-event.php
+$(document).ready(function () {
+    const eventId = $('#edit-event-id').val();
+
+    // Informācija par sludinājumu
+    $.get(`../database/fetch_event_details.php?id=${eventId}`, function (data) {
+        $('#event-details').html(data);
+    });
+
+    // Pieteikušo daudzums
+    $.getJSON(`../database/fetch_event_info.php?id=${eventId}`, function (data) {
+        $('#joined-count').text(data.total_joined);
+    });
+    $.getJSON(`../database/fetch_joined_users.php?id=${eventId}`, function (data) {
+        const tableBody = $('#joined-users-table');
+        tableBody.empty();
+        
+        if (data.length === 0) {
+            tableBody.append(`<tr><td colspan="4">Nav pieteikušos lietotāju.</td></tr>`);
+        } else {
+            data.forEach((user, index) => {
+                tableBody.append(`
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${user.username}</td>
+                        <td>${user.email}</td>
+                        <td>${user.status}</td>
+                    </tr>
+                `);
             });
         }
     });
-
-  
+    
 });
 // posts.php sludinājuma filtrēšana 
 $(document).ready(function () {
