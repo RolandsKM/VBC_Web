@@ -30,6 +30,7 @@ $title = htmlspecialchars($event['title']);
 $category = htmlspecialchars($event['category_name']);
 $city = htmlspecialchars($event['city']);
 $zip = htmlspecialchars($event['zip']);
+$location = htmlspecialchars($event['location']);
 $description = nl2br(htmlspecialchars($event['description']));
 $date = date("d.m.Y H:i", strtotime($event['date']));
 
@@ -40,7 +41,7 @@ echo "
     </div>
     <h1 class='title'>$title</h1>
     <p class='category'><strong>🏷️ Kategorija:</strong> $category</p>
-    <p class='location'><strong>📍 Pilsēta:</strong> $city | Zip: $zip</p>
+    <p class='location'><strong>📍 Pilsēta:</strong> $city, $location | Zip: $zip</p>
     <hr>
     <p class='description'>$description</p>
     <hr>

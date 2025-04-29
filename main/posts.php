@@ -34,10 +34,6 @@ $dateTo = isset($_GET['date_to']) ? $_GET['date_to'] : '';
     <h4>Filtri</h4>
     
     <form id="filter_form">
-<div class="mb-3">
-    <label for="search" class="form-label">Meklēt pēc nosaukuma vai apraksta</label>
-    <input type="text" class="form-control" id="search" placeholder="Ievadi atslēgvārdus...">
-</div>
 
     <div class="mb-3">
         <label for="filter_category" class="form-label">Kategorija</label>

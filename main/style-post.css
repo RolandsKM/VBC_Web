@@ -60,6 +60,11 @@ body {
     border: none;
     margin: .45rem;
 }
+#info .btn-danger {
+    background-color: #f62c2c;
+    border: none;
+    margin: .45rem;
+}
 #info .btn-msg {
     background: #fff;
     border: .1rem solid #45a049;

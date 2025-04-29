@@ -25,9 +25,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['ielogoties'])) {
         $query->execute();
         $result = $query->get_result();
         $user = $result->fetch_assoc();
-
+        if ($user) {
+            if ((int)$user['banned'] === 1) {
+                $_SESSION['login_error'] = "Jūsu konts ir bloķēts.";
+                header("Location: ../main/login.php");
+                exit();
+            }
         if ($user && password_verify($password, $user['password'])) {
-            
+
             $_SESSION['username'] = $user['username'];
             $_SESSION['name'] = $user['name'];
             $_SESSION['surname'] = $user['surname'];
@@ -43,7 +48,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['ielogoties'])) {
             header("Location: ../main/login.php");
             exit();
         }
-
+    }
         $query->close();
     } catch (Exception $e) {
         $_SESSION['login_error'] = "Notika kļūda, mēģiniet vēlreiz!";
