@@ -1,57 +1,77 @@
 <?php
 require_once 'con_db.php';
 
-$category_id = isset($_GET['category_id']) ? intval($_GET['category_id']) : 0;
-$search = isset($_GET['search']) ? trim($_GET['search']) : '';
+// Set default values for each parameter
+$category_id = isset($_GET['category_id']) && !empty($_GET['category_id']) ? intval($_GET['category_id']) : 0;
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';  // Add search parameter
 
-$city = isset($_GET['city']) ? trim($_GET['city']) : '';
-$date_from = isset($_GET['date_from']) ? $_GET['date_from'] : '';
-$date_to = isset($_GET['date_to']) ? $_GET['date_to'] : '';
-$page = isset($_GET['page']) ? intval($_GET['page']) : 1;
-$limit = 2; 
-$offset = ($page - 1) * $limit;
+$city = isset($_GET['city']) && !empty($_GET['city']) ? trim($_GET['city']) : '';
+$date_from = isset($_GET['date_from']) && !empty($_GET['date_from']) ? $_GET['date_from'] : '';
+$date_to = isset($_GET['date_to']) && !empty($_GET['date_to']) ? $_GET['date_to'] : '';
 
+// Start the SQL query
 $query = "
     SELECT e.ID_Event, e.title, e.description, e.date, e.created_at, e.city
     FROM Events e
     INNER JOIN Event_Categories ec ON e.ID_Event = ec.event_id
-    WHERE ec.category_id = ? 
-      AND e.deleted = 0 
-      AND DATE(e.date) >= CURDATE()
-";
+    WHERE e.deleted = 0 
+    AND DATE(e.date) >= CURDATE()"; // Only future events
 
+$params = [];
+$types = '';
 
-$params = [$category_id];
-$types = 'i';
+// Add the category filter if provided
+if ($category_id > 0) {
+    $query .= " AND ec.category_id = ?";
+    $params[] = $category_id;
+    $types .= 'i';
+}
 
+// Add the city filter if provided
 if (!empty($city)) {
     $query .= " AND e.city = ?";
     $params[] = $city;
     $types .= 's';
 }
 
+// Add the date_from filter if provided
 if (!empty($date_from)) {
     $query .= " AND e.date >= ?";
     $params[] = $date_from;
     $types .= 's';
 }
 
+// Add the date_to filter if provided
 if (!empty($date_to)) {
     $query .= " AND e.date <= ?";
     $params[] = $date_to;
     $types .= 's';
 }
 
-$query .= " ORDER BY e.date ASC LIMIT ? OFFSET ?";
-$params[] = $limit;
-$params[] = $offset;
-$types .= 'ii';
+// Add the search filter if provided
+if (!empty($search)) {
+    $query .= " AND (e.title LIKE ? OR e.description LIKE ?)";
+    $params[] = "%$search%";
+    $params[] = "%$search%";
+    $types .= 'ss';  // Two string parameters for LIKE search
+}
 
+// Order the events by date
+$query .= " ORDER BY e.date ASC";
+
+// Prepare the statement
 $stmt = $savienojums->prepare($query);
-$stmt->bind_param($types, ...$params);
+
+// Bind the parameters dynamically if any
+if (!empty($params)) {
+    $stmt->bind_param($types, ...$params);
+}
+
+// Execute the query
 $stmt->execute();
 $result = $stmt->get_result();
 
+// Prepare the output for events
 $output = '';
 while ($row = $result->fetch_assoc()) {
     $title = htmlspecialchars($row['title'], ENT_QUOTES, 'UTF-8');
@@ -61,7 +81,6 @@ while ($row = $result->fetch_assoc()) {
     $created_date = date("d.m.Y", strtotime($row['created_at']));
     $event_id = $row['ID_Event'];
 
-    
     $short_description = (strlen($description) > 100) ? substr($description, 0, 180) . '...' : $description;
 
     $output .= "
@@ -71,7 +90,7 @@ while ($row = $result->fetch_assoc()) {
                 <h2>$title</h2>
                 <p class='event-date'>🗓 $event_date</p>
             </div>
-            <p<strong>📍 Pilsēta:</strong> $city</p>
+            <p><strong>📍 Pilsēta:</strong> $city</p>
             <hr>
             <div class='description'>$short_description</div>
             <div class='dates mt-2'>
@@ -81,58 +100,9 @@ while ($row = $result->fetch_assoc()) {
     </a>";
 }
 
-$total_query = "
-    SELECT COUNT(*) AS total
-    FROM Events e
-    INNER JOIN Event_Categories ec ON e.ID_Event = ec.event_id
-    WHERE ec.category_id = ? AND e.deleted = 0
-";
-
-$total_params = [$category_id];
-$total_types = 'i';
-
-if (!empty($city)) {
-    $total_query .= " AND e.city = ?";
-    $total_params[] = $city;
-    $total_types .= 's';
-}
-
-if (!empty($date_from)) {
-    $total_query .= " AND e.date >= ?";
-    $total_params[] = $date_from;
-    $total_types .= 's';
-}
-
-if (!empty($date_to)) {
-    $total_query .= " AND e.date <= ?";
-    $total_params[] = $date_to;
-    $total_types .= 's';
-}
-
-$total_stmt = $savienojums->prepare($total_query);
-$total_stmt->bind_param($total_types, ...$total_params);
-$total_stmt->execute();
-$total_result = $total_stmt->get_result();
-$total_row = $total_result->fetch_assoc();
-$total_events = $total_row['total'];
-
-$total_pages = ceil($total_events / $limit);
-
-
-$pagination = '';
-if ($total_pages > 1) {
-    $pagination .= '<div class="pagination">';
-    for ($i = 1; $i <= $total_pages; $i++) {
-        
-        $pagination .= "<a href='javascript:void(0);' class='page-link' data-page='$i'>$i</a> ";
-    }
-    $pagination .= '</div>';
-}
-
-
 echo $output ?: "<p>Nav atrastu pasākumu šiem filtriem.</p>";
-echo $pagination;
+
 
 $stmt->close();
-$total_stmt->close();
 $savienojums->close();
+?>

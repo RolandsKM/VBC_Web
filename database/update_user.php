@@ -27,7 +27,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $email = $_POST['email'];
         $password = $_POST['password'];
     
-        // Fetch the current password hash
         $query = $savienojums->prepare("SELECT password FROM users WHERE ID_user = ?");
         $query->bind_param("i", $userID);
         $query->execute();
@@ -40,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit();
         }
     
-        // Update email
+        
         $query = $savienojums->prepare("UPDATE `users` SET `email` = ? WHERE `ID_user` = ?");
         $query->bind_param("si", $email, $userID);
         $query->execute();

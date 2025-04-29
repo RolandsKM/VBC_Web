@@ -1,7 +1,7 @@
 <?php
 $serveris = "localhost";
 $lietotajs = "phpmyadmin";
-$parle = "qwerty123";
+$parle = "=m8PpG(vnpW[-m]-";
 $datubaze = "phpmyadmin";
 
 $savienojums = new mysqli($serveris, $lietotajs, $parle, $datubaze);

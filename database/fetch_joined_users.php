@@ -12,10 +12,10 @@ if (!$event_id) {
 }
 
 $stmt = $savienojums->prepare("
-    SELECT u.username, u.email, v.status 
+    SELECT v.ID_Volunteers, u.username, u.email, v.status 
     FROM Volunteers v 
     JOIN users u ON v.user_id = u.ID_user 
-    WHERE v.event_id = ? AND v.status IN ('waiting', 'accepted')
+    WHERE v.event_id = ? AND v.status IN ('waiting', 'accepted', 'denied')
 ");
 $stmt->bind_param("i", $event_id);
 $stmt->execute();
@@ -25,6 +25,7 @@ $joinedUsers = [];
 
 while ($row = $result->fetch_assoc()) {
     $joinedUsers[] = [
+        'id_volunteer' => $row['ID_Volunteers'],
         'username' => htmlspecialchars($row['username']),
         'email' => htmlspecialchars($row['email']),
         'status' => htmlspecialchars($row['status'])

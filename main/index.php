@@ -1,5 +1,8 @@
-<?php include 'header.php'; 
+<?php 
+
+include 'header.php'; 
   include '../database/get_categories_count.php'; 
+
 ?>
 
 <!DOCTYPE html>

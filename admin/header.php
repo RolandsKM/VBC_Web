@@ -1,0 +1,23 @@
+
+<?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+?>
+
+<header class="admin-header d-flex justify-content-between align-items-center px-4">
+    <a class="btn">VBC-Sadaļa</a>
+
+    <div class="dropdown">
+        <button class="dropbtn">
+            <?= htmlspecialchars($_SESSION['username']) ?> <i class="fa-solid fa-angle-down"></i>
+        </button>
+        <div class="dropdown-content">
+            <a href="../user/user.php">Profils</a>
+            <?php if ($_SESSION['role'] === 'admin'): ?>
+                <a href="../admin/index.php">Admin</a>
+            <?php endif; ?>
+            <a href="../database/logout.php" class="text-danger">Izlogoties</a>
+        </div>
+    </div>
+</header>

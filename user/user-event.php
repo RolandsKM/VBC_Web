@@ -43,20 +43,130 @@ include '../main/header.php';
     </div>
 </section>
 <section id="table">
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Nr.</th>
-            <th>Lietotājvārds</th>
-            <th>E-pasts</th>
-            <th>Status</th>
-        </tr>
-    </thead>
-    <tbody id="joined-users-table">
-        <!-- Rows will be inserted dynamically -->
-    </tbody>
-</table>
+    <h4 class="mb-3">Pieteikušies</h4>
+    <table class="table table-striped" id="waiting-table">
+        <thead>
+            <tr>
+                <th>Nr.</th>
+                <th>Lietotājvārds</th>
+                <th>E-pasts</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Waiting users -->
+        </tbody>
+    </table>
 
+    <h4 class="mb-3 mt-5">Apstiprināti</h4>
+    <table class="table table-striped" id="accepted-table">
+        <thead>
+            <tr>
+                <th>Nr.</th>
+                <th>Lietotājvārds</th>
+                <th>E-pasts</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Accepted users -->
+        </tbody>
+    </table>
+
+    <h4 class="mb-3 mt-5">Noraidītie</h4>
+    <table class="table table-striped" id="denied-table">
+        <thead>
+            <tr>
+                <th>Nr.</th>
+                <th>Lietotājvārds</th>
+                <th>E-pasts</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Denied users -->
+        </tbody>
+    </table>
 </section>
+
+<script>
+$(document).ready(function() {
+    const eventId = $('#edit-event-id').val();
+
+    function loadJoinedUsers() {
+        $.ajax({
+            url: '../database/fetch_joined_users.php',
+            method: 'GET',
+            data: { id: eventId },
+            success: function(data) {
+                const users = JSON.parse(data);
+
+                $('#joined-count').text(users.length);
+
+                let waitingHtml = '';
+                let acceptedHtml = '';
+                let deniedHtml = '';
+
+                users.forEach((user, index) => {
+                    const row = `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${user.username}</td>
+                            <td>${user.email}</td>
+                            <td>
+                                <select class="form-select status-select" data-id="${user.id_volunteer}">
+                                    <option value="waiting" ${user.status === 'waiting' ? 'selected' : ''}>Pieteicies</option>
+                                    <option value="accepted" ${user.status === 'accepted' ? 'selected' : ''}>Apstiprināts</option>
+                                    <option value="denied" ${user.status === 'denied' ? 'selected' : ''}>Noraidīts</option>
+                                </select>
+                            </td>
+                        </tr>
+                    `;
+
+                    if (user.status === 'waiting') {
+                        waitingHtml += row;
+                    } else if (user.status === 'accepted') {
+                        acceptedHtml += row;
+                    } else if (user.status === 'denied') {
+                        deniedHtml += row;
+                    }
+                });
+
+                $('#waiting-table tbody').hide().html(waitingHtml).fadeIn(300);
+                $('#accepted-table tbody').hide().html(acceptedHtml).fadeIn(300);
+                $('#denied-table tbody').hide().html(deniedHtml).fadeIn(300);
+            }
+        });
+    }
+
+   
+    loadJoinedUsers();
+
+  
+    $(document).on('change', '.status-select', function() {
+        const volunteerId = $(this).data('id');
+        const newStatus = $(this).val();
+
+        $.ajax({
+            url: '../database/update_volunteer_status.php',
+            method: 'POST',
+            data: {
+                volunteer_id: volunteerId,
+                status: newStatus
+            },
+            success: function(response) {
+                if (response.trim() === 'success') {
+                   
+                    loadJoinedUsers();
+                } else {
+                    alert('Kļūda atjauninot statusu: ' + response);
+                }
+            }
+        });
+    });
+});
+
+</script>
+
 </body>
 </html>

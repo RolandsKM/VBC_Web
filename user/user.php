@@ -62,7 +62,8 @@ include '../main/header.php'; ?>
         </div>
 
         <div class="create-btn">
-            <a href="create.php" class="btn btn-success">Izveidot</a>
+            <!-- Redirect to create.php instead of showing pop-up -->
+            <a href="create.php" class="btn">Izveidot</a>
         </div>
 
     </div>
@@ -77,58 +78,6 @@ include '../main/header.php'; ?>
     </div>
 
 </section>
-
-<div class="pop-up-creat">
-    <div class="pop-up-content">
-        <span class="close-btn">&times;</span>
-        <form id="event-form">
-            <div class="about-info">
-                <div class="col">
-                    <label>Nosaukums</label>
-                    <input type="text" id="event-title" class="form-control" placeholder="Nosaukums..." required>
-                </div>
-                <div class="col">
-                    <label>Apraksts</label>
-                    <textarea id="event-description" class="form-control" rows="6" placeholder="Apraksts..." required></textarea>
-                </div>
-                <div class="form-group">
-                    <label>Adrese</label>
-                    <input type="text" id="event-location" class="form-control" placeholder="Adrese..." required>
-                </div>
-                <div class="form-row d-flex">
-                    <div class="form-group col-md-8 me-3">
-                        <label>Pilsēta/Novads</label>
-                        <select id="event-city" class="form-control">
-                            <option selected>Izvēlies...</option>
-                            <option>Rīga</option>
-                            <option>Liepāja</option>
-                            <option>Ventspils</option>
-                        </select>
-                    </div>
-                    <div class="form-group col-md-4">
-                        <label>Pasta indekss</label>
-                        <input type="text" id="event-zip" class="form-control" placeholder="LV-0000" required>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Kategorijas</label>
-                    <select id="event-categories" class="form-control">
-                        <option value="">Ielādē kategorijas...</option>
-                    </select>
-                </div>
-
-
-                <div class="form-group">
-                    <label>Datums</label>
-                    <input type="date" id="event-date" class="form-control" required>
-                </div>
-            </div>
-            <button type="submit">Izveidot</button>
-        </form>
-    </div>
-</div>
-
-
 
 
 

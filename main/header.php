@@ -5,8 +5,8 @@ if (session_status() == PHP_SESSION_NONE) {
 
 $current_page = basename($_SERVER['PHP_SELF']);
 $is_category_page = in_array($current_page, ['category.php', 'posts.php']);
-
 $logged_in = isset($_SESSION['username']);
+$user_role = isset($_SESSION['role']) ? $_SESSION['role'] : ''; // Assuming the user's role is stored in session
 ?>
 
 <link rel="stylesheet" href="style.css">
@@ -28,6 +28,9 @@ $logged_in = isset($_SESSION['username']);
                         <a href="#" class="dropbtn"><?= htmlspecialchars($_SESSION['username']) ?> <i class="fa-solid fa-angle-down"></i></a>
                         <div class="dropdown-content">
                             <a href="../user/user.php">Profils</a>
+                            <?php if ($user_role === 'admin'): ?>
+                                <a href="../admin/index.php">Admin</a> <!-- Admin option for admins -->
+                            <?php endif; ?>
                             <a href="../database/logout.php" class="text-danger">Izlogoties</a>
                         </div>
                     </li>
@@ -39,13 +42,11 @@ $logged_in = isset($_SESSION['username']);
     </nav>
 </header>
 
-
 <script>
     function toggleMenu() {
         document.getElementById("navLinks").classList.toggle("show");
     }
 </script>
-
 
 <style>
    .dropdown {

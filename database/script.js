@@ -1,8 +1,8 @@
-// Lietotāja profila pieteiktie un izveidotie sludinājumi
+
 $(document).ready(function () {
     function loadEvents() {
         $.ajax({
-            url: '../database/fetch_events.php', //Izvediotie sludinājumi
+            url: '../database/fetch_events.php', 
             type: 'GET',
             success: function (response) {
                 $(".event-container").html(response);
@@ -15,7 +15,7 @@ $(document).ready(function () {
 
     function loadJoinedEvents() {
         $.ajax({
-            url: '../database/fetch_joined_events.php', //Sludinājumi kur pieteicās
+            url: '../database/fetch_joined_events.php', 
             type: 'GET',
             success: function (response) {
                 $(".joined-container").html(response);
@@ -31,7 +31,7 @@ $(document).ready(function () {
     $(".action-btn button").removeClass("active");
     $(".sludinajumi-btn").addClass("active");
 
-// Parāda izveidotos sludinājumus
+
     $(".sludinajumi-btn").click(function () {
         $(".event-container").show();
         $(".joined-container").hide();
@@ -40,7 +40,7 @@ $(document).ready(function () {
         loadEvents();
     });
 
-    //Parāda piteicies sludinājumus
+    
     $(".pieteicies-btn").click(function () {
         $(".event-container").hide();
         $(".joined-container").show();
@@ -55,113 +55,93 @@ $(document).ready(function () {
     
     setInterval(loadEvents, 30000);
 });
-
 $(document).ready(function () {
-    $(".pop-up-creat").hide();
 
-    $(".create-btn button").click(function () {
-        $(".pop-up-creat").fadeIn();
-        loadCategories();
-    });
+    loadCategories(); 
 
-    $(".close-btn").click(function () {
-        $(".pop-up-creat").fadeOut();
-    });
+   
+    $("#event-form").submit(function (e) {
+        e.preventDefault(); 
 
-    $(document).click(function (event) {
-        if (!$(event.target).closest(".pop-up-content, .create-btn button").length) {
-            $(".pop-up-creat").fadeOut();
-        }
+        let eventData = {
+            title: $("#event-title").val(),
+            description: $("#event-description").val(),
+            location: $("#event-location").val(),
+            city: $("#event-city").val(),
+            zip: $("#event-zip").val(),
+            category_id: $("#event-categories").val(),  
+            date: $("#event-date").val()
+        };
+
+        $.ajax({
+            url: '../database/create_event.php',
+            type: 'POST',
+            data: eventData,
+            success: function (response) {
+                console.log(response); 
+                if (response === "success") {
+                    alert("Pasākums izveidots veiksmīgi!");
+                  
+                    $("#event-form")[0].reset();
+                } else {
+                    alert("Kļūda: " + response); 
+                }
+            },
+            error: function () {
+                alert("Kļūda: Neizdevās izveidot pasākumu.");
+            }
+        });
+        
     });
 
     function loadCategories() {
         $.ajax({
-            url: '../database/get_categories.php',
+            url: '../database/get_categories.php', 
             type: 'GET',
             success: function (response) {
-                
-                $("#event-categories").html(response);
+                $("#event-categories").html(response); 
             },
             error: function () {
                 alert("Kļūda: Neizdevās ielādēt kategorijas.");
             }
         });
     }
-    
-
-    $("#event-form").submit(function (e) {
-        e.preventDefault(); 
-
-        let formData = {
-            title: $("#event-title").val(),
-            description: $("#event-description").val(),
-            location: $("#event-location").val(),
-            date: $("#event-date").val(),
-            city: $("#event-city").val(),
-            zip: $("#event-zip").val(),
-            categories: $("#event-categories").val()
-        };
-
-        $.ajax({
-            url: '../database/fetch_insert.php',
-            type: 'POST',
-            data: formData,
-            dataType: 'json',
-            success: function (response) {
-                if (response.status === "success") {
-                    alert("Notikums veiksmīgi izveidots!");
-                    $(".pop-up-creat").fadeOut();
-                    loadEvents();
-                } else {
-                    alert("Kļūda: " + response.message);
-                }
-            },
-            error: function () {
-                alert("Neizdevās saglabāt notikumu.");
-            }
-        });
-    });
-
-    function loadEvents() {
-        $.ajax({
-            url: '../database/fetch_events.php',
-            type: 'GET',
-            success: function (response) {
-                $(".event-container").html(response);
-            },
-            error: function () {
-                alert("Kļūda: Neizdevās ielādēt notikumus.");
-            }
-        });
-    }
-
-    loadEvents();
-    setInterval(loadEvents, 30000);
 });
+
+
 // Editot savu izveidoto sludinājuma informāciju
 $(document).ready(function () {
     let originalData = {};
 
     $(document).on("click", ".edit-event-btn.bi-pencil", function () {
-
         const dateText = $(".date").text().replace("🗓 Datums:", "").trim();
-    
+        
+        const locationText = $(".location").text().replace("📍 Pilsēta:", "").trim();
+        const locationParts = locationText.split("|");
+        const city = locationParts[0]?.trim().split(",")[0]?.trim();
+        const location = locationParts[0]?.trim().split(",")[1]?.trim();
+        const zip = locationParts[1]?.replace("Zip:", "").trim();
+
         originalData = {
             title: $(".title").text(),
             description: $(".description").html().replace(/<br\s*\/?>/g, "\n"),
-            city: $(".location").text().split(":")[1]?.split("|")[0]?.trim(),
-            zip: $(".location").text().split("Zip:")[1]?.trim(),
+            city: city,
+            location: location,
+            zip: zip,
             date: dateText
         };
-    
+
         $(".title").replaceWith(`<input type="text" class="form-control title" value="${originalData.title}">`);
         $(".description").replaceWith(`<textarea class="form-control description" rows="5">${originalData.description}</textarea>`);
         $(".location").replaceWith(`
             <div class="row location">
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <input type="text" class="form-control city" placeholder="Pilsēta" value="${originalData.city}">
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
+                    <input type="text" class="form-control location-field" placeholder="Atrašanās vieta" value="${originalData.location}">
+                </div>
+                <div class="col-md-4">
                     <input type="text" class="form-control zip" placeholder="Zip" value="${originalData.zip}">
                 </div>
             </div>
@@ -171,15 +151,14 @@ $(document).ready(function () {
                 <input type="datetime-local" class="form-control date-input" value="${convertToInputDatetime(originalData.date)}">
             </div>
         `);
-    
+
         $(".edit-actions").show();
     });
-    
+
     $(document).on("click", ".cancel-edit", function () {
-        
         $(".title").replaceWith(`<h1 class="title">${originalData.title}</h1>`);
         $(".description").replaceWith(`<p class="description">${originalData.description.replace(/\n/g, "<br>")}</p>`);
-        $(".location").replaceWith(`<p class="location"><strong>📍 Pilsēta:</strong> ${originalData.city} | Zip: ${originalData.zip}</p>`);
+        $(".location").replaceWith(`<p class="location"><strong>📍 Pilsēta:</strong> ${originalData.city}, ${originalData.location} | Zip: ${originalData.zip}</p>`);
         $(".date").replaceWith(`<p class="date"><strong>🗓 Datums:</strong> ${originalData.date}</p>`);
         $(".edit-actions").hide();
     });
@@ -190,8 +169,8 @@ $(document).ready(function () {
             title: $(".title").val(),
             description: $(".description").val(),
             city: $(".city").val(),
+            location: $(".location-field").val(),
             zip: $(".zip").val(),
-            location: $(".city").val(), 
             date: $(".date-input").val()
         };
 
@@ -206,7 +185,7 @@ $(document).ready(function () {
 
                     $(".title").replaceWith(`<h1 class="title">${formData.title}</h1>`);
                     $(".description").replaceWith(`<p class="description">${formData.description.replace(/\n/g, "<br>")}</p>`);
-                    $(".location").replaceWith(`<p class="location"><strong>📍 Pilsēta:</strong> ${formData.city} | Zip: ${formData.zip}</p>`);
+                    $(".location").replaceWith(`<p class="location"><strong>📍 Pilsēta:</strong> ${formData.city}, ${formData.location} | Zip: ${formData.zip}</p>`);
                     $(".date").replaceWith(`<p class="date"><strong>🗓 Datums:</strong> ${formatDateTime(formData.date)}</p>`);
 
                     $(".edit-actions").hide();
@@ -229,13 +208,13 @@ $(document).ready(function () {
     }
 
     function convertToInputDatetime(lvDateString) {
-     
         const parts = lvDateString.match(/(\d{2})\.(\d{2})\.(\d{4}) (\d{2}):(\d{2})/);
         if (!parts) return '';
         const [, day, month, year, hour, minute] = parts;
         return `${year}-${month}-${day}T${hour}:${minute}`;
     }
 });
+
 
 // Dzēst ārā sludinājumu (nomainīs 0 uz 1 datbāzē)
 $(document).ready(function () {
@@ -268,12 +247,12 @@ $(document).ready(function () {
 $(document).ready(function () {
     const eventId = $('#edit-event-id').val();
 
-    // Informācija par sludinājumu
+    
     $.get(`../database/fetch_event_details.php?id=${eventId}`, function (data) {
         $('#event-details').html(data);
     });
 
-    // Pieteikušo daudzums
+    
     $.getJSON(`../database/fetch_event_info.php?id=${eventId}`, function (data) {
         $('#joined-count').text(data.total_joined);
     });
@@ -298,17 +277,14 @@ $(document).ready(function () {
     });
     
 });
-// posts.php sludinājuma filtrēšana 
 $(document).ready(function () {
-    
     const urlParams = new URLSearchParams(window.location.search);
     const categoryId = urlParams.get('category_id');
     const city = urlParams.get('city');
     const dateFrom = urlParams.get('date_from');
     const dateTo = urlParams.get('date_to');
-    let page = urlParams.get('page') || 1; 
+    const searchInput = $('#search_input'); 
 
-   
     if (categoryId) {
         $('#filter_category').val(categoryId);
     }
@@ -343,6 +319,18 @@ $(document).ready(function () {
     });
 
     
+    searchInput.on('input', function () {
+        const selectedCatId = $('#filter_category').val();
+        const selectedCity = $('#city').val();
+        const selectedDateFrom = $('#date_from').val();
+        const selectedDateTo = $('#date_to').val();
+        const searchTerm = searchInput.val();  // Get the current input
+    
+        loadEvents(selectedCatId, selectedCity, selectedDateFrom, selectedDateTo, searchTerm);
+    });
+    
+
+
     $('#filter_category, #city, #date_from, #date_to').on('change', function () {
         const selectedCatId = $('#filter_category').val();
         const selectedCity = $('#city').val();
@@ -354,13 +342,12 @@ $(document).ready(function () {
         newUrl.searchParams.set('city', selectedCity);
         newUrl.searchParams.set('date_from', dateFrom);
         newUrl.searchParams.set('date_to', dateTo);
-        newUrl.searchParams.set('page', 1); 
+        newUrl.searchParams.delete('page'); 
         window.history.pushState({}, '', newUrl);  
 
-        loadEvents(selectedCatId, selectedCity, dateFrom, dateTo, 1);
+        loadEvents(selectedCatId, selectedCity, dateFrom, dateTo);
     });
 
-   
     $('#clear_filters').on('click', function () {
         $('#filter_form')[0].reset();
         
@@ -371,39 +358,19 @@ $(document).ready(function () {
         newUrl.searchParams.delete('date_to');
         window.history.pushState({}, '', newUrl);
 
-        loadEvents('', '', '', '', 1);
+        loadEvents('', '', '', '', '');
     });
 
-    
-    $(document).on('click', '.page-link', function () {
-        const selectedPage = $(this).data('page'); 
-        const selectedCatId = $('#filter_category').val();
-        const selectedCity = $('#city').val();
-        const dateFrom = $('#date_from').val();
-        const dateTo = $('#date_to').val();
-
-        
-        const newUrl = new URL(window.location);
-        newUrl.searchParams.set('category_id', selectedCatId);
-        newUrl.searchParams.set('city', selectedCity);
-        newUrl.searchParams.set('date_from', dateFrom);
-        newUrl.searchParams.set('date_to', dateTo);
-        newUrl.searchParams.set('page', selectedPage);
-        window.history.pushState({}, '', newUrl);  
-
-        loadEvents(selectedCatId, selectedCity, dateFrom, dateTo, selectedPage); 
-    });
-
-    function loadEvents(catId, city, dateFrom, dateTo, page) {
+    function loadEvents(catId, city, dateFrom, dateTo, searchTerm = '') {
         $.ajax({
             url: '../database/get_events_by_category.php',
             method: 'GET',
             data: {
-                category_id: catId,
+                category_id: catId || '',
                 city: city || '',
                 date_from: dateFrom || '',
                 date_to: dateTo || '',
-                page: page
+                search: searchTerm || ''  
             },
             success: function (data) {
                 $('#events').html(data);
@@ -414,44 +381,89 @@ $(document).ready(function () {
         });
     }
 
-
-    if (categoryId) {
-        loadEvents(categoryId, city, dateFrom, dateTo, page);
+    if (categoryId || city || dateFrom || dateTo) {
+        loadEvents(categoryId, city, dateFrom, dateTo);
+    } else {
+        loadEvents('', '', '', '', ''); 
     }
-    
 });
 
-// Pieteikties sluninājumam
+
+
+
 $(document).ready(function() {
-   
-    $('#applyButton').click(function() {
- 
-        if (userId === null) {
-            alert("Lūdzu, piesakieties, lai pievienotos pasākumam.");
-            return;
+    
+    function updateButton(status) {
+        if (status === 'waiting' || status === 'accepted') {
+            $('#applyButton').text('Atcelt dalību').removeClass('btn-success').addClass('btn-danger');
+        } else {
+            $('#applyButton').text('Pieteikties').removeClass('btn-danger').addClass('btn-success');
         }
+    }
 
-        
-        console.log('Sending data:', { user_id: userId, event_id: eventId });
-
-        
+    
+    function checkIfJoined() {
         $.ajax({
-            url: '../database/join_event.php',
+            url: '../database/check_join_status.php',
             method: 'POST',
             data: {
                 user_id: userId,
                 event_id: eventId
             },
             success: function(response) {
-                console.log('Response from server:', response);
-                if (response === 'success') {
-                    alert('Jūs esat veiksmīgi pieteicies uz šo pasākumu!');
-                } else if (response === 'already_joined') {
-                    alert('Jūs jau esat pieteicies uz šo pasākumu.');
+                if (response === 'waiting' || response === 'accepted') {
+                    updateButton('waiting'); 
+                } else if (response === 'denied' || response === 'left') {
+                    updateButton('denied'); 
+                }
+            }
+        });
+    }
+
+    
+    $('#applyButton').click(function() {
+        if (userId === null) {
+            alert("Lūdzu, piesakieties, lai pievienotos pasākumam.");
+            return;
+        }
+
+        const currentText = $(this).text().trim();
+        let action = ''; 
+
+        
+        if (currentText === 'Pieteikties') {
+            action = 'join';
+        } else if (currentText === 'Atcelt dalību') {
+            action = 'leave';
+        }
+
+       
+        $.ajax({
+            url: '../database/join_event.php',
+            method: 'POST',
+            data: {
+                user_id: userId,
+                event_id: eventId,
+                action: action
+            },
+            success: function(response) {
+                if (response === 'joined') {
+                    alert('Jūs esat veiksmīgi pieteicies!');
+                    updateButton('waiting');
+                } else if (response === 'left') {
+                    alert('Jūs esat atcēlis dalību.');
+                    updateButton('left'); 
                 } else {
-                    alert('Kļūda: nevarēja pieteikties. Atbilde no servera: ' + response);
+                    alert('Kļūda: ' + response);
                 }
             }
         });
     });
+
+    
+    if (userId !== null) {
+        checkIfJoined();
+    }
 });
+
+
