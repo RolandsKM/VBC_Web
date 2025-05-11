@@ -11,19 +11,19 @@ if (!$event_id) {
     die("Nav norādīts notikuma ID.");
 }
 
-$stmt = $savienojums->prepare("
+$stmt = $pdo->prepare("
     SELECT v.ID_Volunteers, u.username, u.email, v.status 
     FROM Volunteers v 
     JOIN users u ON v.user_id = u.ID_user 
-    WHERE v.event_id = ? AND v.status IN ('waiting', 'accepted', 'denied')
+    WHERE v.event_id = :event_id AND v.status IN ('waiting', 'accepted', 'denied')
 ");
-$stmt->bind_param("i", $event_id);
-$stmt->execute();
-$result = $stmt->get_result();
+
+$stmt->execute(['event_id' => $event_id]);
+$rows = $stmt->fetchAll();
 
 $joinedUsers = [];
 
-while ($row = $result->fetch_assoc()) {
+foreach ($rows as $row) {
     $joinedUsers[] = [
         'id_volunteer' => $row['ID_Volunteers'],
         'username' => htmlspecialchars($row['username']),
@@ -33,7 +33,4 @@ while ($row = $result->fetch_assoc()) {
 }
 
 echo json_encode($joinedUsers);
-
-$stmt->close();
-$savienojums->close();
 ?>

@@ -10,53 +10,45 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['ielogoties'])) {
     $password = trim($_POST['parole']);
 
     if (!$email) {
-        $_SESSION['login_error'] = "Nepareizs e-pasts vai parole!";
-        header("Location: ../main/login.php");
-        exit();
+        setLoginError("Nepareizs e-pasts vai parole!");
     }
 
     try {
-        $query = $savienojums->prepare("SELECT * FROM users WHERE email = ?");
-        if (!$query) {
-            throw new Exception("Kļūda, izpildot pieprasījumu uz datubāzi.");
+        $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
+        $stmt->execute([$email]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC); 
+
+        if (!$user || !password_verify($password, $user['password'])) {
+            setLoginError("Nepareizs e-pasts vai parole!");
         }
 
-        $query->bind_param("s", $email);
-        $query->execute();
-        $result = $query->get_result();
-        $user = $result->fetch_assoc();
-        if ($user) {
-            if ((int)$user['banned'] === 1) {
-                $_SESSION['login_error'] = "Jūsu konts ir bloķēts.";
-                header("Location: ../main/login.php");
-                exit();
-            }
-        if ($user && password_verify($password, $user['password'])) {
-
-            $_SESSION['username'] = $user['username'];
-            $_SESSION['name'] = $user['name'];
-            $_SESSION['surname'] = $user['surname'];
-            $_SESSION['email'] = $user['email'];
-            $_SESSION['role'] = $user['role'];
-            $_SESSION['ID_user'] = $user['ID_user'];
-
-            unset($_SESSION['login_error'], $_SESSION['login_email']);
-            header("Location: ../main/index.php");
-            exit();
-        } else {
-            $_SESSION['login_error'] = "Nepareizs e-pasts vai parole!";
-            header("Location: ../main/login.php");
-            exit();
+        if ((int)$user['banned'] === 1) {
+            setLoginError("Jūsu konts ir bloķēts.");
         }
-    }
-        $query->close();
-    } catch (Exception $e) {
+
+       
+        $_SESSION['username'] = $user['username'];
+        $_SESSION['name'] = $user['name'];
+        $_SESSION['surname'] = $user['surname'];
+        $_SESSION['email'] = $user['email'];
+        $_SESSION['role'] = $user['role'];
+        $_SESSION['ID_user'] = $user['ID_user'];
+
+        unset($_SESSION['login_error'], $_SESSION['login_email']);
+        header("Location: ../main/index.php");
+        exit();
+
+    } catch (PDOException $e) {
         $_SESSION['login_error'] = "Notika kļūda, mēģiniet vēlreiz!";
-        error_log("Login error: " . $e->getMessage()); 
+        error_log("Login error: " . $e->getMessage());
         header("Location: ../main/login.php");
         exit();
-    } finally {
-        $savienojums->close();
     }
+}
+
+function setLoginError($message) {
+    $_SESSION['login_error'] = $message;
+    header("Location: ../main/login.php");
+    exit();
 }
 ?>

@@ -10,12 +10,11 @@ include '../main/header.php';
 require_once '../database/con_db.php';
 
 $userID = $_SESSION['ID_user'];
-$query = $savienojums->prepare("SELECT `username`, `name`, `surname`, `email`, `location` FROM `users` WHERE `ID_user` = ?");
 
-$query->bind_param("i", $userID);
-$query->execute();
-$result = $query->get_result();
-$user = $result->fetch_assoc();
+// Fetch user information using PDO
+$query = $pdo->prepare("SELECT `username`, `name`, `surname`, `email`, `location` FROM `users` WHERE `ID_user` = ?");
+$query->execute([$userID]);
+$user = $query->fetch();
 ?>
 
 <!DOCTYPE html>
@@ -52,17 +51,17 @@ $user = $result->fetch_assoc();
                 <!-- User Information Display -->
                 <div class="mb-3">
                     <label for="username" class="form-label">Lietotājvārds</label>
-                    <input type="text" id="username" value="<?= $user['username']; ?>" readonly class="form-control">
+                    <input type="text" id="username" value="<?= htmlspecialchars($user['username']); ?>" readonly class="form-control">
                 </div>
 
                 <div class="mb-3">
                     <label for="name" class="form-label">Vārds</label>
-                    <input type="text" id="name" value="<?= $user['name']; ?>" readonly class="form-control">
+                    <input type="text" id="name" value="<?= htmlspecialchars($user['name']); ?>" readonly class="form-control">
                 </div>
 
                 <div class="mb-3">
                     <label for="surname" class="form-label">Uzvārds</label>
-                    <input type="text" id="surname" value="<?= $user['surname']; ?>" readonly class="form-control">
+                    <input type="text" id="surname" value="<?= htmlspecialchars($user['surname']); ?>" readonly class="form-control">
                 </div>
 
                 <div class="d-flex justify-content-end mb-4">
@@ -77,7 +76,7 @@ $user = $result->fetch_assoc();
 
                 <div class="mb-3">
                     <label for="email" class="form-label">E-pasts</label>
-                    <input type="text" id="email" value="<?= $user['email']; ?>" readonly class="form-control">
+                    <input type="text" id="email" value="<?= htmlspecialchars($user['email']); ?>" readonly class="form-control">
                 </div>
 
                 <div class="d-flex justify-content-end mb-2">
@@ -96,7 +95,7 @@ $user = $result->fetch_assoc();
 
                 <div class="mb-3">
                     <label for="location" class="form-label">Atrašanās vieta</label>
-                    <input type="text" id="location" value="<?= $user['location'] ?? ''; ?>" readonly class="form-control">
+                    <input type="text" id="location" value="<?= htmlspecialchars($user['location'] ?? ''); ?>" readonly class="form-control">
                 </div>
 
                 <div class="d-flex justify-content-end">

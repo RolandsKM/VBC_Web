@@ -13,22 +13,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $allowedStatuses = ['waiting', 'accepted', 'denied'];
 
     if ($volunteerId > 0 && in_array($newStatus, $allowedStatuses)) {
-        $stmt = $savienojums->prepare("UPDATE Volunteers SET status = ? WHERE ID_Volunteers = ?");
-        if ($stmt) {
-            $stmt->bind_param('si', $newStatus, $volunteerId);
-            if ($stmt->execute()) {
-                echo 'success';
-            } else {
-                echo 'error_execute';
-            }
-            $stmt->close();
-        } else {
-            echo 'error_prepare';
-        }
+        $stmt = $pdo->prepare("UPDATE Volunteers SET status = :status WHERE ID_Volunteers = :id");
+        $success = $stmt->execute([
+            ':status' => $newStatus,
+            ':id' => $volunteerId
+        ]);
+
+        echo $success ? 'success' : 'error_execute';
     } else {
         echo 'invalid_data';
     }
 }
-
-$savienojums->close();
 ?>

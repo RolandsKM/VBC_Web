@@ -1,28 +1,27 @@
 <?php
 require_once 'con_db.php';
 
-$category_id = isset($_GET['category_id']) ? intval($_GET['category_id']) : 0;
+$category_id = isset($_GET['category_id']) ? (int)$_GET['category_id'] : 0;
 
-$query = "
-    SELECT e.ID_Event, e.title, e.description, e.location, e.date, e.city
-    FROM Events e
-    INNER JOIN Event_Categories ec ON e.ID_Event = ec.event_id
-    WHERE ec.category_id = ? AND e.deleted = 0
-    ORDER BY e.date ASC
-";
+try {
+    $query = "
+        SELECT e.ID_Event, e.title, e.description, e.location, e.date, e.city
+        FROM Events e
+        INNER JOIN Event_Categories ec ON e.ID_Event = ec.event_id
+        WHERE ec.category_id = :category_id AND e.deleted = 0
+        ORDER BY e.date ASC
+    ";
 
-$stmt = $savienojums->prepare($query);
-$stmt->bind_param("i", $category_id);
-$stmt->execute();
-$result = $stmt->get_result();
+    $stmt = $pdo->prepare($query);
+    $stmt->execute([':category_id' => $category_id]);
 
-$events = [];
-while ($row = $result->fetch_assoc()) {
-    $events[] = $row;
+    $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    header('Content-Type: application/json');
+    echo json_encode($events);
+
+} catch (PDOException $e) {
+    http_response_code(500);
+    echo json_encode(['error' => 'Datu iegūšanas kļūda.']);
 }
-
-header('Content-Type: application/json');
-echo json_encode($events);
-
-$stmt->close();
-$savienojums->close();
+?>

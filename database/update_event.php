@@ -16,17 +16,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $zip = $_POST['zip'];
     $date = $_POST['date'];
 
-    $query = "UPDATE Events SET title=?, description=?, city=?, location=?, zip=?, date=? WHERE ID_Event=?";
-    $stmt = $savienojums->prepare($query);
-    $stmt->bind_param("ssssssi", $title, $description, $city, $location, $zip, $date, $event_id);
+    $query = "UPDATE Events SET title = :title, description = :description, city = :city, location = :location, zip = :zip, date = :date WHERE ID_Event = :event_id";
 
-    if ($stmt->execute()) {
+    $stmt = $pdo->prepare($query);
+
+    $success = $stmt->execute([
+        ':title' => $title,
+        ':description' => $description,
+        ':city' => $city,
+        ':location' => $location,
+        ':zip' => $zip,
+        ':date' => $date,
+        ':event_id' => $event_id
+    ]);
+
+    if ($success) {
         echo json_encode(["status" => "success"]);
     } else {
         echo json_encode(["status" => "error", "message" => "Neizdevās atjaunināt datus."]);
     }
-
-    $stmt->close();
-    $savienojums->close();
 }
 ?>

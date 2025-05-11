@@ -1,15 +1,21 @@
 <?php
-$serveris = "localhost";
-$lietotajs = "phpmyadmin";
-$parle = "=m8PpG(vnpW[-m]-";
-$datubaze = "phpmyadmin";
+$host = 'localhost';
+$db   = 'phpmyadmin';
+$user = 'phpmyadmin';
+$pass = 'qwerty123';
+$charset = 'utf8mb4';
 
-$savienojums = new mysqli($serveris, $lietotajs, $parle, $datubaze);
+$dsn = "mysql:host=$host;dbname=$db;charset=$charset";
+$options = [
+    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,  // Kļūdas metīs Exception, vieglāk debugot
+    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,        // Saņemsi asociatīvus masīvus
+    PDO::ATTR_EMULATE_PREPARES   => false,                   // Lai izmantotu īstus prepared statements (drošāk pret SQL injekcijām)
+];
 
-
-if ($savienojums->connect_error) {
-    die("Connection failed: " . $savienojums->connect_error);
+try {
+    $pdo = new PDO($dsn, $user, $pass, $options);
+} catch (\PDOException $e) {
+    
+    throw new \PDOException($e->getMessage(), (int)$e->getCode());
 }
-
-$savienojums->set_charset("utf8");
 ?>

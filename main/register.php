@@ -29,7 +29,7 @@ include 'header.php';
 
 <div class="container d-flex justify-content-center align-items-center vh-100">
     <div class="card p-4 shadow-lg" style="width: 350px;">
-        <h3 class="text-center">Reģistrācija</h3>
+        <h3 class="text-center">Reģistrācija</h3>+
         <form action="../database/register_function.php" method="POST">
             <?php if (!empty($errors['general'])): ?>
                 <div class="alert alert-danger"><?= $errors['general'] ?></div>

@@ -9,42 +9,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($userId > 0 && $eventId > 0 && ($action === 'join' || $action === 'leave')) {
         if ($action === 'join') {
-         
-            $query = "SELECT status FROM Volunteers WHERE user_id = ? AND event_id = ?";
-            $stmt = $savienojums->prepare($query);
-            $stmt->bind_param('ii', $userId, $eventId);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            
-            if ($result->num_rows > 0) {
-              
-                $updateQuery = "UPDATE Volunteers SET status = 'waiting' WHERE user_id = ? AND event_id = ?";
-                $updateStmt = $savienojums->prepare($updateQuery);
-                $updateStmt->bind_param('ii', $userId, $eventId);
-                $updateStmt->execute();
-                $updateStmt->close();
+           
+            $query = "SELECT status FROM Volunteers WHERE user_id = :user_id AND event_id = :event_id";
+            $stmt = $pdo->prepare($query);
+            $stmt->execute(['user_id' => $userId, 'event_id' => $eventId]);
+            $result = $stmt->fetch();
+
+            if ($result) {
+               
+                $updateQuery = "UPDATE Volunteers SET status = 'waiting' WHERE user_id = :user_id AND event_id = :event_id";
+                $updateStmt = $pdo->prepare($updateQuery);
+                $updateStmt->execute(['user_id' => $userId, 'event_id' => $eventId]);
             } else {
                
-                $insertQuery = "INSERT INTO Volunteers (user_id, event_id, status) VALUES (?, ?, 'waiting')";
-                $insertStmt = $savienojums->prepare($insertQuery);
-                $insertStmt->bind_param('ii', $userId, $eventId);
-                $insertStmt->execute();
-                $insertStmt->close();
+                $insertQuery = "INSERT INTO Volunteers (user_id, event_id, status) VALUES (:user_id, :event_id, 'waiting')";
+                $insertStmt = $pdo->prepare($insertQuery);
+                $insertStmt->execute(['user_id' => $userId, 'event_id' => $eventId]);
             }
             echo 'joined'; 
         } elseif ($action === 'leave') {
-          
-            $query = "UPDATE Volunteers SET status = 'left' WHERE user_id = ? AND event_id = ?";
-            $stmt = $savienojums->prepare($query);
-            $stmt->bind_param('ii', $userId, $eventId);
-            $stmt->execute();
+            
+            $query = "UPDATE Volunteers SET status = 'left' WHERE user_id = :user_id AND event_id = :event_id";
+            $stmt = $pdo->prepare($query);
+            $stmt->execute(['user_id' => $userId, 'event_id' => $eventId]);
             echo 'left'; 
         }
-        $stmt->close();
     } else {
         echo 'invalid'; 
     }
 }
-
-$savienojums->close();
 ?>

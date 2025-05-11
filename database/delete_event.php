@@ -8,23 +8,24 @@ if (!isset($_SESSION['username'])) {
 }
 
 if (isset($_POST['event_id'])) {
-    $event_id = $_POST['event_id'];
+    $event_id = intval($_POST['event_id']);
+    $user_id = $_SESSION['ID_user'];
 
-    
-    $query = "UPDATE Events SET deleted = 1 WHERE ID_Event = ? AND user_id = ?";
-    $stmt = $savienojums->prepare($query);
-    
-  
-    $stmt->bind_param("ii", $event_id, $_SESSION['ID_user']);
-    
-    if ($stmt->execute()) {
-        echo json_encode(['status' => 'success', 'message' => 'Notikums dzēsts veiksmīgi']);
-    } else {
-        echo json_encode(['status' => 'error', 'message' => 'Neizdevās dzēst notikumu']);
+    try {
+        $query = "UPDATE Events SET deleted = 1 WHERE ID_Event = ? AND user_id = ?";
+        $stmt = $pdo->prepare($query);
+        $success = $stmt->execute([$event_id, $user_id]);
+
+        if ($success) {
+            echo json_encode(['status' => 'success', 'message' => 'Notikums dzēsts veiksmīgi']);
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Neizdevās dzēst notikumu']);
+        }
+
+    } catch (Exception $e) {
+        echo json_encode(['status' => 'error', 'message' => 'Kļūda: ' . $e->getMessage()]);
     }
-    
-    $stmt->close();
-    $savienojums->close();
+
 } else {
     echo json_encode(['status' => 'error', 'message' => 'Notikuma ID nav norādīts']);
 }

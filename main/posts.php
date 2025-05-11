@@ -143,6 +143,7 @@ $dateTo = isset($_GET['date_to']) ? $_GET['date_to'] : '';
         
 
 <main class="col-md-9">
+    
 <div class="mb-3">
     <input type="text" class="form-control" id="search_input" placeholder="Meklēt pasākumus pēc nosaukuma vai apraksta...">
     </div>

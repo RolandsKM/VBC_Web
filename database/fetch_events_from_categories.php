@@ -2,9 +2,8 @@
 
 require_once '../database/con_db.php';
 
-
 function fetchEventData($eventId) {
-    global $savienojums;
+    global $pdo;
 
     $query = "
         SELECT e.title, e.description, e.date, e.city, e.zip, e.created_at, 
@@ -18,16 +17,16 @@ function fetchEventData($eventId) {
         LIMIT 1
     ";
 
-    $stmt = $savienojums->prepare($query);
-    $stmt->bind_param('i', $eventId);
-    $stmt->execute();
-    $result = $stmt->get_result();
+    try {
+        $stmt = $pdo->prepare($query);
+        $stmt->execute([$eventId]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if ($result->num_rows === 0) {
-        return null;
+        return $result ? $result : null; 
+    } catch (PDOException $e) {
+        error_log("Error fetching event data: " . $e->getMessage());
+        return null; 
     }
-
-    return $result->fetch_assoc();
 }
 
 ?>

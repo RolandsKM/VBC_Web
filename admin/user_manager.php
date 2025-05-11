@@ -4,19 +4,19 @@ if (!isset($_SESSION['ID_user']) || $_SESSION['role'] !== 'admin') {
     header("Location: ../main/login.php");
     exit();
 }
+
 require_once '../database/con_db.php';
-
 $users = [];
-$query = $savienojums->prepare("SELECT ID_user, username, email, banned FROM users WHERE role = 'user'");
 
-$query->execute();
-$result = $query->get_result();
-while ($row = $result->fetch_assoc()) {
-    $users[] = $row;
+try {
+    $query = $pdo->prepare("SELECT ID_user, username, email, banned FROM users WHERE role = 'user'");
+    $query->execute();
+    $users = $query->fetchAll();
+
+} catch (PDOException $e) {
+    echo "Kļūda, neizdevās ielādēt lietotājus: " . $e->getMessage();
 }
-$query->close();
 ?>
-
 
 <!DOCTYPE html>
 <html lang="lv">
