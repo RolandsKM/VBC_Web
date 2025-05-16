@@ -17,4 +17,4 @@
 - [ ] Pabeikt sākum ekrānu
 
 <-- Readme tiks papildināts --> 
-http://64.176.187.163/Local_V_Center/main/index.php
+http://165.227.158.55/Local_V_Center/main/index.php
