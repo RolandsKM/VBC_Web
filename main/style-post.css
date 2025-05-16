@@ -1,0 +1,215 @@
+* {
+    font-family: "Quicksand", sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    text-decoration: none;
+    transition: 0.3s linear;
+}
+
+body {
+    background-color: #f4f4f4;
+    color: #383838;
+    line-height: 1.6;
+    padding: 8rem 12% 0rem
+}
+.btn{
+    background: #45a049;
+    color: #fff;
+}
+.btn:hover{
+    background: #333;
+    color: #fff;
+    font-weight: bold;
+}
+.card{
+    border-radius: .1rem;
+}
+#info {
+    padding: 3.5rem 0;
+}
+
+#info .card {
+    border: 1px solid #ddd;
+    
+   
+}
+
+#info .row {
+    display: flex;
+    justify-content: space-between;
+}
+
+#info .col-md-6 {
+    margin-bottom: 1.1rem;
+}
+
+#info .btn {
+    font-size: .8rem;
+    padding: .5rem 1rem;
+    border-radius: .1rem;
+}
+
+#info .btn-primary {
+    background-color: #45a049;
+    border: none;
+}
+
+#info .btn-success {
+    background-color: #28a745;
+    border: none;
+    margin: .45rem;
+}
+#info .btn-danger {
+    background-color: #f62c2c;
+    border: none;
+    margin: .45rem;
+}
+#info .btn-msg {
+    background: #fff;
+    border: .1rem solid #45a049;
+    margin: .4rem;
+    color: #45a049;
+}
+#info .btn-msg:hover{
+    border: .1rem solid #333;
+    color: #333;
+}
+#info .btn-primary:hover, #info .btn-success:hover{
+    background: #333;
+    color: #fff;
+    font-weight: bold;
+}
+#info img {
+    border-radius: 50%;
+}
+
+@media (max-width: 768px) {
+    body {
+        padding: 2rem 5%;
+    }
+
+    #info .card {
+        padding: 1rem;
+        text-align: center;
+    }
+
+    #info .btn {
+        display: block;
+        width: 100%;
+        margin: 0.5rem 0;
+    }
+
+    #info .d-flex {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    #info .d-flex .ms-3 {
+        margin-left: 0;
+        margin-top: 1rem;
+    }
+
+    img.rounded-circle {
+        width: 80px;
+        height: 80px;
+    }
+}
+
+@media (max-width: 480px) {
+    h1 {
+        font-size: 1.5rem;
+    }
+
+    p {
+        font-size: 0.9rem;
+    }
+
+    .btn {
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 360px) {
+  body {
+    padding: 1.5rem 1rem 0; 
+    font-size: 14px; 
+  }
+
+  h1 {
+    font-size: 1.3rem;
+    margin-bottom: 0.5rem;
+  }
+
+  p {
+    font-size: 0.85rem;
+  }
+
+  .btn {
+    font-size: 0.85rem;
+    padding: 0.45rem 1rem;
+    border-radius: 0.25rem;
+  }
+
+  .btn:hover {
+    font-weight: 600;
+  }
+
+  .card {
+    padding: 1rem;
+    border-radius: 0.25rem;
+  }
+
+  /* Info section tweaks */
+  #info {
+    padding: 2rem 1rem;
+  }
+
+  #info .row {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  #info .col-md-6 {
+    width: 100%;
+    margin-bottom: 0;
+  }
+
+  #info .card {
+    text-align: center;
+  }
+
+  #info .d-flex {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  #info .d-flex .ms-3 {
+    margin-left: 0;
+    margin-top: 0.75rem;
+  }
+
+  img.rounded-circle {
+    width: 70px;
+    height: 70px;
+  }
+
+  #info .btn {
+    display: block;
+    width: 100%;
+    margin: 0.5rem 0;
+  }
+
+  #info .btn-msg {
+    margin: 0.5rem 0;
+  }
+
+ 
+  .btn.mb-3 {
+    width: 100%;
+    padding: 0.5rem 0;
+    font-size: 1rem;
+  }
+}
