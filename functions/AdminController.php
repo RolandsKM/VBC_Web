@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax'])) {
 
 function getUserById($id) {
     global $pdo;
-    $stmt = $pdo->prepare("SELECT ID_user, username, name, surname, email, profile_pic, bio, location, social_links, role, banned, deleted, created_at FROM users WHERE ID_user = :id");
+    $stmt = $pdo->prepare("SELECT ID_user, username, name, surname, email, profile_pic, location, role, banned, deleted, created_at FROM users WHERE ID_user = :id");
     $stmt->execute([':id' => $id]);
     return $stmt->fetch(PDO::FETCH_ASSOC);
 }

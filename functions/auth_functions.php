@@ -130,8 +130,8 @@ function handleRegister() {
     }
 
     $hashed_password = password_hash($parole, PASSWORD_DEFAULT);
-    $stmt = $pdo->prepare("INSERT INTO users (username, password, name, surname, email, profile_pic, bio, location, social_links, role)
-                           VALUES (?, ?, ?, ?, ?, NULL, NULL, NULL, NULL, 'user')");
+    $stmt = $pdo->prepare("INSERT INTO users (username, password, name, surname, email, profile_pic, location, role)
+                           VALUES (?, ?, ?, ?, ?, NULL, NULL, 'user')");
     $success = $stmt->execute([$lietotajvards, $hashed_password, $name, $surname, $email]);
 
     if ($success) {

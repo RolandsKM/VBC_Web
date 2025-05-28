@@ -32,7 +32,7 @@ include '../css/templates/header.php';  ?>
         <a href="account_info.php" class=" py-2 px-3 text-decoration-none border-bottom">Account Information</a>
         <a href="change_password.php" class=" py-2 px-3 text-decoration-none border-bottom">Password</a>
         <a href="history.php" class=" py-2 px-3 text-decoration-none border-bottom">History</a>
-        <a href="../main/logout.php" class=" py-2 px-3 text-decoration-none border-bottom">Logout</a>
+        <a href="../database/auth_functions.php?logout=1" class=" py-2 px-3 text-decoration-none border-bottom">Logout</a>
     </nav>
 </aside>
 <?php include '../main/footer.php'; ?>
