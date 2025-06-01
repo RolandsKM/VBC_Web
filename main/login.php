@@ -1,5 +1,5 @@
 <?php 
-include 'header.php';
+include '../css/templates/header.php'; 
 session_start();
 
 if (empty($_SESSION['csrf_token'])) {
@@ -30,7 +30,7 @@ $login_email = $_SESSION['login_email'] ?? '';
     <div class="container d-flex justify-content-center align-items-center vh-100">
         <div class="card p-4 shadow-lg" style="width: 350px;">
             <h3 class="text-center">Pieslēgties</h3>
-            <form action="../database/login_function.php" method="POST">
+            <form action="../database/auth_functions.php" method="POST">
                 <div class="mb-3">
                     <label class="form-label">E-pasts</label>
                     <input type="email" name="epasts" class="form-control" required value="<?= htmlspecialchars($login_email) ?>">
@@ -52,6 +52,7 @@ $login_email = $_SESSION['login_email'] ?? '';
         </div>
     </div>
 
+<?php include '../css/templates/footer.php'; ?>
 
 </body>
 </html>

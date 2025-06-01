@@ -1,6 +1,6 @@
 <?php
-include '../database/get_categories.php'; 
-include 'header.php'; 
+include '../functions/get_categories.php'; 
+include '../css/templates/header.php'; 
 ?>
 
 <!DOCTYPE html>
@@ -9,13 +9,14 @@ include 'header.php';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Populārās Kategorijas</title>
-    <link rel="stylesheet" href="style.css">
+    
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;600&display=swap">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="script.js" defer></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
@@ -28,7 +29,8 @@ include 'header.php';
                 <a href="posts.php?category_id=<?= $category['Kategorijas_ID']; ?>" class="category-link">
                     <div class="category-card">
                         <div class="icon" style="background: <?= htmlspecialchars($category['color']); ?>;">
-                            <i class="bi bi-car-front-fill"></i>
+                            
+                            <p><i class="<?= htmlspecialchars($category['icon']); ?>"></i>
                         </div>
                         <p class="category-name"><?= htmlspecialchars($category['Nosaukums']); ?></p>
                     </div>
@@ -38,6 +40,7 @@ include 'header.php';
     </div>
 </section>
 
+<?php include '../css/templates/footer.php'; ?>
 
 
 </body>

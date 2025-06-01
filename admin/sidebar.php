@@ -2,56 +2,54 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+$currentPage = basename($_SERVER['PHP_SELF']);
 ?>
+<style>
+    .admin-sidebar-title{
+       color: #2c3e50;
+    }
+    .admin-nav a.active,
+.dropdown-toggle-admin.active {
+    color: green; 
+    font-weight: bold; 
+}
+.dropdown-content-admin a.active {
+    color: green;
+    font-weight: bold;
+}
 
-<aside>
-    <h3>VBC - ADMIN</h3>
-    <hr>
-    <nav class="d-flex flex-column">
+</style>
+<aside class="admin-sidebar">
+    <h3 class="admin-sidebar-title">VBC - ADMIN</h3>
 
-        <a href="index.php" class="py-2 px-3 text-decoration-none border-bottom <?= basename($_SERVER['PHP_SELF']) == 'index.php' ? 'active' : '' ?>">Dashboard</a>
+    <nav class="admin-nav">
+        <a href="index.php" class="<?= $currentPage === 'index.php' ? 'active' : '' ?>">Dashboard</a>
 
-        <div class="dropdown-container">
-            <button class="dropdown-toggle2 py-2 px-3 text-decoration-none border-bottom text-start w-100">
-                Pārvaldība 
+        <div class="dropdown-admin <?= in_array($currentPage, ['user_manager.php', 'event_manager.php, admin_manager']) ? 'open' : '' ?>">
+            <button class="dropdown-toggle-admin <?= in_array($currentPage, ['user_manager.php', 'event_manager.php, admin_manager']) ? 'active' : '' ?>">
+                Pārvaldība
             </button>
-            <div class="dropdown-content2 flex-column" style="display: none;">
-                <a href="user_manager.php" class="py-2 ps-4 text-decoration-none <?= basename($_SERVER['PHP_SELF']) == 'user_manager.php' ? 'active' : '' ?>">Lietotāju pārvaldība</a>
-                <a href="#" class="py-2 ps-4 text-decoration-none">Sludinājuma pārvaldība</a>
-                <a href="#" class="py-2 ps-4 text-decoration-none">Admina pārvaldība</a>
+            <div class="dropdown-content-admin">
+                <a href="user_manager.php" class="<?= $currentPage === 'user_manager.php' ? 'active' : '' ?>">Lietotāju pārvaldība</a>
+                <a href="event_manager.php" class="<?= $currentPage === 'event_manager.php' ? 'active' : '' ?>">Sludinājumu pārvaldība</a>
+                <a href="admin_manager.php" class="<?= $currentPage === 'admin_manager.php' ? 'active' : '' ?>">Admina pārvaldība</a>
             </div>
         </div>
 
-        <a href="#" class="py-2 px-3 text-decoration-none border-bottom">Ziņojumi & Moderācija</a>
-        <a href="#" class="py-2 px-3 text-decoration-none border-bottom">CMS</a>
-        <a href="#" class="py-2 px-3 text-decoration-none border-bottom">Setting</a>
-        
-        <a href="../main/logout.php" class="py-2 px-3 text-decoration-none border-bottom">Logout</a>
+        <a href="report_manager.php" class="<?= $currentPage === 'report_manager.php' ? 'active' : '' ?>">Ziņojumi & Moderācija</a>
+        <a href="#" class="<?= $currentPage === 'cms.php' ? 'active' : '' ?>">CMS</a>
+        <a href="#" class="<?= $currentPage === 'settings.php' ? 'active' : '' ?>">Iestatījumi</a>
+        <a href="../database/auth_functions.php?logout=1">Izrakstīties</a>
     </nav>
 </aside>
 
 <script>
-    const dropdownToggle = document.querySelector('.dropdown-toggle2');
-    const dropdownContent = document.querySelector('.dropdown-content2');
-
-    dropdownToggle.addEventListener('click', () => {
-        const isVisible = dropdownContent.style.display === 'flex';
-        dropdownContent.style.display = isVisible ? 'none' : 'flex';
-        dropdownToggle.classList.toggle('active', !isVisible);
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.dropdown-toggle-admin').forEach(toggle => {
+            toggle.addEventListener('click', () => {
+                const dropdown = toggle.closest('.dropdown-admin');
+                dropdown.classList.toggle('open');
+            });
+        });
     });
 </script>
-
-
-<style>
-.dropdown-toggle2 {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 1rem;
-    transition: 0.3s;
-}
-
-.dropdown-content2 a {
-    padding-left: 2rem; 
-}
-</style>

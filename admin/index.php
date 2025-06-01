@@ -1,10 +1,6 @@
 <?php 
-session_start();
-if (!isset($_SESSION['ID_user']) || $_SESSION['role'] !== 'admin') {
-    header("Location: ../main/login.php");
-    exit();
-}
-include '../database/admin_stats.php';
+
+include '../functions/admin_stats.php';
 ?>
 
 

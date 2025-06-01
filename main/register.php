@@ -1,4 +1,5 @@
 <?php 
+
 session_start();
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -7,7 +8,7 @@ if (empty($_SESSION['csrf_token'])) {
 $form_data = $_SESSION['form_data'] ?? [];
 $errors = $_SESSION['form_errors'] ?? [];
 
-include 'header.php'; 
+include '../css/templates/header.php'; 
 ?>
 
 
@@ -29,15 +30,18 @@ include 'header.php';
 
 <div class="container d-flex justify-content-center align-items-center vh-100">
     <div class="card p-4 shadow-lg" style="width: 350px;">
-        <h3 class="text-center">Reģistrācija</h3>+
-        <form action="../database/register_function.php" method="POST">
+        <h3 class="text-center">Reģistrācija</h3>
+        <form action="../functions/auth_functions.php" method="POST">
             <?php if (!empty($errors['general'])): ?>
                 <div class="alert alert-danger"><?= $errors['general'] ?></div>
             <?php endif; ?>
 
             <div class="mb-3">
                 <label class="form-label">Lietotājvārds</label>
-                <input type="text" name="username" class="form-control <?= isset($errors['username']) ? 'is-invalid' : '' ?>" value="<?= htmlspecialchars($form_data['username'] ?? '') ?>" required>
+                <input type="text" name="username" class="form-control <?= isset($errors['username']) ? 'is-invalid' : '' ?>" 
+                    value="<?= htmlspecialchars($form_data['username'] ?? '') ?>" 
+                    required pattern="^[a-zA-Z0-9_]{3,20}$" 
+                    title="Lietotājvārds var saturēt tikai burtus, ciparus un pasvītras (3-20 simboli).">
                 <?php if (!empty($errors['username'])): ?>
                     <div class="invalid-feedback"><?= $errors['username'] ?></div>
                 <?php endif; ?>
@@ -45,17 +49,23 @@ include 'header.php';
 
             <div class="mb-3">
                 <label class="form-label">Vārds</label>
-                <input type="text" name="name" class="form-control" value="<?= htmlspecialchars($form_data['name'] ?? '') ?>" required>
+                <input type="text" name="name" class="form-control" 
+                    value="<?= htmlspecialchars($form_data['name'] ?? '') ?>" 
+                    required minlength="1">
             </div>
 
             <div class="mb-3">
                 <label class="form-label">Uzvārds</label>
-                <input type="text" name="surname" class="form-control" value="<?= htmlspecialchars($form_data['surname'] ?? '') ?>" required>
+                <input type="text" name="surname" class="form-control" 
+                    value="<?= htmlspecialchars($form_data['surname'] ?? '') ?>" 
+                    required minlength="1">
             </div>
 
             <div class="mb-3">
                 <label class="form-label">E-pasts</label>
-                <input type="email" name="email" class="form-control <?= isset($errors['email']) ? 'is-invalid' : '' ?>" value="<?= htmlspecialchars($form_data['email'] ?? '') ?>" required> 
+                <input type="email" name="email" class="form-control <?= isset($errors['email']) ? 'is-invalid' : '' ?>" 
+                    value="<?= htmlspecialchars($form_data['email'] ?? '') ?>" 
+                    required> 
                 <?php if (!empty($errors['email'])): ?>
                     <div class="invalid-feedback"><?= $errors['email'] ?></div>
                 <?php endif; ?>
@@ -63,11 +73,23 @@ include 'header.php';
 
             <div class="mb-3">
                 <label class="form-label">Parole</label>
-                <input type="password" name="password" class="form-control <?= isset($errors['password']) ? 'is-invalid' : '' ?>" required>
+                <input type="password" name="password" class="form-control <?= isset($errors['password']) ? 'is-invalid' : '' ?>" 
+                    required minlength="8" 
+                    title="Parolei jābūt vismaz 8 simbolus garai.">
                 <?php if (!empty($errors['password'])): ?>
                     <div class="invalid-feedback"><?= $errors['password'] ?></div>
                 <?php endif; ?>
             </div>
+            <div class="mb-3">
+                <label class="form-label">Apstiprini paroli</label>
+                <input type="password" name="confirm_password" class="form-control <?= isset($errors['confirm_password']) ? 'is-invalid' : '' ?>" 
+                    required minlength="8" 
+                    title="Ievadi paroli vēlreiz.">
+                <?php if (!empty($errors['confirm_password'])): ?>
+                    <div class="invalid-feedback"><?= $errors['confirm_password'] ?></div>
+                <?php endif; ?>
+            </div>
+
 
             <button type="submit" name="registracija" class="btn btn-custom w-100">Reģistrēties</button>
             <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
@@ -77,6 +99,7 @@ include 'header.php';
         <p class="text-center mt-3"><a href="login.php">Atpakaļ uz ielogošanos</a></p>
     </div>
 </div>
+<!--  -->
 
 </body>
 </html>

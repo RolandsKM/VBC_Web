@@ -4,7 +4,7 @@ if (!isset($_SESSION['ID_user'])) {
     header("Location: ../main/login.php");
     exit();
 }
-include '../main/header.php'; 
+include '../css/templates/header.php'; 
 ?>
 
 <!DOCTYPE html>
@@ -19,9 +19,9 @@ include '../main/header.php';
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="user.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="../database/script.js"></script>
+    <script src="../functions/script.js"></script>
 </head>
-<body>
+<body id="bg">
 
 <section id="my-event">
     <div class="container p-0 m-0">
@@ -29,144 +29,124 @@ include '../main/header.php';
         <input type="hidden" id="edit-event-id" value="<?= htmlspecialchars($_GET['id']) ?>">
 
         <div class="card shadow p-4" id="event-details">
-            <!-- Event content will be loaded here via JS -->
+           
         </div>
     </div>
 </section>
 
 <section id="my-event-info">
+    <section id="my-event-info">
     <div class="group">
-        <div class="amount-joined shadow p-4">
-            <p id="joined-count">0</p>
+        <div class="amount-joined  p-4">
+            <p id="count-waiting">0</p>
+            <i class="fa-solid fa-people-group wait"></i>
+            <h5>Pieteikušies</h5>
+        </div>
+        <div class="amount-joined  p-4">
+            <p id="count-accepted">0</p>
             <i class="fa-solid fa-people-group"></i>
+            <h5>Apstiprināti</h5>
+        </div>
+        <div class="amount-joined  p-4">
+            <p id="count-denied">0</p>
+            <i class="fa-solid fa-people-group den"></i>
+            <h5>Noraidīti</h5>
         </div>
     </div>
 </section>
-<section id="table">
-    <h4 class="mb-3">Pieteikušies</h4>
-    <table class="table table-striped" id="waiting-table">
-        <thead>
-            <tr>
-                <th>Nr.</th>
-                <th>Lietotājvārds</th>
-                <th>E-pasts</th>
-                <th>Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- Waiting users -->
-        </tbody>
-    </table>
 
-    <h4 class="mb-3 mt-5">Apstiprināti</h4>
-    <table class="table table-striped" id="accepted-table">
-        <thead>
-            <tr>
-                <th>Nr.</th>
-                <th>Lietotājvārds</th>
-                <th>E-pasts</th>
-                <th>Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- Accepted users -->
-        </tbody>
-    </table>
-
-    <h4 class="mb-3 mt-5">Noraidītie</h4>
-    <table class="table table-striped" id="denied-table">
-        <thead>
-            <tr>
-                <th>Nr.</th>
-                <th>Lietotājvārds</th>
-                <th>E-pasts</th>
-                <th>Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- Denied users -->
-        </tbody>
-    </table>
 </section>
 
-<script>
-$(document).ready(function() {
-    const eventId = $('#edit-event-id').val();
+<section id="table">
+  <h4 class="mb-3">Pieteikušies</h4>
+<div class="d-flex mb-2">
+  <select class="form-select me-2 batch-status" data-table="waiting" style="max-width: 200px;">
+    <option disabled selected>Izvēlies statusu</option>
+    <option value="accepted">Apstiprināt</option>
+    <option value="denied">Noraidīt</option>
+  </select>
+  <button class="btn-stat batch-update-btn" data-table="waiting">Mainīt izvēlētajiem</button>
+</div>
 
-    function loadJoinedUsers() {
-        $.ajax({
-            url: '../database/fetch_joined_users.php',
-            method: 'GET',
-            data: { id: eventId },
-            success: function(data) {
-                const users = JSON.parse(data);
+<table class="table table-striped" id="waiting-table">
+  <thead>
+    <tr>
+      <th><input type="checkbox" class="select-all" data-table="waiting"></th>
+      <th>Nr.</th>
+      <th>Lietotājvārds</th>
+      <th>E-pasts</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
 
-                $('#joined-count').text(users.length);
+  </tbody>
+</table>
 
-                let waitingHtml = '';
-                let acceptedHtml = '';
-                let deniedHtml = '';
-
-                users.forEach((user, index) => {
-                    const row = `
-                        <tr>
-                            <td>${index + 1}</td>
-                            <td>${user.username}</td>
-                            <td>${user.email}</td>
-                            <td>
-                                <select class="form-select status-select" data-id="${user.id_volunteer}">
-                                    <option value="waiting" ${user.status === 'waiting' ? 'selected' : ''}>Pieteicies</option>
-                                    <option value="accepted" ${user.status === 'accepted' ? 'selected' : ''}>Apstiprināts</option>
-                                    <option value="denied" ${user.status === 'denied' ? 'selected' : ''}>Noraidīts</option>
-                                </select>
-                            </td>
-                        </tr>
-                    `;
-
-                    if (user.status === 'waiting') {
-                        waitingHtml += row;
-                    } else if (user.status === 'accepted') {
-                        acceptedHtml += row;
-                    } else if (user.status === 'denied') {
-                        deniedHtml += row;
-                    }
-                });
-
-                $('#waiting-table tbody').hide().html(waitingHtml).fadeIn(300);
-                $('#accepted-table tbody').hide().html(acceptedHtml).fadeIn(300);
-                $('#denied-table tbody').hide().html(deniedHtml).fadeIn(300);
-            }
-        });
-    }
-
-   
-    loadJoinedUsers();
-
+<div class="pagination-controls" id="waiting-pagination"></div>
   
-    $(document).on('change', '.status-select', function() {
-        const volunteerId = $(this).data('id');
-        const newStatus = $(this).val();
+  <div class="row mt-5">
+    <div class="col-md-6 mb-4">
+      <h4 class="mb-3">Apstiprināti</h4>
+        <div class="d-flex mb-2">
+            <select class="form-select me-2 batch-status" data-table="accepted" style="max-width: 200px;">
+                <option disabled selected>Izvēlies statusu</option>
+                <option value="waiting">Pieteicies</option>
+                <option value="denied">Noraidīt</option>
+            </select>
+            <button class="btn-stat batch-update-btn" data-table="accepted">Mainīt izvēlētajiem</button>
+        </div>
 
-        $.ajax({
-            url: '../database/update_volunteer_status.php',
-            method: 'POST',
-            data: {
-                volunteer_id: volunteerId,
-                status: newStatus
-            },
-            success: function(response) {
-                if (response.trim() === 'success') {
-                   
-                    loadJoinedUsers();
-                } else {
-                    alert('Kļūda atjauninot statusu: ' + response);
-                }
-            }
-        });
-    });
-});
+      <table class="table table-striped" id="accepted-table">
+        <thead>
+          <tr>
+            <th><input type="checkbox" class="select-all" data-table="accepted"></th>
+            <th>Nr.</th>
+            <th>Lietotājvārds</th>
+            <th>E-pasts</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+      
+        </tbody>
+      </table>
+      <div class="pagination-controls" id="accepted-pagination"></div>
 
-</script>
+    </div>
+
+    <div class="col-md-6 mb-4">
+      <h4 class="mb-3">Noraidītie</h4>
+        <div class="d-flex mb-2">
+            <select class="form-select me-2 batch-status" data-table="denied" style="max-width: 200px;">
+                <option disabled selected>Izvēlies statusu</option>
+                <option value="waiting">Pieteicies</option>
+                <option value="accepted">Apstiprināt</option>
+            </select>
+            <button class="btn-stat batch-update-btn" data-table="denied">Mainīt izvēlētajiem</button>
+        </div>
+
+      <table class="table table-striped" id="denied-table">
+        <thead>
+          <tr>
+            <th><input type="checkbox" class="select-all" data-table="denied"></th>
+            <th>Nr.</th>
+            <th>Lietotājvārds</th>
+            <th>E-pasts</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+    
+        </tbody>
+      </table>
+      <div class="pagination-controls" id="denied-pagination"></div>
+    </div>
+  </div>
+</section>
+
+<?php include '../main/footer.php'; ?>
+
 
 </body>
 </html>

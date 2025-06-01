@@ -4,7 +4,7 @@ if (!isset($_SESSION['ID_user'])) {
     header("Location: ../main/login.php");
     exit();
 }
-include '../main/header.php'; ?>
+include '../css/templates/header.php';  ?>
 
 <!DOCTYPE html>
 <html lang="lv">
@@ -17,7 +17,7 @@ include '../main/header.php'; ?>
     <link rel="stylesheet" href="user.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;600&display=swap">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="../database/script.js"></script>
+    <script src="../functions/script.js"></script>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">

@@ -14,31 +14,90 @@ body {
     display: flex;
     min-height: 100vh;
 }
-
-/* Sidebar */
-aside {
-    width: 15.6rem;        
-    background-color: #ffffff;
-    
-    border-right: 0.1rem solid #ddd; 
-}
-aside h3{
-    padding: 1rem 1rem .5rem;
-}
-aside nav a,
-aside nav button {
-    color: #383838;
-    background: none;
-    transition: 0.3s;
+.admin-sidebar {
+    width: 100%;
+    background-color: #fff;
+    border-right: 1px solid #eee;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
 }
 
-aside nav a:hover,
-aside nav button:hover,
-aside nav a.active,
-aside nav button.active {
-    color: #fff;
-    background: #45a049;
+@media (min-width: 992px) {
+    .admin-sidebar {
+        width: 280px;
+        min-height: calc(100vh - 120px);
+    }
 }
+
+.admin-sidebar-title {
+    padding: 20px;
+    margin: 0;
+    font-weight: 600;
+    color: var(--primary-color);
+    border-bottom: 1px solid #eee;
+}
+
+.admin-nav {
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-nav a,
+.dropdown-toggle-admin {
+    padding: 12px 20px;
+    text-decoration: none;
+    color: var(--dark-gray);
+    background-color: transparent;
+    border: none;
+    text-align: left;
+    width: 100%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+}
+
+.admin-nav a:hover,
+.dropdown-toggle-admin:hover,
+.admin-nav a.active,
+.dropdown-toggle-admin.active {
+    color: var(--primary-color);
+    background-color: var(--light-gray);
+    border-left: 4px solid var(--secondary-color);
+    padding-left: 16px;
+}
+
+.dropdown-admin {
+    display: flex;
+    flex-direction: column;
+}
+
+.dropdown-content-admin {
+    display: none;
+    flex-direction: column;
+    margin-left: 10px;
+    padding-left: 10px;
+    border-left: 2px solid #eee;
+}
+
+.dropdown-admin.open .dropdown-content-admin {
+    display: flex;
+}
+h5{
+    color: #333;
+}
+
+.dropdown-content-admin a {
+    padding: 10px 20px;
+    font-size: 0.95rem;
+    color: var(--dark-gray);
+}
+
+.dropdown-content-admin a.active {
+    color: var(--primary-color);
+    background-color: var(--light-gray);
+    border-left: 4px solid var(--secondary-color);
+    padding-left: 16px;
+}
+
 
 .main-content {
     flex-grow: 1;
@@ -152,4 +211,244 @@ header .btn:hover {
     font-size: 1.2rem;
     font-weight: bold;
     color: #383838;
+}
+
+.table-btn{
+    background: #45a080;
+    color: #fff;
+    border-radius: .5rem;
+    text-align: center;
+    padding: .2rem .5rem;
+    text-decoration: none;
+}
+.table-btn:hover{
+    background: #3e8e41;
+    color: #fff;
+
+}
+
+
+#todays-users-pagination .pagination-btn{
+ border:1px solid #3e8e41;
+}
+#all-users-pagination .pagination-btn{
+ border:1px solid #3e8e41;
+}
+.graph{
+    margin-top: 10rem;
+}
+.card-header{
+    background: #4caf4fad !important;
+    
+}
+card
+.dropdown .dropdown-toggle {
+    color: #fff !important;
+}
+.dropdown li a{
+    color: #333 !important;
+}
+
+/* #newUsersChart{
+      height: 20rem !important;
+    width: 100% !important;
+} */
+
+
+/* event managaer */
+
+
+
+
+.card {
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 0.15rem 0.5rem 0 rgba(58, 59, 69, 0.1);
+    transition: transform 0.3s;
+    margin-bottom: 20px;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+}
+
+.card-header {
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: 600;
+    border-radius: 8px 8px 0 0 !important;
+    padding: 1rem 1.5rem;
+}
+
+.stat-card {
+    transition: all 0.3s;
+    cursor: pointer;
+    height: 100%;
+}
+
+.stat-card:hover {
+    box-shadow: 0 0.5rem 1rem 0 rgba(58, 59, 69, 0.2);
+}
+
+.stat-icon {
+    font-size: 2rem;
+    opacity: 0.7;
+}
+
+.table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.table thead th {
+    background-color: var(--secondary-color);
+    border-top: 1px solid var(--border-color);
+    border-bottom: 2px solid var(--border-color);
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(78, 115, 223, 0.05);
+}
+
+.status-badge {
+    padding: 0.35em 0.65em;
+    font-size: 0.75em;
+    font-weight: 700;
+    border-radius: 0.25rem;
+}
+
+.status-active {
+    background-color: var(--success-color);
+    color: white;
+}
+h6{
+    color: #fff;
+}
+.status-deleted {
+    background-color: var(--danger-color);
+    color: white;
+}
+.btn-darb{
+    color: #fff;
+}
+.btn-darb:hover{
+    color: #333;
+}
+.chart-container {
+    position: relative;
+    height: 300px;
+    margin-bottom: 30px;
+}
+
+.section-title {
+    color: var(--primary-color);
+    font-weight: 600;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+
+/* --- */
+        .admin-layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+.main-content {
+    flex: 1;
+    overflow-x: hidden;
+}
+
+.admin-body {
+    padding: 20px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
+    margin: 20px;
+}
+
+.card {
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 0.15rem 0.5rem 0 rgba(58, 59, 69, 0.1);
+    transition: transform 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+}
+
+.card-header {
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: 600;
+    border-radius: 8px 8px 0 0 !important;
+}
+
+.table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.table thead th {
+    background-color: var(--secondary-color);
+    border-top: 1px solid var(--border-color);
+    border-bottom: 2px solid var(--border-color);
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(78, 115, 223, 0.05);
+}
+
+.table-danger {
+    background-color: rgba(231, 74, 59, 0.1);
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+.chart-column {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0.15rem 0.5rem 0 rgba(58, 59, 69, 0.1);
+}
+
+.stat-card {
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+.stat-card:hover {
+    box-shadow: 0 0.5rem 1rem 0 rgba(58, 59, 69, 0.2);
+}
+
+.section-title {
+    color: var(--primary-color);
+    font-weight: 600;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.filter-control {
+    max-width: 200px;
+}
+
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
 }
