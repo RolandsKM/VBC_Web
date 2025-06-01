@@ -1,3 +1,4 @@
+// User Profile - Own/Joined
 $(document).ready(function () {
     let ownOffset = 0;
     let joinedOffset = 0;
@@ -84,6 +85,7 @@ $(document).ready(function () {
 });
 
 
+// Event Creation and Category Loading
 $(document).ready(function () {
 
     loadCategories(); 
@@ -114,7 +116,7 @@ $(document).ready(function () {
             if (response === "success") {
                
                 alert("Pasākums izveidots veiksmīgi!");
-                window.location.href = "user.php"; 
+                window.location.href = "user/"; 
             } else {
                     alert("Kļūda: " + response); 
                 }
@@ -175,7 +177,7 @@ function loadCategories() {
 });
 
 
-// Editot savu izveidoto sludinājuma informāciju
+// Event Editing
 $(document).ready(function () {
     let originalData = {};
 
@@ -271,8 +273,11 @@ $(document).ready(function () {
     function formatDateTime(inputDate) {
         const date = new Date(inputDate);
         return date.toLocaleString("lv-LV", {
-            year: "numeric", month: "2-digit", day: "2-digit",
-            hour: "2-digit", minute: "2-digit"
+            year: "numeric", 
+            month: "2-digit", 
+            day: "2-digit",
+            hour: "2-digit", 
+            minute: "2-digit"
         });
     }
 
@@ -285,7 +290,7 @@ $(document).ready(function () {
 });
 
 
-// Dzēst ārā sludinājumu (nomainīs 0 uz 1 datbāzē)
+// Event Deletion
 $(document).ready(function () {
     $(document).on("click", ".edit-event-btn.bi-trash", function () {
 
@@ -304,7 +309,7 @@ $(document).ready(function () {
             success: function (response) {
                 if (response.status === "success") {
                     alert("Notikums veiksmīgi dzēsts!");
-                    window.location.href = "user.php"; 
+                    window.location.href = "../user/"; 
                 } else {
                     alert("Kļūda: " + response.message);
                 }
@@ -331,6 +336,11 @@ $(document).ready(function () {
 
    
    function loadJoinedUsers() {
+    if (!eventId) {
+        console.warn('No event ID found');
+        return;
+    }
+
     $.ajax({
         url: '../functions/event_functions.php',
         method: 'GET',
@@ -339,7 +349,21 @@ $(document).ready(function () {
             id: eventId
         },
         success: function (data) {
-            const users = JSON.parse(data);
+            let users;
+            try {
+                users = typeof data === 'string' ? JSON.parse(data) : data;
+                if (!Array.isArray(users)) {
+                    if (typeof users === 'object' && users.users) {
+                        users = users.users; 
+                    } else {
+                        console.error('Expected array of users, got:', typeof users);
+                        return;
+                    }
+                }
+            } catch (e) {
+                console.error('Error parsing users data:', e);
+                return;
+            }
 
             const waitingUsers = [];
             const acceptedUsers = [];
@@ -387,6 +411,11 @@ function paginateData(dataArray, containerId, tableId, rowsPerPage = 10) {
                             <option value="denied" ${user.status === 'denied' ? 'selected' : ''}>Noraidīts</option>
                         </select>
                     </td>
+                    <td>
+                        <button class="btn btn-primary btn-sm view-user" data-id="${user.user_id}">
+                            <i class="bi bi-eye"></i> Apskatīt
+                        </button>
+                    </td>
                 </tr>
             `;
         });
@@ -428,42 +457,79 @@ function paginateData(dataArray, containerId, tableId, rowsPerPage = 10) {
    
     loadJoinedUsers();
 
-$(document).on('change', '.select-all', function () {
-  const table = $(this).data('table');
-  $(`#${table}-table .user-checkbox`).prop('checked', this.checked);
-});
+    // Handle view user button click
+    $(document).on('click', '.view-user', function() {
+        const userId = $(this).data('id');
+        showUserDetails(userId);
+    });
 
-// Batch update
-$(document).on('click', '.batch-update-btn', function () {
-  const table = $(this).data('table');
-  const newStatus = $(`.batch-status[data-table="${table}"]`).val();
-
-  const selectedIds = $(`#${table}-table .user-checkbox:checked`).map(function () {
-    return $(this).data('id');
-  }).get();
-
-  if (selectedIds.length === 0) {
-    alert('Nav izvēlēts neviens lietotājs!');
-    return;
-  }
-
-  $.ajax({
-    url: '../functions/event_functions.php',
-    method: 'POST',
-    data: {
-      action: 'batch_update_status',
-      ids: selectedIds,
-      status: newStatus
-    },
-    success: function (response) {
-      if (response.trim() === 'success') {
-        loadJoinedUsers();
-      } else {
-        alert('Kļūda: ' + response);
-      }
+    function showUserDetails(userId) {
+        $.ajax({
+            url: '../functions/event_functions.php',
+            method: 'GET',
+            data: {
+                action: 'get_user_details',
+                user_id: userId
+            },
+            success: function(response) {
+                const data = JSON.parse(response);
+                
+                // Update modal content
+                $('#userProfilePic').attr('src', data.profile_pic || '../assets/default-profile.png');
+                $('#userName').text(data.name + ' ' + data.surname);
+                $('#userEmail').text(data.email);
+                $('#userLocation').text(data.location || 'Nav norādīts');
+                $('#userCreatedAt').text(new Date(data.created_at).toLocaleDateString('lv-LV'));
+                
+                // Update statistics
+                $('#createdEvents').text(data.created_events);
+                $('#completedEvents').text(data.completed_events);
+                
+                // Show modal
+                new bootstrap.Modal(document.getElementById('userDetailsModal')).show();
+            },
+            error: function() {
+                alert('Kļūda ielādējot lietotāja informāciju');
+            }
+        });
     }
-  });
-});
+
+    $(document).on('change', '.select-all', function () {
+        const table = $(this).data('table');
+        $(`#${table}-table .user-checkbox`).prop('checked', this.checked);
+    });
+
+
+    $(document).on('click', '.batch-update-btn', function () {
+        const table = $(this).data('table');
+        const newStatus = $(`.batch-status[data-table="${table}"]`).val();
+
+        const selectedIds = $(`#${table}-table .user-checkbox:checked`).map(function () {
+            return $(this).data('id');
+        }).get();
+
+        if (selectedIds.length === 0) {
+            alert('Nav izvēlēts neviens lietotājs!');
+            return;
+        }
+
+        $.ajax({
+            url: '../functions/event_functions.php',
+            method: 'POST',
+            data: {
+                action: 'batch_update_status',
+                ids: selectedIds,
+                status: newStatus
+            },
+            success: function (response) {
+                if (response.trim() === 'success') {
+                    loadJoinedUsers();
+                } else {
+                    alert('Kļūda: ' + response);
+                }
+            }
+        });
+    });
 
     $(document).on('change', '.status-select', function () {
         const volunteerId = $(this).data('id');
@@ -490,6 +556,7 @@ $(document).on('click', '.batch-update-btn', function () {
 });
 
 
+//Event Filtering and Search
 // -------------------------
 // HANDLE FILTER
 // -------------------------
@@ -606,10 +673,12 @@ $(document).ready(function () {
 
 
 
+// Event Detail Page - Join/Leave Functionality
 // -------------------------
 // post-event.php join
 // -------------------------
 $(document).ready(function() {
+    const eventId = APP_DATA.eventId; 
     
     function updateButton(status) {
         if (status === 'waiting' || status === 'accepted') {
@@ -619,17 +688,20 @@ $(document).ready(function() {
         }
     }
 
-    
     function checkIfJoined() {
+        if (!eventId) {
+            console.warn('No event ID found');
+            return;
+        }
+
         $.ajax({
-           url: '../functions/event_functions.php',
+            url: '../functions/event_functions.php',
             method: 'POST',
             data: {
                 user_id: userId,
                 event_id: eventId,
                 action: 'check'
-            }
-            ,
+            },
             success: function(response) {
                 if (response === 'waiting' || response === 'accepted') {
                     updateButton('waiting'); 
@@ -640,8 +712,12 @@ $(document).ready(function() {
         });
     }
 
-    
     $('#applyButton').click(function() {
+        if (!eventId) {
+            console.warn('No event ID found');
+            return;
+        }
+
         if (userId === null) {
             alert("Lūdzu, piesakieties, lai pievienotos pasākumam.");
             return;
@@ -650,14 +726,12 @@ $(document).ready(function() {
         const currentText = $(this).text().trim();
         let action = ''; 
 
-        
         if (currentText === 'Pieteikties') {
             action = 'join';
         } else if (currentText === 'Atcelt dalību') {
             action = 'leave';
         }
 
-       
         $.ajax({
             url: '../functions/event_functions.php',
             method: 'POST',
@@ -668,20 +742,17 @@ $(document).ready(function() {
             },
             success: function(response) {
                 if (response === 'joined') {
-                    alert('Jūs esat veiksmīgi pieteicies!');
                     updateButton('waiting');
                 } else if (response === 'left') {
-                    alert('Jūs esat atcēlis dalību.');
                     updateButton('left'); 
                 } else {
-                    alert('Kļūda: ' + response);
+                    alert('Kļūda: Neizdevās pieteikties vai atcelt dalību.');
                 }
             }
         });
     });
 
-    
-    if (userId !== null) {
+    if (userId !== null && eventId) {
         checkIfJoined();
     }
 });
@@ -690,31 +761,94 @@ $(document).ready(function() {
 
 
 $(document).ready(function() {
+    let retryCount = 0;
+    const maxRetries = 3;
+    const retryDelay = 1000; 
+    let lastUpdateTime = 0;
+
+    function loadStats() {
+        
+        $('#post-count').html('<i class="fas fa-spinner fa-spin"></i>');
+        $('#joined-count').html('<i class="fas fa-spinner fa-spin"></i>');
+
     $.ajax({
         url: '../functions/UserController.php',
         method: 'GET',
-        data: { action: 'get_stats' },
-        dataType: 'json'
+            data: { 
+                action: 'get_stats',
+                _: new Date().getTime() 
+            },
+            dataType: 'json',
+            timeout: 5000, 
+            headers: {
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0'
+            }
     })
     .done(function(response) {
         if (response.error) {
             console.error('Error fetching stats:', response.error);
+                retryLoad();
             return;
         }
 
-        // Update new stat elements by ID
-        $('#post-count').text(response.events);
-        $('#joined-count').text(response.volunteers);
+          
+            if (response.timestamp > lastUpdateTime) {
+                lastUpdateTime = response.timestamp;
+                
+              
+                updateStatWithAnimation('#post-count', response.events || '0');
+                updateStatWithAnimation('#joined-count', response.volunteers || '0');
+            }
+          
+            retryCount = 0;
     })
     .fail(function(jqXHR, textStatus, errorThrown) {
         console.error('AJAX error:', textStatus, errorThrown);
+            retryLoad();
+        });
+    }
+
+    function updateStatWithAnimation(elementId, value) {
+        const element = $(elementId);
+        const currentValue = parseInt(element.text()) || 0;
+        const newValue = parseInt(value) || 0;
+        
+        if (currentValue !== newValue) {
+            element.fadeOut(200, function() {
+                element.text(value).fadeIn(200);
+            });
+        }
+    }
+
+    function retryLoad() {
+        if (retryCount < maxRetries) {
+            retryCount++;
+            console.log(`Retrying stats load (attempt ${retryCount}/${maxRetries})...`);
+            setTimeout(loadStats, retryDelay * retryCount);
+        } else {
+            console.error('Failed to load stats after maximum retries');
+            // Show error state instead of 0
+            $('#post-count').html('<i class="fas fa-exclamation-circle" title="Failed to load"></i>');
+            $('#joined-count').html('<i class="fas fa-exclamation-circle" title="Failed to load"></i>');
+        }
+    }
+
+    loadStats();
+
+    
+    setInterval(loadStats, 15000);
+
+    $(window).on('focus', function() {
+        loadStats();
     });
 });
 
 
-// ||||||||||||
+// |||||||||||||
 // ||  CHAT  ||
-// ||||||||||||
+// |||||||||||||
 $(document).ready(function() {
     const chatSidebar = $('#chatSidebar');
     const chatMessages = $('#chatMessages');
@@ -742,7 +876,7 @@ $(document).ready(function() {
     });
 
     chatInput.on('keypress', function(e) {
-        if (e.which === 13 && !e.shiftKey) { // Enter key without Shift sends message
+        if (e.which === 13 && !e.shiftKey) {
             e.preventDefault();
             sendMessage();
         }
@@ -830,54 +964,52 @@ function sendMessage() {
         return $('<div>').text(text).html();
     }
 });
-
-// ----- REPORT- -----
+// ----- REPORT -----
 $(document).ready(function () {
-    
+    // Show modal
     $("#reportBtn").click(function () {
         $("#reportModalOverlay").show();
         $("#reportModal").show();
     });
 
-    $("input[name='reportReason']").change(function() {
-        if ($(this).val() === "Citi") {
+  
+    $("input[name='reportReason'], #reportReason").change(function () {
+        const reason = $(this).val();
+        if (reason === "Citi") {
             $("#reportCustomReason").show();
         } else {
             $("#reportCustomReason").hide();
         }
     });
 
-    $("#cancelReport").click(function() {
+    $("#cancelReport, #reportModalOverlay").click(function () {
         closeReportModal();
     });
 
-    $("#reportModalOverlay").click(function() {
-        closeReportModal();
-    });
-
-    function closeReportModal() {
-        $("#reportModal").hide();
-        $("#reportModalOverlay").hide();
-        $("input[name='reportReason']").prop('checked', false);
-        $("#reportCustomReason").val('').hide();
-    }
-
+   
     $("#submitReport").click(function () {
-        const selectedReason = $("input[name='reportReason']:checked").val();
+        let selectedReason;
+
+    
+        if ($("input[name='reportReason']").length > 0) {
+            selectedReason = $("input[name='reportReason']:checked").val();
+        } else {
+            selectedReason = $("#reportReason").val();
+        }
+
         let customReason = $("#reportCustomReason").val().trim();
-        
+
         if (!selectedReason) {
-            alert("Lūdzu, izvēlieties iemeslu!");
+            showNotification("Lūdzu, izvēlieties iemeslu!", "error");
             return;
         }
-        
+
         let finalReason = selectedReason;
-        if (selectedReason === "Citi" && !customReason) {
-            alert("Lūdzu, aprakstiet iemeslu!");
-            return;
-        }
-        
         if (selectedReason === "Citi") {
+            if (!customReason) {
+                showNotification("Lūdzu, aprakstiet iemeslu!", "error");
+                return;
+            }
             finalReason = "Citi: " + customReason;
         }
 
@@ -892,15 +1024,175 @@ $(document).ready(function () {
             },
             success: function (response) {
                 if (response === "success") {
-                    alert("Paldies! Jūsu ziņojums ir saņemts.");
+                    showNotification("Paldies! Jūsu ziņojums ir saņemts.");
                     closeReportModal();
                 } else {
-                    alert("Kļūda: " + response);
+                    showNotification("Kļūda: " + response, "error");
                 }
             },
             error: function () {
-                alert("Neizdevās iesniegt ziņojumu.");
+                showNotification("Neizdevās iesniegt ziņojumu.", "error");
             }
         });
     });
+
+    function closeReportModal() {
+        $("#reportModal").hide();
+        $("#reportModalOverlay").hide();
+        $("input[name='reportReason']").prop("checked", false);
+        $("#reportReason").val(""); // For select dropdown
+        $("#reportCustomReason").val("").hide();
+    }
+
+
+    function showNotification(message, type = "success") {
+        const notification = $("#notification");
+        const icon = notification.find(".notification-icon");
+        const messageEl = notification.find(".notification-message");
+
+
+        icon
+            .removeClass("fas fa-check fas fa-exclamation-circle")
+            .addClass(type === "success" ? "fas fa-check" : "fas fa-exclamation-circle");
+
+
+        messageEl.text(message);
+
+        notification.removeClass("success error").addClass(type).addClass("show");
+
+        setTimeout(() => {
+            notification.removeClass("show");
+        }, 3000);
+    }
 });
+
+// ||||||||||||||
+// || SETTINGS ||
+// ||||||||||||||
+
+$(document).ready(function() {
+   $('#profileForm').on('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    $.ajax({
+        url: '../functions/upload_profile_pic.php',
+        type: 'POST',
+        data: formData,
+        contentType: false,
+        processData: false,
+        success: function(response) {
+            if (response.success) {
+                alert("Veiksmīgi Augšupielādēji!");
+                location.reload();
+            } else {
+                alert('Kļūda: ' + response.message);
+            }
+        },
+        error: function(xhr) {
+            alert('Kļūda: ' + xhr.responseText);
+        }
+    });
+});
+
+    $('#toggleEmailPassword').click(function() {
+        const input = $('#emailPassword');
+        const icon = $(this).find('i');
+        if (input.attr('type') === 'password') {
+            input.attr('type', 'text');
+            icon.removeClass('bi-eye').addClass('bi-eye-slash');
+        } else {
+            input.attr('type', 'password');
+            icon.removeClass('bi-eye-slash').addClass('bi-eye');
+        }
+    });
+
+
+    $('#editMainButton').click(function() {
+        $('#username, #name, #surname').prop('readonly', false).addClass('bg-light');
+        $('#editMainButton').hide();
+        $('#saveMainButton').show();
+    });
+
+    $('#saveMainButton').click(function() {
+        $.post('../functions/UserController.php', {
+            action: 'update_main',
+            username: $('#username').val(),
+            name: $('#name').val(),
+            surname: $('#surname').val()
+        }, function(response) {
+            if (response.success) {
+                alert('Informācija saglabāta!');
+                $('#username, #name, #surname').prop('readonly', true).removeClass('bg-light');
+                $('#saveMainButton').hide();
+                $('#editMainButton').show();
+            } else {
+                alert('Kļūda: ' + response.error);
+            }
+        }, 'json').fail(function(xhr) {
+            alert('Kļūda: ' + (xhr.responseJSON?.error || xhr.responseText));
+        });
+    });
+
+    
+    $('#editEmailButton').click(function() {
+        $('#email').prop('readonly', false).addClass('bg-light');
+        $('#emailPasswordGroup').show();
+        $('#editEmailButton').hide();
+        $('#saveEmailButton').show();
+    });
+
+    $('#saveEmailButton').click(function() {
+        const password = $('#emailPassword').val();
+        if (!password) {
+            alert("Lūdzu ievadiet paroli!");
+            return;
+        }
+
+        $.post('../functions/UserController.php', {
+            action: 'update_email',
+            email: $('#email').val(),
+            password: password
+        }, function(response) {
+            if (response.success) {
+                alert(response.message);
+                $('#email').prop('readonly', true).removeClass('bg-light');
+                $('#emailPasswordGroup').hide();
+                $('#emailPassword').val('');
+                $('#saveEmailButton').hide();
+                $('#editEmailButton').show();
+            } else {
+                alert('Kļūda: ' + response.error);
+            }
+        }, 'json').fail(function(xhr) {
+            alert('Kļūda: ' + (xhr.responseJSON?.error || xhr.responseText));
+        });
+    });
+
+
+    $('#editLocationButton').click(function() {
+        $('#location').prop('readonly', false).addClass('bg-light');
+        $('#editLocationButton').hide();
+        $('#saveLocationButton').show();
+    });
+
+    $('#saveLocationButton').click(function() {
+        $.post('../functions/UserController.php', {
+            action: 'update_location',
+            location: $('#location').val()
+        }, function(response) {
+            if (response.success) {
+                alert('Atrašanās vieta atjaunināta!');
+                $('#location').prop('readonly', true).removeClass('bg-light');
+                $('#saveLocationButton').hide();
+                $('#editLocationButton').show();
+            } else {
+                alert('Kļūda: ' + response.error);
+            }
+        }, 'json').fail(function(xhr) {
+            alert('Kļūda: ' + (xhr.responseJSON?.error || xhr.responseText));
+        });
+    });
+});
+

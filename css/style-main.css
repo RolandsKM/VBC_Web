@@ -1,3 +1,26 @@
+/* Root Variables */
+:root {
+    --primary-color: #2E7D32;
+    --primary-light: #81C784;
+    --primary-dark: #1B5E20;
+    --secondary-color: #0288D1;
+    --secondary-light: #B3E5FC;
+    --secondary-dark: #01579B;
+    --accent-color: #FFA000;
+    --accent-light: #FFD54F;
+    --dark-color: #263238;
+    --light-color: #ECEFF1;
+    --gray-color: #607D8B;
+    --light-gray: #CFD8DC;
+    --dark-blue: #2c3e50;
+    --red-dark: #bb3f3f;
+    --red: #ce4444;
+    --white: #FFFFFF;
+    --black: #212121;
+    --box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    --transition: all 0.3s ease;
+}
+
 /* General Styles */
 * {
     font-family: "Quicksand", sans-serif;
@@ -12,6 +35,7 @@ body {
     background-color: #f4f4f4;
     color: #383838;
     line-height: 1.6;
+    padding-top: 80px;
 }
 
 .hidden {
@@ -21,18 +45,19 @@ body {
 }
 .create-btn .btn{
  
-    border: solid .1rem #45a049;
-    background: #fff;
-    padding: .2rem .5rem;
-    color: #45a049;
+    
+    background: var(--dark-blue);
+    padding: .2rem 1em;
+    color: #fff;
     font-weight: bold;
-    padding-right: 12% ;
+    
+    border-radius: 1.5rem;
 
 }
-.create-btn .btn:hover{
-border: solid .1rem #333;
-color: #333;
-}
+    .create-btn .btn:hover{
+    background: var(--primary-color);
+    color: #fff;
+    }
 .show {
     opacity: 1;
     transform: translateY(0);
@@ -55,10 +80,6 @@ header {
     box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-
-body {
-    padding-top: 80px;
-}
 /* #events */
 header {
     padding: 2rem 12%;
@@ -948,95 +969,109 @@ main .form:focus {
   text-align: left;
   padding: 1rem;
 }
-.event-user-info {
-  position: absolute;
-  top: -30px;
-  left: 1rem;
-  display: flex;
-  align-items: center;
-  background: white;
-  padding: 4px 10px;
-  border-radius: 999px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  z-index: 2;
+       #events {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .event-container,
+        .joined-container {
+            display: none;
+        }
+
+        .event-container.active,
+        .joined-container.active {
+            display: block;
+        }
+
+        .events-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 30px 15px;
+        }
+
+        .empty-state i {
+            font-size: 40px;
+            color: #bdc3c7;
+            margin-bottom: 10px;
+        }
+
+        .empty-state p {
+            font-size: 16px;
+            color: #7f8c8d;
+        }
+
+        .event {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid #eee;
+            
+        }
+
+        .event:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .event h2 {
+            font-size: 18px;
+            padding: 15px;
+            margin: 0;
+            color: #2c3e50;
+            border-bottom: 1px solid #eee;
+        }
+
+        .event h2 {
+    font-size: 1.6rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+   
+}
+        /* #event {
+        font-family: 'Quicksand', sans-serif;
+    } */
+
+        .event .description {
+            padding: 0 15px 15px;
+            color: #7f8c8d;
+            font-size: 14px;
+            line-height: 1.5;
+
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+
+            max-height: calc(1.5em * 3);  /* limit height to 3 lines */
+        }
+        .event .discription {
+    font-size: 1rem;
+    color: #555;
+    margin-bottom: 1.2rem;
+    
 }
 
-.event-user-pic {
-  width: 32px;
-  height: 32px;
-  object-fit: cover;
-  border-radius: 50%;
-  margin-right: 0.5rem;
-  border: 2px solid #45a049;
+.event .dates {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 15px;
+    background: #f8f9fa;
+    font-size: 13px;
+    color: #6c757d;
 }
-#events .event {
-  padding-top: 2.5rem; /* more space at top */
-  
-}
-
-.event-username {
-  font-weight: 600;
-  color: #333;
-  font-size: 0.9rem;
-}
-
-#events .event {
-  width: 100%;
-  max-width: 100%;
-  background: #fff;
-  transition: transform 0.2s ease, background 0.2s ease;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  margin-bottom: 1rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-#events .event:hover {
-  background: #f9f9f9;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
-
-#events .event-header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-#events .event-header h2 {
-  font-size: 1.5rem;
-  color: #45a049;
-  margin: 0;
-}
-
-#events .event-header .event-date {
-  font-size: 1rem;
-  color: #555;
-}
-
-#events .event .description {
-  text-align: left;
-  color: #333;
-  padding-top: 1rem;
-}
-
-#events .event .dates {
-  margin-top: 15px;
-  display: flex;
-  justify-content: flex-end;
-}
-
-#events .event .created-date {
-  font-size: 0.875rem;
-  color: #777;
-}
-
-#events .event-link {
-  text-decoration: none;
-}
-
 
 @media (max-width: 992px) {
   .content-wrapper {
@@ -1184,5 +1219,25 @@ main .form:focus {
     top: 0.7rem;
     right: 0.7rem;
   }
+}
+.create-btn .btn{
+border: none;
+}
+.create-btn .btn:hover{
+    border: none;
+    }
+#load_more {
+    background-color:var(--dark-blue);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 1.5rem;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#load_more:hover {
+    background-color: #45a049;
 }
 

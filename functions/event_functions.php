@@ -102,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $stmt = $pdo->prepare("SELECT status FROM Volunteers WHERE user_id = ? AND event_id = ?");
             $stmt->execute([$userId, $eventId]);
             $row = $stmt->fetch();
-            echo $row ? $row['status'] : 'left';
+            echo $row ? htmlspecialchars($row['status']) : 'left';
             exit();
         }
     }
@@ -489,8 +489,63 @@ if ($action === 'fetch_event_details') {
     exit();
 }
 
+if ($action === 'get_user_details') {
+    $user_id = $_GET['user_id'] ?? null;
 
-//  <p class='category'><strong>🏷️ Kategorija:</strong> $category</p>
+    if (!$user_id) {
+        echo json_encode(['error' => 'Nav norādīts lietotāja ID']);
+        exit();
+    }
+
+    try {
+        // Get user details
+        $userQuery = "SELECT * FROM users WHERE ID_user = ?";
+        $userStmt = $pdo->prepare($userQuery);
+        $userStmt->execute([$user_id]);
+        $user = $userStmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$user) {
+            echo json_encode(['error' => 'Lietotājs nav atrasts']);
+            exit();
+        }
+
+        // Count created events
+        $createdEventsQuery = "SELECT COUNT(*) FROM Events WHERE user_id = ? AND deleted = 0";
+        $createdEventsStmt = $pdo->prepare($createdEventsQuery);
+        $createdEventsStmt->execute([$user_id]);
+        $createdEvents = $createdEventsStmt->fetchColumn();
+
+        // Count completed events (accepted and past events)
+        $completedEventsQuery = "
+            SELECT COUNT(DISTINCT v.event_id) 
+            FROM Volunteers v 
+            JOIN Events e ON v.event_id = e.ID_Event 
+            WHERE v.user_id = ? 
+            AND v.status = 'accepted' 
+            AND e.date < NOW()
+        ";
+        $completedEventsStmt = $pdo->prepare($completedEventsQuery);
+        $completedEventsStmt->execute([$user_id]);
+        $completedEvents = $completedEventsStmt->fetchColumn();
+
+        $response = [
+            'name' => $user['name'],
+            'surname' => $user['surname'],
+            'email' => $user['email'],
+            'location' => $user['location'],
+            'profile_pic' => $user['profile_pic'],
+            'created_at' => $user['created_at'],
+            'created_events' => $createdEvents,
+            'completed_events' => $completedEvents
+        ];
+
+        echo json_encode($response);
+    } catch (PDOException $e) {
+        echo json_encode(['error' => 'Kļūda: ' . $e->getMessage()]);
+    }
+    exit();
+}
+
     echo "<p>Nederīgs pieprasījums.</p>";
     exit();
 }

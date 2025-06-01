@@ -6,6 +6,8 @@ $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 $city = isset($_GET['city']) ? trim($_GET['city']) : '';
 $date_from = isset($_GET['date_from']) ? $_GET['date_from'] : '';
 $date_to = isset($_GET['date_to']) ? $_GET['date_to'] : '';
+$limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 12;
+$offset = isset($_GET['offset']) ? (int)$_GET['offset'] : 0;
 
 try {
     $query = "
@@ -45,10 +47,20 @@ if ($search !== '') {
 }
 
 
-    $query .= " ORDER BY e.date ASC";
+    $query .= " ORDER BY e.date ASC LIMIT :limit OFFSET :offset";
 
     $stmt = $pdo->prepare($query);
-    $stmt->execute($params);
+    
+    // Bind all parameters
+    foreach ($params as $key => $value) {
+        $stmt->bindValue($key, $value);
+    }
+    
+    // Bind pagination parameters
+    $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+    
+    $stmt->execute();
 
     $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -66,27 +78,24 @@ if ($search !== '') {
         $username = htmlspecialchars($row['username'], ENT_QUOTES, 'UTF-8');
         $profilePic = !empty($row['profile_pic']) ? htmlspecialchars($row['profile_pic'], ENT_QUOTES, 'UTF-8') : 'default.jpg'; // fallback image
 
-        $output .= "
-        <a href='post-event.php?id=$event_id' class='event-link text-decoration-none text-dark'>
-            <div class='event border p-3 mb-3 shadow-sm position-relative'>
+ $output .= "
+    <a href='post-event.php?id=$event_id' class='event-link text-decoration-none text-dark'>
+        <div class='event border p-3 mb-3 shadow-sm'>
 
-                <div class='event-user-info'>
-                    <img src='../functions/assets//$profilePic' alt='Profile picture' class='event-user-pic'>
-                    <span class='event-username'>$username</span>
-                </div>
+            <h2 class='h5'>$title</h2>
 
-                <div class='event-header'>
-                    <h2>$title</h2>
-                    <p class='event-date'>🗓 $event_date</p>
-                </div>
-                <p><strong>📍 Pilsēta:</strong> $city</p>
-                <hr>
-                <div class='description'>$short_description</div>
-                <div class='dates mt-2'>
-                    <p class='created-date text-muted'>Izveidots: $created_date</p>
-                </div>
+            <div class='description mb-2'>$short_description</div>
+
+            <hr>
+
+            <div class='dates'>
+                <p class='event-date'>🗓 $event_date</p>
+                <p class='created-date'>Izveidots: $created_date</p>
             </div>
-        </a>";
+
+        </div>
+    </a>";
+
 
     }
 

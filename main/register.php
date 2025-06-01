@@ -18,7 +18,7 @@ include '../css/templates/header.php';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vietējais Brīvprātīgais Centrs</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../css/style-main.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;600&display=swap">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="script.js" defer></script> 

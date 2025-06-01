@@ -44,11 +44,11 @@ $user_role = isset($_SESSION['role']) ? $_SESSION['role'] : '';
                     <li class="dropdown">
                         <a href="#" class="dropbtn"><?= htmlspecialchars($_SESSION['username']) ?> <i class="fa-solid fa-angle-down"></i></a>
                         <div class="dropdown-content">
-                            <a href="../user/user.php">Profils</a>
+                            <a href="../user/">Profils</a>
                             <?php if ($user_role === 'admin'): ?>
                                 <a href="../admin/index.php">Admin</a> <!-- Admin option for admins -->
                             <?php endif; ?>
-                            <a href="../database/auth_functions.php?logout=1" class="text-danger">Izlogoties</a>
+                            <a href="../functions/auth_functions.php?logout=1" class="text-danger">Izlogoties</a>
                         </div>
                     </li>
                 <?php else: ?>
@@ -208,5 +208,40 @@ nav ul li a.active {
     border: none;
     cursor: pointer;
 }
+@media (max-width: 768px) {
+    .hamburger {
+        display: block;
+        color: #333;
+        margin-left: auto;
+        z-index: 1001;
+    }
 
+    .nav-links {
+        display: none;
+        position: absolute;
+        flex-direction: column;
+        background-color: #f8f9fa;
+        top: 70px;
+        left: 0;
+        width: 100%;
+        padding: 1rem;
+        box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.1);
+    }
+
+    .nav-links.show {
+        display: flex;
+    }
+
+    .nav-left,
+    .nav-right {
+        flex-direction: column;
+        align-items: flex-start;
+        width: 100%;
+    }
+
+    .nav-right {
+        align-items: flex-end;
+        margin-top: 1rem;
+    }
+}
 </style>

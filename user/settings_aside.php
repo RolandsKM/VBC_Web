@@ -11,9 +11,9 @@ $current_page = basename($_SERVER['PHP_SELF']);
         <a href="change_password.php" class="<?= $current_page === 'change_password.php' ? 'active' : '' ?>">
             <i class="bi bi-lock me-2"></i>Parole
         </a>
-        <a href="#" class="<?= $current_page === 'history.php' ? 'active' : '' ?>">
+        <!-- <a href="#" class="<?= $current_page === 'history.php' ? 'active' : '' ?>">
             <i class="bi bi-clock-history me-2"></i>Vēsture
-        </a>
+        </a> -->
         <a href="../database/auth_functions.php?logout=1">
             <i class="bi bi-box-arrow-right me-2"></i>Iziet
         </a>

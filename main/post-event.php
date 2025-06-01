@@ -19,7 +19,7 @@ if (!$event) {
     exit;
 }
 
-$eventDate = date("d.m.Y H:i", strtotime($event['date']));
+$eventDate = htmlspecialchars(date("d.m.Y H:i", strtotime($event['date'])));
 
 $isLoggedIn = isset($_SESSION['ID_user']);
 
@@ -32,17 +32,13 @@ $isLoggedIn = isset($_SESSION['ID_user']);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($event['title']) ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style-post.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script>
         var userId = <?= $isLoggedIn ? $_SESSION['ID_user'] : 'null' ?>;
         var eventId = <?= $eventId ?>;
     </script>
-    <style>
-
-
-    </style>
     <script src="../functions/script.js" defer></script> 
 </head>
 <body>
@@ -52,8 +48,12 @@ $isLoggedIn = isset($_SESSION['ID_user']);
             <button id="closeChatBtn" class="btn btn-sm btn-outline-danger">X</button>
         </div>
         <div id="chatMessages" class="chat-messages"></div>
-        <textarea id="chatInput" placeholder="Rakstiet ziņu..." rows="3"></textarea>
-        <button id="sendChatBtn" class="btn btn-primary">Sūtīt</button>
+        <div class="chat-input-container">
+            <textarea id="chatInput" placeholder="Rakstiet ziņu..." rows="1"></textarea>
+            <button id="sendChatBtn">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
     </div>
 
 
@@ -131,29 +131,15 @@ $isLoggedIn = isset($_SESSION['ID_user']);
     <h3>Ziņot par pasākumu</h3>
     <p>Lūdzu, izvēlieties iemeslu:</p>
     
-    <div class="report-option">
-        <input type="radio" id="reason1" name="reportReason" value="Nepareiza atrašanās vieta">
-        <label for="reason1">Nepareiza atrašanās vieta</label>
-    </div>
-    
-    <div class="report-option">
-        <input type="radio" id="reason2" name="reportReason" value="Nepareizs datums/laiks">
-        <label for="reason2">Nepareizs datums/laiks</label>
-    </div>
-    
-    <div class="report-option">
-        <input type="radio" id="reason3" name="reportReason" value="Aizvainojošs saturs">
-        <label for="reason3">Aizvainojošs saturs</label>
-    </div>
-    
-    <div class="report-option">
-        <input type="radio" id="reason4" name="reportReason" value="Mākslīgais pasākums">
-        <label for="reason4">Mākslīgais pasākums</label>
-    </div>
-    
-    <div class="report-option">
-        <input type="radio" id="reason5" name="reportReason" value="Citi">
-        <label for="reason5">Citi</label>
+    <div class="report-select-wrapper">
+        <select id="reportReason" class="report-select">
+            <option value="" disabled selected>Izvēlieties iemeslu</option>
+            <option value="Nepareiza atrašanās vieta">Nepareiza atrašanās vieta</option>
+            <option value="Nepareizs datums/laiks">Nepareizs datums/laiks</option>
+            <option value="Aizvainojošs saturs">Aizvainojošs saturs</option>
+            <option value="Mākslīgais pasākums">Mākslīgais pasākums</option>
+            <option value="Citi">Citi</option>
+        </select>
     </div>
     
     <textarea id="reportCustomReason" placeholder="Lūdzu, aprakstiet problēmu..." class="form-control"></textarea>
@@ -164,12 +150,19 @@ $isLoggedIn = isset($_SESSION['ID_user']);
     </div>
 </div>
 
+<div id="notification" class="notification">
+    <i class="notification-icon"></i>
+    <span class="notification-message"></span>
+</div>
+
     <script>
         const APP_DATA = {
             userId: <?= $isLoggedIn ? $_SESSION['ID_user'] : 'null' ?>,
             eventUserId: <?= json_encode($event['user_id']) ?>,
             eventId: <?= $eventId ?>
         };
+
+       
     </script>
 <?php include '../css/templates/footer.php'; ?>
 

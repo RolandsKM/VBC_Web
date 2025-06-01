@@ -1,7 +1,10 @@
 <?php
 require_once '../config/con_db.php';
 session_start();
+date_default_timezone_set('Europe/Riga');
 
+
+$pdo->exec("SET time_zone = '+03:00'");
 
 function fetchMessages($user1, $user2, $event_id) {
     global $pdo;
@@ -11,7 +14,7 @@ function fetchMessages($user1, $user2, $event_id) {
             m.from_user_id, 
             m.to_user_id, 
             m.message, 
-            m.sent_at,
+            DATE_FORMAT(m.sent_at, '%Y-%m-%d %H:%i:%s') as sent_at,
             m.event_id,
             u.username,
             u.profile_pic

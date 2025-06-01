@@ -1,0 +1,7 @@
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Configuration files with sensitive data
+config/email_config.php 

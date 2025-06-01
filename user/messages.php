@@ -47,6 +47,336 @@ $contacts = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <link rel="stylesheet" href="user.css" />
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2E7D32;
+            --primary-light: #81C784;
+            --primary-dark: #1B5E20;
+            --secondary-color: #0288D1;
+            --secondary-light: #B3E5FC;
+            --secondary-dark: #01579B;
+            --accent-color: #FFA000;
+            --accent-light: #FFD54F;
+            --dark-color: #263238;
+            --light-color: #ECEFF1;
+            --gray-color: #607D8B;
+            --light-gray: #CFD8DC;
+            --dark-blue:#2c3e50;
+            --white: #FFFFFF;
+            --black: #212121;
+            --box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            --transition: all 0.3s ease;
+            --message-sent: var(--primary-light);
+            --message-received: var(--white);
+            --message-time: var(--gray-color);
+        }
+
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+        }
+
+        .contacts {
+            width: 320px;
+            background: white;
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .contact-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            background: white;
+        }
+
+        .contact-header h2 {
+            font-size: 1.25rem;
+            color: var(--text-color);
+            margin: 0;
+        }
+
+        .btn-back {
+            color: var(--light-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .btn-back:hover {
+            color: var(--primary-color);
+        }
+
+        #contactSearch {
+            border: 1px solid var(--gray-color);
+            border-radius: 1.5rem;
+            padding: 0.75rem 1rem;
+            margin: .5rem;
+            width: calc(100% - 2rem);
+            transition: all 0.2s;
+        }
+
+        #contactSearch:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+            outline: none;
+        }
+
+        #contactList {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0;
+            margin: 0;
+        }
+
+        .contact {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .contact:hover {
+            background-color: var(--hover-color);
+        }
+
+        .contact.active {
+            background-color: var(--hover-color);
+        }
+
+        .contact img {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .contact-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .contact-info .fw-semibold {
+            color: var(--text-color);
+            margin-bottom: 0.25rem;
+            font-size: 0.95rem;
+        }
+
+        .contact-info .text-muted {
+            font-size: 0.85rem;
+            color: var(--message-time);
+        }
+
+        .text-ellipsis {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 150px;
+            display: inline-block;
+        }
+
+        .last-msg-time {
+            font-size: 0.8rem;
+            color: var(--message-time);
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+        }
+
+        .chat-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .chat-header img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .chat-header .fw-semibold {
+            color: var(--text-color);
+            margin: 0;
+            font-size: 1rem;
+        }
+
+        .chat-header .text-muted {
+            font-size: 0.85rem;
+            color: var(--message-time);
+        }
+
+        .chat {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #f8f9fc;
+            position: relative;
+            height: calc(100vh - 60px); /* Adjust based on header height */
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 80px; /* Add space for input area */
+            height: calc(100% - 80px); /* Subtract input area height */
+        }
+
+        .message-container {
+            display: flex;
+            margin-bottom: 0.5rem;
+        }
+
+        .message-container.sent {
+            justify-content: flex-end;
+        }
+
+        .message-container.received {
+            justify-content: flex-start;
+        }
+
+        .msg-bubble {
+            max-width: 70%;
+            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            position: relative;
+        }
+
+        .msg-sent {
+            background-color: var(--message-sent);
+            color: var(--dark-color);
+            border-bottom-right-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .msg-received {
+            background-color: var(--message-received);
+            color: var(--dark-color);
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .message-text {
+            font-size: 0.95rem;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            color: var(--message-time);
+            margin-top: 0.25rem;
+            text-align: right;
+        }
+
+        #chatInputWrapper {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 1rem;
+            background: white;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 0.5rem;
+            align-items: flex-end;
+            z-index: 10;
+        }
+
+        #chatInput {
+            flex: 1;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            resize: none;
+            max-height: 120px;
+            min-height: 40px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            overflow-y: hidden; /* Hide scrollbar */
+            line-height: 1.4;
+        }
+
+        #chatInput::-webkit-scrollbar {
+            display: none; /* Hide scrollbar for Chrome, Safari and Opera */
+        }
+
+        #chatInput {
+            -ms-overflow-style: none;  /* Hide scrollbar for IE and Edge */
+            scrollbar-width: none;  /* Hide scrollbar for Firefox */
+        }
+
+        #sendChatBtn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        #sendChatBtn:hover {
+            background: var(--accent-color);
+        }
+
+        .no-chat-selected {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--message-time);
+        }
+
+        .no-chat-selected i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .contacts {
+                position: fixed;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                z-index: 1000;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .contacts.show {
+                transform: translateX(0);
+            }
+
+            .chat-container {
+                width: 100%;
+            }
+        }
+    </style>
 </head>
 <body id="msg">
 
@@ -71,7 +401,7 @@ $contacts = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         </div>
                     </div>
                     <div class="last-msg-time small text-muted text-nowrap">
-                        <?= date('H:i', strtotime($contact['last_msg'])) ?>
+                        <?= htmlspecialchars(date('H:i', strtotime($contact['last_msg']))) ?>
                     </div>
                 </li>
             <?php endforeach; ?>
@@ -158,19 +488,40 @@ function loadMessages(withUserId, eventId) {
     });
 }
 
-
 function formatMessageTime(timestamp) {
-    const rigaTime = new Date(timestamp);
-
-    const formatter = new Intl.DateTimeFormat('lv-LV', {
-        timeZone: 'Europe/Riga',
+    const date = new Date(timestamp);
+  
+    const timeOptions = {
         hour: '2-digit',
-        minute: '2-digit'
-    });
+        minute: '2-digit',
+        hour12: false
+    };
+    
+    const dateOptions = {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+    };
 
-    return formatter.format(rigaTime);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const messageDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const yesterdayDate = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
+
+    if (messageDate.getTime() === todayDate.getTime()) {
+        return new Intl.DateTimeFormat('lv-LV', timeOptions).format(date);
+    } else if (messageDate.getTime() === yesterdayDate.getTime()) {
+        return 'Vakar ' + new Intl.DateTimeFormat('lv-LV', timeOptions).format(date);
+    } else {
+        return new Intl.DateTimeFormat('lv-LV', dateOptions).format(date);
+    }
 }
-
 
 function startPolling() {
     if (pollingInterval) clearInterval(pollingInterval);

@@ -25,6 +25,11 @@ if (isset($_GET['logout'])) {
 function handleLogin() {
     global $pdo;
 
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        setLoginError("Nederīgs CSRF tokens!");
+        return;
+    }
+
     $_SESSION['login_error'] = null;
     $_SESSION['login_email'] = $_POST['epasts'] ?? '';
 
@@ -53,9 +58,13 @@ function handleLogin() {
         $_SESSION['surname'] = $user['surname'];
         $_SESSION['email'] = $user['email'];
         $_SESSION['role'] = $user['role'];
-        $_SESSION['profile_pic'] = $user['profile_pic']; // $user = fetched DB row with user info
-
         $_SESSION['ID_user'] = $user['ID_user'];
+        
+        if (!empty($user['profile_pic'])) {
+            $_SESSION['profile_pic'] = $user['profile_pic'];
+        } else {
+            $_SESSION['profile_pic'] = null;
+        }
 
         unset($_SESSION['login_error'], $_SESSION['login_email']);
         header("Location: ../main/index.php");

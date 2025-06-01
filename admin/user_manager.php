@@ -1,8 +1,9 @@
 <?php
 require_once '../functions/AdminController.php';
+checkAdminAccess();
 
 if (isset($_GET['chart']) && $_GET['chart'] === 'bannedActive' && isset($_GET['period'])) {
-    $period = $_GET['period'];
+    $period = htmlspecialchars($_GET['period']);
     try {
         $bannedCount = getBannedUsersCountByPeriod($period);
         $activeCount = getUsersCountByPeriod($period); 
@@ -14,7 +15,7 @@ if (isset($_GET['chart']) && $_GET['chart'] === 'bannedActive' && isset($_GET['p
 }
 
 if (isset($_GET['chart']) && $_GET['chart'] === 'newUsers' && isset($_GET['period'])) {
-    $period = $_GET['period'];
+    $period = htmlspecialchars($_GET['period']);
     try {
         $newUsersData = getNewUsersCountByPeriod($period);
         echo json_encode(['success' => true, 'data' => $newUsersData]);
@@ -27,8 +28,8 @@ if (isset($_GET['chart']) && $_GET['chart'] === 'newUsers' && isset($_GET['perio
 if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
     header('Content-Type: application/json');
     if (isset($_GET['count']) && $_GET['count'] === 'banned' && ($_GET['table'] ?? '') === 'all') {
-        $period = $_GET['period'] ?? 'all';
-        $statusFilter = $_GET['status'] ?? 'all'; 
+        $period = htmlspecialchars($_GET['period'] ?? 'all');
+        $statusFilter = htmlspecialchars($_GET['status'] ?? 'all'); 
         try {
             $bannedCount = getBannedUsersCountByPeriod($period, $statusFilter);
             echo json_encode(['success' => true, 'bannedCount' => $bannedCount]);
@@ -42,18 +43,16 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
     $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
     $perPage = 5;
     $offset = ($page - 1) * $perPage;
-    $statusFilter = $_GET['status'] ?? 'all'; 
     $sortField = $_GET['sort'] ?? 'created_at'; 
     $sortOrder = $_GET['order'] ?? 'DESC'; 
 
     try {
         if ($table === 'todays') {
-            $total = getTodaysUsersCount($statusFilter);
-            $users = getPaginatedTodaysUsers($perPage, $offset, $statusFilter, $sortField, $sortOrder);
+            $users = getTodaysUsers($perPage, $offset, $sortField, $sortOrder);
+            $total = getTodaysUsersCount();
         } elseif ($table === 'all') {
-            $period = $_GET['period'] ?? 'all';
-            $total = getUsersCountByPeriodTotal($period, $statusFilter);
-            $users = getPaginatedUsersByPeriod($perPage, $offset, $period, $statusFilter, $sortField, $sortOrder);
+            $users = getAllUsers($perPage, $offset, $sortField, $sortOrder);
+            $total = getAllUsersCount();
         } else {
             echo json_encode(['success' => false, 'message' => 'Invalid table']);
             exit;
@@ -67,23 +66,20 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
             'perPage' => $perPage
         ]);
     } catch (PDOException $e) {
-     
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
     }
     exit;
 }
 
 try {
-
-    $todaysUsers = getPaginatedTodaysUsers(5, 0);
-    $todaysUsersCount = getTodaysUsersCount();
+    $todaysUsers = getTodaysUsers();
+    $todaysUsersCount = count($todaysUsers);
     $todaysBannedCount = getTodaysBannedUsersCount();
     $filterPeriod = $_GET['filter'] ?? 'all';
-    $allUsers = getPaginatedUsersByPeriod(5, 0, $filterPeriod);
-    $allUsersCount = getUsersCountByPeriodTotal($filterPeriod);
+    $allUsers = getAllUsers();
+    $allUsersCount = count($allUsers);
     $allBannedCount = getBannedUsersCountByPeriod($filterPeriod);
-
 } catch (PDOException $e) {
-  
     $todaysUsers = [];
     $todaysUsersCount = 0;
     $todaysBannedCount = 0;
@@ -108,23 +104,7 @@ try {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
-    <style>
-        :root {
-            --primary-color: #4e73df;
-            --secondary-color: #f8f9fc;
-            --accent-color: #2e59d9;
-            --danger-color: #e74a3b;
-            --success-color: #1cc88a;
-            --text-color: #5a5c69;
-            --border-color: #e3e6f0;
-        }
-        
-
-.drop-table a{
-   color:#fff;
-}
-
-    </style>
+    
 </head>
 <body>
 <div class="admin-layout">
@@ -226,7 +206,7 @@ try {
                             <h6 class="m-0 fw-semibold text-muted">Lietotāju Statuss & Jauno Lietotāju Dinamika</h6>
                         </div>
                         <div class="card-body p-3">
-                            <div class="row g-3">
+                            <div class="row">
                                 <div class="col-md-6">
                                     <div class="chart-container">
                                         <canvas id="bannedActiveChart"></canvas>
@@ -261,46 +241,21 @@ try {
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-bordered table-hover" width="100%" cellspacing="0">
-                            <thead class="thead-light">
-                                <tr>
+                            <thead class="thead-light ">
+                                <tr class="table-header-style">
                                     <th>Lietotājvārds</th>
                                     <th>E-pasts</th>
                                     <th>Reģistrācijas Laiks</th>
-                                    <th>Statuss</th> <!-- Added status column -->
+                                    <th>Statuss</th>
                                     <th class="text-center">Darbības</th>
                                 </tr>
                             </thead>
                             <tbody id="todays-users-body">
-                                <?php if (count($todaysUsers) === 0): ?>
-                                <tr>
-                                    <td colspan="4" class="text-center">Nav šodien reģistrētu lietotāju.</td>
-                                </tr>
-                                <?php else: ?>
-                                    <?php foreach ($todaysUsers as $user): ?>
-                                        <tr class="<?= $user['banned'] ? 'table-danger' : '' ?>">
-                                            <td><?= htmlspecialchars($user['username']) ?></td>
-                                            <td><?= htmlspecialchars($user['email']) ?></td>
-                                            <td><?= date('H:i', strtotime($user['registration_date'])) ?></td>
-                                            <td>
-                                                <?php if ($user['banned']): ?>
-                                                    <span class="badge bg-danger">Bloķēts</span>
-                                                <?php else: ?>
-                                                    <span class="badge bg-success">Aktīvs</span>
-                                                <?php endif; ?>
-                                            </td>
-                                            <td class="text-center">
-                                                <a href="user-details.php?id=<?= $user['ID_user'] ?>" 
-                                                class="btn btn-sm btn-primary">
-                                                <i class="fas fa-eye"></i> Apskatīt
-                                                </a>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                <?php endif; ?>
+                              
                             </tbody>
                         </table>
+                        <div id="todays-users-pagination" class="pagination-container"></div>
                     </div>
-                    <div class="pagination-container" id="todays-users-pagination"></div>
                 </div>
             </div>
 
@@ -309,7 +264,6 @@ try {
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                     <h6 class="m-0 font-weight-bold">Visi Lietotāji</h6>
                     <div class="d-flex">
-
                         <div class="dropdown drop-table drop-table no-arrow">
                             <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" 
                                data-bs-toggle="dropdown" aria-expanded="false">
@@ -319,7 +273,6 @@ try {
                                 aria-labelledby="dropdownMenuLink">
                                 <li><a class="dropdown-item" href="#">Eksportēt uz CSV</a></li>
                                 <li><a class="dropdown-item" href="#">Drukāt</a></li>
-                               
                             </ul>
                         </div>
                     </div>
@@ -337,30 +290,11 @@ try {
                                 </tr>
                             </thead>
                             <tbody id="all-users-body">
-                                <?php foreach ($allUsers as $user): ?>
-                                    <tr class="<?= $user['banned'] ? 'table-danger' : '' ?>">
-                                        <td><?= htmlspecialchars($user['username']) ?></td>
-                                        <td><?= htmlspecialchars($user['email']) ?></td>
-                                        <td><?= date('Y-m-d', strtotime($user['created_at'])) ?></td>
-                                        <td>
-                                            <?php if ($user['banned']): ?>
-                                                <span class="badge bg-danger">Bloķēts</span>
-                                            <?php else: ?>
-                                                <span class="badge bg-success">Aktīvs</span>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td class="text-center">
-                                            <a href="user-details.php?id=<?= $user['ID_user'] ?>" 
-                                               class="btn btn-sm btn-primary">
-                                               <i class="fas fa-eye"></i> Apskatīt
-                                            </a>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
+                               
                             </tbody>
                         </table>
+                        <div id="all-users-pagination" class="pagination-container"></div>
                     </div>
-                    <div class="pagination-container" id="all-users-pagination"></div>
                 </div>
             </div>
 
@@ -373,6 +307,6 @@ try {
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="../functions/adminscript.js" defer></script>
+<script src="../functions/admin_script.js" defer></script>
 </body>
 </html>

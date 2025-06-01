@@ -8,7 +8,7 @@ include '../css/templates/header.php';
 require_once '../config/con_db.php';
 
 $userID = $_SESSION['ID_user'];
-$query = $pdo->prepare("SELECT `username`, `name`, `surname`, `email`, `location` FROM `users` WHERE `ID_user` = ?");
+$query = $pdo->prepare("SELECT `username`, `name`, `surname`, `email`, `location`, `profile_pic` FROM `users` WHERE `ID_user` = ?");
 $query->execute([$userID]);
 $user = $query->fetch();
 ?>
@@ -36,7 +36,8 @@ $user = $query->fetch();
             font-family: 'Quicksand', sans-serif;
             background-color: #f5f7fa;
             padding:0;
-            padding-top:8rem;
+            
+            padding-top:5.5rem;
         }
         
         .settings-container {
@@ -238,9 +239,11 @@ $user = $query->fetch();
             <div class="mb-4">
                 <label for="profile_pic" class="form-label">Profila bilde</label><br>
                 <?php if (!empty($user['profile_pic'])): ?>
-                    <img src="../functions/assets/<?= htmlspecialchars($user['profile_pic']) ?>" alt="Profila bilde" width="100" class="mb-2">
+                    <img src="../functions/assets/<?= htmlspecialchars($user['profile_pic']) ?>" alt="Profila bilde" width="100" height="100" class="rounded-circle mb-2">
+                <?php else: ?>
+                    <img src="../images/default-profile.png" alt="Default Profile" width="100" height="100" class="rounded-circle mb-2">
                 <?php endif; ?>
-                <input type="file" name="profile_pic" id="profile_pic" class="form-control">
+                <input type="file" name="profile_pic" id="profile_pic" class="form-control" accept="image/jpeg,image/png,image/gif">
             </div>
 
             <button type="submit" class="btn btn-primary">Augšupielādēt attēlu</button>
@@ -249,115 +252,7 @@ $user = $query->fetch();
     </main>
 </div>
 
-<script>
-$(document).ready(function() {
-   $('#profileForm').on('submit', function(e) {
-    e.preventDefault();
-    
-    const formData = new FormData(this);
-    
-    $.ajax({
-        url: '../functions/upload_profile_pic.php',
-        type: 'POST',
-        data: formData,
-        contentType: false,
-        processData: false,
-        success: function(res) {
-            alert("Veiksmīgi Augšupielādēji!");
-            location.reload(); 
-        },
-        error: function(xhr) {
-            alert('Kļūda: ' + xhr.responseText);
-        }
-    });
-});
-
-    $('#toggleEmailPassword').click(function() {
-        const input = $('#emailPassword');
-        const icon = $(this).find('i');
-        if (input.attr('type') === 'password') {
-            input.attr('type', 'text');
-            icon.removeClass('bi-eye').addClass('bi-eye-slash');
-        } else {
-            input.attr('type', 'password');
-            icon.removeClass('bi-eye-slash').addClass('bi-eye');
-        }
-    });
-
-
-    $('#editMainButton').click(function() {
-        $('#username, #name, #surname').prop('readonly', false).addClass('bg-light');
-        $('#editMainButton').hide();
-        $('#saveMainButton').show();
-    });
-
-    $('#saveMainButton').click(function() {
-        $.post('../database/update_user.php', {
-            username: $('#username').val(),
-            name: $('#name').val(),
-            surname: $('#surname').val()
-        }, function(response) {
-            alert('Informācija saglabāta!');
-            $('#username, #name, #surname').prop('readonly', true).removeClass('bg-light');
-            $('#saveMainButton').hide();
-            $('#editMainButton').show();
-        }).fail(function(xhr) {
-            alert('Kļūda: ' + xhr.responseText);
-        });
-    });
-
-    
-    $('#editEmailButton').click(function() {
-        $('#email').prop('readonly', false).addClass('bg-light');
-        $('#emailPasswordGroup').show();
-        $('#editEmailButton').hide();
-        $('#saveEmailButton').show();
-    });
-
-    $('#saveEmailButton').click(function() {
-        const password = $('#emailPassword').val();
-        if (!password) {
-            alert("Lūdzu ievadiet paroli!");
-            return;
-        }
-
-        $.post('../database/update_user.php', {
-            email: $('#email').val(),
-            password: password
-        }, function(response) {
-            alert(response);
-            $('#email').prop('readonly', true).removeClass('bg-light');
-            $('#emailPasswordGroup').hide();
-            $('#emailPassword').val('');
-            $('#saveEmailButton').hide();
-            $('#editEmailButton').show();
-        }).fail(function(xhr) {
-            alert('Kļūda: ' + xhr.responseText);
-        });
-    });
-
-
-    $('#editLocationButton').click(function() {
-        $('#location').prop('readonly', false).addClass('bg-light');
-        $('#editLocationButton').hide();
-        $('#saveLocationButton').show();
-    });
-
-    $('#saveLocationButton').click(function() {
-        $.post('../database/update_user.php', {
-            location: $('#location').val()
-        }, function(response) {
-            alert('Atrašanās vieta atjaunināta!');
-            $('#location').prop('readonly', true).removeClass('bg-light');
-            $('#saveLocationButton').hide();
-            $('#editLocationButton').show();
-        }).fail(function(xhr) {
-            alert('Kļūda: ' + xhr.responseText);
-        });
-    });
-});
-</script>
-
+<script src="../functions/script.js"></script>
 <?php include '../main/footer.php'; ?>
 </body>
 </html>

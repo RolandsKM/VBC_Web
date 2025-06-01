@@ -6,8 +6,10 @@ function scrollCategories(direction) {
 
     const categoryStyle = window.getComputedStyle(category);
     const categoryWidth = category.offsetWidth;
-    const marginRight = parseFloat(categoryStyle.marginRight || 0);
-    const scrollAmount = categoryWidth + marginRight;
+
+    // Use gap instead of marginRight (since gap is now controlling spacing)
+    const gap = parseFloat(getComputedStyle(categoryList).gap || 0);
+    const scrollAmount = categoryWidth + gap;
 
     categoryList.scrollBy({
         left: direction * scrollAmount,

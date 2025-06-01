@@ -33,8 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['profile_pic'])) {
 
         $_SESSION['profile_pic'] = $newFileName;
 
-        session_write_close();
-        // header("Location: ../user/user.php");
+        echo json_encode(['success' => true, 'message' => 'Profile picture updated successfully']);
         exit();
     } else {
         http_response_code(500);

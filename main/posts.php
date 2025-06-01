@@ -19,8 +19,14 @@ $dateTo = isset($_GET['date_to']) ? $_GET['date_to'] : '';
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <link rel="stylesheet" href="style.css">
-    <style></style>
+    <link rel="stylesheet" href="../css/style-main.css">
+    <style>
+       #filter_category option {
+  background-color: transparent !important;
+  color: inherit;
+}
+
+    </style>
 </head>
 <body style="background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);  overflow-x: hidden;">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -167,16 +173,24 @@ $dateTo = isset($_GET['date_to']) ? $_GET['date_to'] : '';
                     <section id="events">
                         <p>Izvēlieties kategoriju, lai redzētu pasākumus.</p>
                     </section>
+                    <div class="text-center mt-3" id="load_more_container" style="display: none;">
+                        <button id="load_more" class="btn">Ielādēt vairāk</button>
+                    </div>
                 </main>
             </div>
 
         </div>
     </div>
 <script>
+let currentOffset = 0;
+const eventsPerPage = 12;
+
 document.addEventListener("DOMContentLoaded", () => {
     const sidebar = document.getElementById("sidebar");
     const toggleButton = document.getElementById("toggle_filters");
     const closeButton = document.getElementById("close_sidebar");
+    const loadMoreBtn = document.getElementById("load_more");
+    const loadMoreContainer = document.getElementById("load_more_container");
 
     function handleToggle() {
         sidebar.classList.toggle("active");
@@ -192,6 +206,70 @@ document.addEventListener("DOMContentLoaded", () => {
             toggleButton.style.display = "none";
         }
     }
+
+    function loadEvents(reset = false) {
+        if (reset) {
+            currentOffset = 0;
+            document.getElementById('events').innerHTML = '';
+        }
+
+        const categoryId = document.getElementById('filter_category').value;
+        const search = document.getElementById('search_input').value;
+        const city = document.getElementById('city').value;
+        const dateFrom = document.getElementById('date_from').value;
+        const dateTo = document.getElementById('date_to').value;
+
+        fetch(`../functions/get_events_by_category.php?category_id=${categoryId}&search=${search}&city=${city}&date_from=${dateFrom}&date_to=${dateTo}&limit=${eventsPerPage}&offset=${currentOffset}`)
+            .then(response => response.text())
+            .then(data => {
+                if (data.includes('Nav atrastu pasākumu')) {
+                    if (currentOffset === 0) {
+                        document.getElementById('events').innerHTML = data;
+                    }
+                    loadMoreContainer.style.display = 'none';
+                } else {
+                    if (currentOffset === 0) {
+                        document.getElementById('events').innerHTML = data;
+                    } else {
+                        document.getElementById('events').insertAdjacentHTML('beforeend', data);
+                    }
+                    
+                    // Count the number of events in the response
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = data;
+                    const eventCount = tempDiv.querySelectorAll('.event').length;
+                    
+                    // Only show load more button if we got the full number of events
+                    if (eventCount === eventsPerPage) {
+                        loadMoreContainer.style.display = 'block';
+                        currentOffset += eventsPerPage;
+                    } else {
+                        loadMoreContainer.style.display = 'none';
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                loadMoreContainer.style.display = 'none';
+            });
+    }
+
+    // Event listeners for filters
+    document.getElementById('filter_category').addEventListener('change', () => loadEvents(true));
+    document.getElementById('search_input').addEventListener('input', () => loadEvents(true));
+    document.getElementById('city').addEventListener('change', () => loadEvents(true));
+    document.getElementById('date_from').addEventListener('change', () => loadEvents(true));
+    document.getElementById('date_to').addEventListener('change', () => loadEvents(true));
+    document.getElementById('clear_filters').addEventListener('click', () => {
+        document.getElementById('filter_form').reset();
+        loadEvents(true);
+    });
+
+    // Load more button click handler
+    loadMoreBtn.addEventListener('click', () => loadEvents());
+
+    // Initial load
+    loadEvents(true);
 
     toggleButton.addEventListener("click", handleToggle);
     closeButton.addEventListener("click", handleToggle);

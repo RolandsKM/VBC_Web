@@ -1,12 +1,18 @@
-
-
 <?php 
 session_start();
 if (!isset($_SESSION['ID_user'])) {
     header("Location: ../main/login.php");
     exit();
 }
-include '../css/templates/header.php';  ?>
+include '../css/templates/header.php';
+require_once '../config/con_db.php';
+
+
+$userID = $_SESSION['ID_user'];
+$query = $pdo->prepare("SELECT `profile_pic`, `username`, `email` FROM `users` WHERE `ID_user` = ?");
+$query->execute([$userID]);
+$user = $query->fetch();
+  ?>
 
 <!DOCTYPE html>
 <html lang="lv">
@@ -22,6 +28,15 @@ include '../css/templates/header.php';  ?>
     <script src="../functions/script.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script>
+  
+        const userId = <?= htmlspecialchars($_SESSION['ID_user'] ?? 'null') ?>;
+        const APP_DATA = {
+            userId: <?= $_SESSION['ID_user'] ?? 'null' ?>,
+            eventUserId: null,
+            eventId: null
+        };
+    </script>
     <style>
         #user {
                 
@@ -35,16 +50,18 @@ include '../css/templates/header.php';  ?>
     <div class="container">
         <div class="profile-card">
             <div class="profile-main">
-
-
+                
                 <div class="profile-avatar">
-                  <img src="../functions/assets/<?= htmlspecialchars($_SESSION['profile_pic']) ?>">
-
-
+                    <?php if (!empty($user['profile_pic'])): ?>
+                        <img src="../functions/assets/<?= htmlspecialchars($user['profile_pic']) ?>" alt="Profile Picture" class="rounded-circle">
+                    <?php else: ?>
+                        <img src="../images/default-profile.png" alt="Default Profile" class="rounded-circle">
+                    <?php endif; ?>
+                    
                 </div>
                 <div class="profile-info">
-                    <h1><?= htmlspecialchars($_SESSION['username']) ?></h1>
-                    <p class="text-muted"><?= htmlspecialchars($_SESSION['email']) ?></p>
+                    <h1><?= htmlspecialchars($user['username']) ?></h1>
+                    <p class="text-muted"><?= htmlspecialchars($user['email']) ?></p>
                 </div>
                 <div class="profile-actions">
                     <a href="messages.php" class="btn-action" title="Ziņas">

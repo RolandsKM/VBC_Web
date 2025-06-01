@@ -1,4 +1,3 @@
-
 <?php
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -19,9 +18,9 @@ if (!isset($_SESSION['ID_user']) || $_SESSION['role'] !== 'admin') {
             <?= htmlspecialchars($_SESSION['username']) ?> <i class="fa-solid fa-angle-down"></i>
         </button>
         <div class="dropdown-content">
-            <a href="../user/user.php">Profils</a>
+            <a href="../user/">Profils</a>
             <?php if ($_SESSION['role'] === 'admin'): ?>
-                <a href="../admin/index.php">Admin</a>
+                <a href="../admin/">Admin</a>
             <?php endif; ?>
             <a href="../database/logout.php" class="text-danger">Izlogoties</a>
         </div>

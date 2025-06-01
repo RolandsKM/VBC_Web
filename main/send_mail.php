@@ -6,6 +6,9 @@ require '../functions/phpmailer/Exception.php';
 require '../functions/phpmailer/PHPMailer.php';
 require '../functions/phpmailer/SMTP.php';
 
+// Load email configuration
+$config = require '../config/email_config.php';
+
 $response = [
     'success' => false,
     'message' => ''
@@ -22,16 +25,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         try {
             $mail->isSMTP();
-            $mail->Host       = 'smtp.sendgrid.net';
+            $mail->Host       = $config['smtp_host'];
             $mail->SMTPAuth   = true;
-            $mail->Username   = 'apikey';
-            $mail->Password   = '';
+            $mail->Username   = $config['smtp_username'];
+            $mail->Password   = $config['smtp_password'];
             
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->Port       = 2525 ;
+            $mail->Port       = $config['smtp_port'];
 
-            $mail->setFrom('vbcentrs@gmail.com', 'VB Centrs Website');
-            $mail->addAddress('vbcentrs@gmail.com');
+            $mail->setFrom($config['from_email'], $config['from_name']);
+            $mail->addAddress($config['to_email']);
             $mail->addReplyTo($email, $name . ' ' . $surname);
 
             $mail->isHTML(true);
@@ -56,7 +59,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 } else {
     $response['message'] = 'Nederīgs pieprasījuma veids.';
 }
-
 
 header('Content-Type: application/json');
 echo json_encode($response);

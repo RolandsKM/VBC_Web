@@ -1,8 +1,69 @@
 <?php
 require_once '../config/con_db.php';
 session_start();
+
+
+function isAdmin() {
+    return isset($_SESSION['role']) && ($_SESSION['role'] === 'admin' || $_SESSION['role'] === 'supper-admin');
+}
+
+function isModerator() {
+    return isset($_SESSION['role']) && ($_SESSION['role'] === 'mod' || $_SESSION['role'] === 'admin' || $_SESSION['role'] === 'supper-admin');
+}
+
+function isSuperAdmin() {
+    return isset($_SESSION['role']) && $_SESSION['role'] === 'supper-admin';
+}
+
+function checkAdminAccess() {
+    if (!isAdmin()) {
+        echo '<script>
+            
+            window.location.href = "' . ($_SERVER['HTTP_REFERER'] ?? 'index.php') . '";
+        </script>';
+        exit();
+    }
+}
+
+function checkModeratorAccess() {
+    if (!isModerator()) {
+        echo '<script>
+       
+            window.location.href = "' . ($_SERVER['HTTP_REFERER'] ?? 'index.php') . '";
+        </script>';
+        exit();
+    }
+}
+
+function checkSuperAdminAccess() {
+    if (!isSuperAdmin()) {
+        echo '<script>
+           
+            window.location.href = "' . ($_SERVER['HTTP_REFERER'] ?? 'index.php') . '";
+        </script>';
+        exit();
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax'])) {
     header('Content-Type: application/json');
+
+    if ($_POST['action'] === 'delete_user') {
+        $userId = $_POST['user_id'] ?? null;
+        if ($userId) {
+            try {
+                global $pdo;
+                $stmt = $pdo->prepare("DELETE FROM users WHERE ID_user = ? AND role IN ('admin', 'mod')");
+                $success = $stmt->execute([$userId]);
+                echo json_encode(['success' => $success]);
+            } catch (PDOException $e) {
+                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+            }
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Nav norādīts lietotāja ID.']);
+        }
+        exit;
+    }
 
     if ($_POST['action'] === 'delete_event') {
         $eventId = $_POST['event_id'];
@@ -19,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax'])) {
         exit;
     }
     
-        if ($_POST['action'] === 'ban_user') {
+    if ($_POST['action'] === 'ban_user') {
         $userId = $_POST['user_id'] ?? null;
         if ($userId) {
             banUser($userId);
@@ -29,29 +90,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax'])) {
         }
         exit;
     }
-    if ($_POST['action'] === 'resolve_report') {
-        $reportId = isset($_POST['report_id']) ? (int)$_POST['report_id'] : 0;
-        if ($reportId <= 0) {
-            echo json_encode(['success' => false, 'message' => 'Nederīgs ziņojuma ID.']);
-            exit;
-        }
 
-        $result = markReportAsSolved($reportId);
-        if ($result) {
-            echo json_encode(['success' => true, 'message' => 'Ziņojums ir atzīmēts kā atrisināts.']);
+    if ($_POST['action'] === 'unban_user') {
+        $userId = $_POST['user_id'] ?? null;
+        if ($userId) {
+            unbanUser($userId);
+            echo json_encode(['success' => true]);
         } else {
-            echo json_encode(['success' => false, 'message' => 'Neizdevās atjaunināt statusu.']);
+            echo json_encode(['success' => false, 'message' => 'Nav norādīts lietotāja ID.']);
         }
         exit;
     }
+
     if ($_POST['action'] === 'undelete_event') {
         $eventId = $_POST['event_id'];
-
         undeleteEvent($eventId);
         echo json_encode(['success' => true]);
         exit;
     }
-
 
     echo json_encode(['success' => false, 'message' => 'Invalid action']);
     exit;
@@ -80,12 +136,9 @@ function unbanUser($id) {
 
 function deleteUser($id) {
     global $pdo;
- 
     $stmt = $pdo->prepare("UPDATE users SET deleted = 1 WHERE ID_user = :id");
     $stmt->execute([':id' => $id]);
 }
-
-
 
 // ----------------- EVENT FUNCTIONS ------------------
 function getEventsCount() {
@@ -95,14 +148,26 @@ function getEventsCount() {
     return (int) $stmt->fetchColumn();
 }
 
-function getPaginatedEvents($limit, $offset) {
+function getPaginatedEvents($limit, $offset, $sortField = 'created_at', $sortOrder = 'DESC') {
     global $pdo;
+    
+    $validSortFields = [
+        'ID_Event' => 'Events.ID_Event',
+        'title' => 'Events.title',
+        'username' => 'users.username',
+        'deleted' => 'Events.deleted',
+        'created_at' => 'Events.created_at'
+    ];
+    
+    $sortField = $validSortFields[$sortField] ?? 'Events.created_at';
+    $sortOrder = strtoupper($sortOrder) === 'ASC' ? 'ASC' : 'DESC';
+    
     $stmt = $pdo->prepare("
         SELECT Events.ID_Event, Events.title, Events.deleted, Events.created_at,
                users.ID_user, users.username, users.name, users.surname
         FROM Events
         JOIN users ON Events.user_id = users.ID_user
-        ORDER BY Events.created_at DESC
+        ORDER BY {$sortField} {$sortOrder}
         LIMIT :limit OFFSET :offset
     ");
     $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
@@ -143,7 +208,6 @@ function getAllEventsWithUser() {
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-
 function getEventsCountByDay() {
     global $pdo;
     $stmt = $pdo->prepare("
@@ -170,7 +234,6 @@ function getEventsCountByWeek() {
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-
 function getEventsCountByMonth() {
     global $pdo;
     $stmt = $pdo->prepare("
@@ -184,14 +247,12 @@ function getEventsCountByMonth() {
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-
 function getDeletedEventsCount() {
     global $pdo;
     $stmt = $pdo->prepare("SELECT COUNT(*) FROM Events WHERE deleted = 1");
     $stmt->execute();
     return $stmt->fetchColumn();
 }
-
 
 function getMostPopularEvent() {
     global $pdo;
@@ -207,11 +268,8 @@ function getMostPopularEvent() {
     return $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
-
-
 function getEventByIdWithUser(int $eventId): ?array {
     global $pdo; 
-
     $stmt = $pdo->prepare("
         SELECT e.*, u.name, u.surname, u.username, u.email 
         FROM Events e
@@ -226,7 +284,6 @@ function getEventByIdWithUser(int $eventId): ?array {
 
 function getVolunteersByEventId(int $eventId): array {
     global $pdo;
-
     $stmt = $pdo->prepare("
         SELECT u.name, u.surname, u.username, v.created_at 
         FROM Volunteers v
@@ -237,20 +294,16 @@ function getVolunteersByEventId(int $eventId): array {
     $stmt->execute(['event_id' => $eventId]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
+
 function deleteEventById(int $eventId): bool {
     global $pdo;
-
     $stmt = $pdo->prepare("UPDATE Events SET deleted = 1 WHERE ID_Event = :id");
     return $stmt->execute(['id' => $eventId]);
 }
 
-
-
-
 // ----------------- USER DETAILS LOGIC ------------------
 
 if (basename($_SERVER['PHP_SELF']) === 'user-details.php') {
-
     if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
         header("Location: user_manager.php");
         exit();
@@ -283,26 +336,60 @@ if (basename($_SERVER['PHP_SELF']) === 'user-details.php') {
         exit();
     }
 
-   
     $eventsCreated = getEventsCreatedByUser($id);
     $volunteeredEvents = getEventsUserVolunteered($id);
 }
+
 // ----------------- USER LISTING LOGIC ------------------
 
-function getAllUsers() {
+function getTodaysUsers($limit = 5, $offset = 0, $sortField = 'created_at', $sortOrder = 'DESC') {
     global $pdo;
-    $stmt = $pdo->prepare("SELECT ID_user, username, email, banned, created_at FROM users WHERE role = 'user'");
-    $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
-
-function getTodaysUsers() {
-    global $pdo;
+    
+    $validSortFields = [
+        'username' => 'username',
+        'email' => 'email',
+        'created_at' => 'created_at',
+        'banned' => 'banned'
+    ];
+    
+    $sortField = $validSortFields[$sortField] ?? 'created_at';
+    $sortOrder = strtoupper($sortOrder) === 'ASC' ? 'ASC' : 'DESC';
+    
     $stmt = $pdo->prepare("
         SELECT ID_user, username, email, banned, created_at 
         FROM users 
         WHERE role = 'user' AND DATE(created_at) = CURDATE()
+        ORDER BY {$sortField} {$sortOrder}
+        LIMIT :limit OFFSET :offset
     ");
+    $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+function getAllUsers($limit = 5, $offset = 0, $sortField = 'created_at', $sortOrder = 'DESC') {
+    global $pdo;
+    
+    $validSortFields = [
+        'username' => 'username',
+        'email' => 'email',
+        'created_at' => 'created_at',
+        'banned' => 'banned'
+    ];
+    
+    $sortField = $validSortFields[$sortField] ?? 'created_at';
+    $sortOrder = strtoupper($sortOrder) === 'ASC' ? 'ASC' : 'DESC';
+    
+    $stmt = $pdo->prepare("
+        SELECT ID_user, username, email, banned, created_at 
+        FROM users 
+        WHERE role = 'user'
+        ORDER BY {$sortField} {$sortOrder}
+        LIMIT :limit OFFSET :offset
+    ");
+    $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
     $stmt->execute();
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
@@ -313,16 +400,33 @@ function getTodaysUsersCount() {
     $stmt->execute();
     return (int)$stmt->fetchColumn();
 }
-// ---------Pagination-----------------
-function getPaginatedTodaysUsers($limit, $offset) {
+
+function getPaginatedTodaysUsers($limit, $offset, $statusFilter = 'all', $sortField = 'created_at', $sortOrder = 'DESC') {
     global $pdo;
-    $stmt = $pdo->prepare("
-        SELECT ID_user, username, email, created_at, banned 
-        FROM users 
-        WHERE role = 'user' AND DATE(created_at) = CURDATE()
-        ORDER BY created_at DESC
-        LIMIT :limit OFFSET :offset
-    ");
+    
+    $validSortFields = [
+        'username' => 'username',
+        'email' => 'email',
+        'created_at' => 'created_at',
+        'banned' => 'banned'
+    ];
+    
+    $sortField = $validSortFields[$sortField] ?? 'created_at';
+    $sortOrder = strtoupper($sortOrder) === 'ASC' ? 'ASC' : 'DESC';
+    
+    $query = "SELECT ID_user, username, email, created_at, banned 
+              FROM users 
+              WHERE role = 'user' AND DATE(created_at) = CURDATE()";
+    
+    if ($statusFilter === 'banned') {
+        $query .= " AND banned = 1";
+    } elseif ($statusFilter === 'active') {
+        $query .= " AND banned = 0";
+    }
+    
+    $query .= " ORDER BY {$sortField} {$sortOrder} LIMIT :limit OFFSET :offset";
+    
+    $stmt = $pdo->prepare($query);
     $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
     $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
     $stmt->execute();
@@ -366,7 +470,6 @@ function getAllBannedUsersCount() {
 }
 
 function getUsersCountByPeriod($period) {
-    
     global $pdo;
     $query = "SELECT COUNT(*) FROM users WHERE role = 'user' AND banned = 0";
     switch ($period) {
@@ -381,7 +484,6 @@ function getUsersCountByPeriod($period) {
             break;
         case 'all':
         default:
-           
             break;
     }
     $stmt = $pdo->prepare($query);
@@ -411,9 +513,21 @@ function getBannedUsersCountByPeriod($period) {
     return (int)$stmt->fetchColumn();
 }
 
-function getPaginatedUsersByPeriod($limit, $offset, $period) {
+function getPaginatedUsersByPeriod($limit, $offset, $period, $statusFilter = 'all', $sortField = 'created_at', $sortOrder = 'DESC') {
     global $pdo;
+    
+    $validSortFields = [
+        'username' => 'username',
+        'email' => 'email',
+        'created_at' => 'created_at',
+        'banned' => 'banned'
+    ];
+    
+    $sortField = $validSortFields[$sortField] ?? 'created_at';
+    $sortOrder = strtoupper($sortOrder) === 'ASC' ? 'ASC' : 'DESC';
+    
     $query = "SELECT ID_user, username, email, banned, created_at FROM users WHERE role = 'user' ";
+    
     switch ($period) {
         case 'week':
             $query .= " AND YEARWEEK(created_at, 1) = YEARWEEK(CURDATE(), 1) ";
@@ -424,12 +538,16 @@ function getPaginatedUsersByPeriod($limit, $offset, $period) {
         case 'year':
             $query .= " AND YEAR(created_at) = YEAR(CURDATE()) ";
             break;
-        case 'all':
-        default:
-            
-            break;
     }
-    $query .= " ORDER BY created_at DESC LIMIT :limit OFFSET :offset";
+    
+    if ($statusFilter === 'banned') {
+        $query .= " AND banned = 1 ";
+    } elseif ($statusFilter === 'active') {
+        $query .= " AND banned = 0 ";
+    }
+    
+    $query .= " ORDER BY {$sortField} {$sortOrder} LIMIT :limit OFFSET :offset";
+    
     $stmt = $pdo->prepare($query);
     $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
     $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
@@ -437,9 +555,10 @@ function getPaginatedUsersByPeriod($limit, $offset, $period) {
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-function getUsersCountByPeriodTotal($period) {
+function getUsersCountByPeriodTotal($period, $statusFilter = 'all') {
     global $pdo;
     $query = "SELECT COUNT(*) FROM users WHERE role = 'user' ";
+    
     switch ($period) {
         case 'week':
             $query .= " AND YEARWEEK(created_at, 1) = YEARWEEK(CURDATE(), 1)";
@@ -450,130 +569,111 @@ function getUsersCountByPeriodTotal($period) {
         case 'year':
             $query .= " AND YEAR(created_at) = YEAR(CURDATE())";
             break;
-        case 'all':
-        default:
-            break;
     }
+    
+    if ($statusFilter === 'banned') {
+        $query .= " AND banned = 1";
+    } elseif ($statusFilter === 'active') {
+        $query .= " AND banned = 0";
+    }
+    
     $stmt = $pdo->prepare($query);
     $stmt->execute();
     return (int)$stmt->fetchColumn();
 }
+
 function getNewUsersCountByPeriod($period) {
     global $pdo;
+    $endDate = new DateTime();
+    $startDate = new DateTime();
 
     switch ($period) {
         case 'week':
-           
-            $stmt = $pdo->prepare("
-                SELECT DATE(created_at) AS day, COUNT(*) AS count 
-                FROM users 
-                WHERE role = 'user' AND YEARWEEK(created_at, 1) = YEARWEEK(CURDATE(), 1)
-                GROUP BY day
-                ORDER BY day
-            ");
-            break;
-        case 'month':
+            $startDate->modify('-7 days');
+            $interval = new DateInterval('P1D');
+            $dateRange = new DatePeriod($startDate, $interval, $endDate->modify('+1 day'));
             
             $stmt = $pdo->prepare("
                 SELECT DATE(created_at) AS day, COUNT(*) AS count 
                 FROM users 
-                WHERE role = 'user' AND YEAR(created_at) = YEAR(CURDATE()) AND MONTH(created_at) = MONTH(CURDATE())
+                WHERE role = 'user' AND created_at >= :start_date
                 GROUP BY day
                 ORDER BY day
             ");
+            $stmt->execute([':start_date' => $startDate->format('Y-m-d')]);
             break;
-        case 'year':
-          
+
+        case 'month':
+            $startDate->modify('-30 days');
+            $interval = new DateInterval('P1D');
+            $dateRange = new DatePeriod($startDate, $interval, $endDate->modify('+1 day'));
+            
             $stmt = $pdo->prepare("
-                SELECT MONTH(created_at) AS month, COUNT(*) AS count 
+                SELECT DATE(created_at) AS day, COUNT(*) AS count 
                 FROM users 
-                WHERE role = 'user' AND YEAR(created_at) = YEAR(CURDATE())
-                GROUP BY month
-                ORDER BY month
+                WHERE role = 'user' AND created_at >= :start_date
+                GROUP BY day
+                ORDER BY day
             ");
+            $stmt->execute([':start_date' => $startDate->format('Y-m-d')]);
             break;
+
+        case 'year':
+            $startDate->modify('-365 days');
+            $interval = new DateInterval('P1D');
+            $dateRange = new DatePeriod($startDate, $interval, $endDate->modify('+1 day'));
+            
+            $stmt = $pdo->prepare("
+                SELECT DATE(created_at) AS day, COUNT(*) AS count 
+                FROM users 
+                WHERE role = 'user' AND created_at >= :start_date
+                GROUP BY day
+                ORDER BY day
+            ");
+            $stmt->execute([':start_date' => $startDate->format('Y-m-d')]);
+            break;
+
         case 'all':
         default:
-
             $stmt = $pdo->prepare("
-                SELECT YEAR(created_at) AS year, COUNT(*) AS count 
+                SELECT DATE(created_at) AS day, COUNT(*) AS count 
                 FROM users 
                 WHERE role = 'user'
-                GROUP BY year
-                ORDER BY year
+                GROUP BY day
+                ORDER BY day
             ");
+            $stmt->execute();
             break;
     }
 
-    $stmt->execute();
     $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $dataMap = [];
+    foreach ($results as $row) {
+        $dataMap[$row['day']] = (int)$row['count'];
+    }
 
-    
     $labels = [];
     $counts = [];
 
-    switch ($period) {
-        case 'week':
-        case 'month':
-       
-            $startDate = null;
-            $endDate = new DateTime();
-
-            if ($period === 'week') {
-                $startDate = (new DateTime())->modify('monday this week');
-            } else { 
-                $startDate = (new DateTime())->modify('first day of this month');
-            }
-
-            $interval = new DateInterval('P1D');
-            $periodRange = new DatePeriod($startDate, $interval, $endDate->modify('+1 day'));
-
-            $dataMap = [];
-            foreach ($results as $row) {
-                $dataMap[$row['day']] = (int)$row['count'];
-            }
-
-            foreach ($periodRange as $date) {
-                $dateStr = $date->format('Y-m-d');
-                $labels[] = $date->format('d M');
-                $counts[] = $dataMap[$dateStr] ?? 0;
-            }
-            break;
-
-        case 'year':
-            $dataMap = [];
-            foreach ($results as $row) {
-                $dataMap[(int)$row['month']] = (int)$row['count'];
-            }
-          
-            for ($m = 1; $m <= 12; $m++) {
-                $labels[] = date('M', mktime(0, 0, 0, $m, 10));
-                $counts[] = $dataMap[$m] ?? 0;
-            }
-            break;
-
-        case 'all':
-        default:
-            $dataMap = [];
-            foreach ($results as $row) {
-                $dataMap[(int)$row['year']] = (int)$row['count'];
-            }
-            $years = array_keys($dataMap);
-            sort($years);
-            foreach ($years as $year) {
-                $labels[] = (string)$year;
-                $counts[] = $dataMap[$year];
-            }
-            break;
+    if (isset($dateRange)) {
+        foreach ($dateRange as $date) {
+            $dateStr = $date->format('Y-m-d');
+            $labels[] = $date->format('d M');
+            $counts[] = $dataMap[$dateStr] ?? 0;
+        }
+    } else {
+        foreach ($results as $row) {
+            $date = new DateTime($row['day']);
+            $labels[] = $date->format('d M');
+            $counts[] = (int)$row['count'];
+        }
     }
 
     return ['labels' => $labels, 'counts' => $counts];
 }
 
-
 function deleteEventWithReason($eventId, $adminId, $reason) {
     global $pdo;
-
     $stmt = $pdo->prepare("UPDATE Events SET deleted = 1 WHERE ID_Event = :eventId");
     $stmt->execute([':eventId' => $eventId]);
 
@@ -584,164 +684,234 @@ function deleteEventWithReason($eventId, $adminId, $reason) {
         ':reason' => $reason
     ]);
 }
+
 function undeleteEvent($eventId) {
     global $pdo;
     $stmt = $pdo->prepare("UPDATE Events SET deleted = 0 WHERE ID_Event = :eventId");
     $stmt->execute([':eventId' => $eventId]);
-$stmt = $pdo->prepare("UPDATE DeletedEventsLog SET undeleted_at = NOW() WHERE event_id = :eventId ORDER BY deleted_at DESC LIMIT 1");
-$stmt->execute([':eventId' => $eventId]);
-
-
+    $stmt = $pdo->prepare("UPDATE DeletedEventsLog SET undeleted_at = NOW() WHERE event_id = :eventId ORDER BY deleted_at DESC LIMIT 1");
+    $stmt->execute([':eventId' => $eventId]);
 }
 
-
-
-// REPORT
-function getAllEventReports() {
+function getUsersCountByRole($role) {
     global $pdo;
-
-    $stmt = $pdo->prepare("
-        SELECT 
-            r.ID_report, r.reason AS report_reason, r.reported_at, r.status,
-            u.ID_user, u.username, u.profile_pic AS reporter_pic,
-            e.ID_Event, e.title, e.description, e.location, e.city, e.zip, e.date, e.deleted AS event_deleted,
-            eu.ID_user AS creator_id, eu.username AS event_creator, eu.profile_pic AS creator_pic,
-            eu.banned AS creator_banned
-        FROM event_reports r
-        JOIN users u ON r.ID_user = u.ID_user
-        JOIN Events e ON r.ID_event = e.ID_Event
-        JOIN users eu ON e.user_id = eu.ID_user
-        WHERE r.status = 'waiting'
-        ORDER BY r.reported_at DESC
-    ");
-
-    $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE role = :role AND deleted = 0");
+    $stmt->execute([':role' => $role]);
+    return (int) $stmt->fetchColumn();
 }
-function getPaginatedReports($limit, $offset) {
+
+function getPaginatedUsersByRole($role, $limit, $offset, $sortField = 'created_at', $sortOrder = 'DESC') {
     global $pdo;
+    
+    $validSortFields = [
+        'ID_user' => 'ID_user',
+        'username' => 'username',
+        'name' => 'name',
+        'surname' => 'surname',
+        'email' => 'email',
+        'created_at' => 'created_at'
+    ];
+    
+    $sortField = $validSortFields[$sortField] ?? 'created_at';
+    $sortOrder = strtoupper($sortOrder) === 'ASC' ? 'ASC' : 'DESC';
+    
     $stmt = $pdo->prepare("
-        SELECT 
-            r.ID_report, r.reason AS report_reason, r.reported_at, r.status,
-            u.ID_user, u.username, u.profile_pic AS reporter_pic,
-            e.ID_Event, e.title, e.description, e.location, e.city, e.zip, e.date, e.deleted AS event_deleted,
-            eu.ID_user AS creator_id, eu.username AS event_creator, eu.profile_pic AS creator_pic,
-            eu.banned AS creator_banned
-        FROM event_reports r
-        JOIN users u ON r.ID_user = u.ID_user
-        JOIN Events e ON r.ID_event = e.ID_Event
-        JOIN users eu ON e.user_id = eu.ID_user
-        WHERE r.status = 'waiting'
-        ORDER BY r.reported_at DESC
+        SELECT ID_user, username, name, surname, email, deleted, created_at
+        FROM users
+        WHERE role = :role AND deleted = 0
+        ORDER BY {$sortField} {$sortOrder}
         LIMIT :limit OFFSET :offset
     ");
+    $stmt->bindValue(':role', $role, PDO::PARAM_STR);
     $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
     $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
     $stmt->execute();
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-function countAllReports() {
+function getPaginatedEventsCreatedByUser($userId, $limit, $offset, $sortField = 'created_at', $sortOrder = 'DESC') {
     global $pdo;
-    $stmt = $pdo->query("SELECT COUNT(*) FROM event_reports WHERE status = 'waiting'");
-    return $stmt->fetchColumn();
-}
-
-function markReportAsSolved($reportId) {
-    global $pdo; 
-    $stmt = $pdo->prepare("UPDATE event_reports SET status = 'solved' WHERE ID_report = ?");
-    return $stmt->execute([$reportId]);
-}
-function getTodayReportsCount() {
-    global $pdo;
-    $stmt = $pdo->prepare("SELECT COUNT(*) FROM event_reports WHERE DATE(reported_at) = CURDATE()");
-    $stmt->execute();
-    return $stmt->fetchColumn();
-}
-
-function getUniqueReporterCount() {
-    global $pdo;
-    $stmt = $pdo->query("SELECT COUNT(DISTINCT ID_user) FROM event_reports");
-    return $stmt->fetchColumn();
-}
-
-function getResolvedReportsCount() {
-    global $pdo;
-    $stmt = $pdo->query("SELECT COUNT(*) FROM event_reports WHERE status = 'solved'");
-    return $stmt->fetchColumn();
-}
-// For Line Chart (last 7 days)
-function getLast7DaysReportCounts() {
-    global $pdo;
-    $stmt = $pdo->query("
-        SELECT DATE(reported_at) AS date, COUNT(*) AS count
-        FROM event_reports
-        WHERE reported_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
-        GROUP BY DATE(reported_at)
-        ORDER BY date ASC
-    ");
-    $rows = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
-
-    // Ensure all 7 days are present
-    $data = [];
-    for ($i = 6; $i >= 0; $i--) {
-        $day = date("Y-m-d", strtotime("-$i days"));
-        $data[$day] = isset($rows[$day]) ? (int)$rows[$day] : 0;
-    }
-
-    return $data;
-}
-
-// For Pie Chart (top reasons)
-function getTopReportReasons() {
-    global $pdo;
-    $stmt = $pdo->query("
-        SELECT reason, COUNT(*) AS count
-        FROM event_reports
-        GROUP BY reason
-        ORDER BY count DESC
-        LIMIT 5
-    ");
-    return $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
-}
-
-function getLast12MonthsReportCounts() {
-    global $pdo;
-    $stmt = $pdo->query("
-        SELECT DATE_FORMAT(reported_at, '%Y-%m') AS month, COUNT(*) AS count
-        FROM event_reports
-        WHERE reported_at >= DATE_SUB(CURDATE(), INTERVAL 11 MONTH)
-        GROUP BY month
-        ORDER BY month ASC
-    ");
-    $rows = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
-
-   
-    $data = [];
-    for ($i = 11; $i >= 0; $i--) {
-        $month = date("Y-m", strtotime("-$i months"));
-        $data[$month] = isset($rows[$month]) ? (int)$rows[$month] : 0;
-    }
-
-    return $data;
-}
-function getUsersCountByRole($role) {
-    global $pdo;
-    $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE role = :role");
-    $stmt->execute([':role' => $role]);
-    return (int) $stmt->fetchColumn();
-}
-
-function getPaginatedUsersByRole($role, $limit, $offset) {
-    global $pdo;
+    
+    $validSortFields = [
+        'title' => 'Events.title',
+        'description' => 'Events.description',
+        'date' => 'Events.date',
+        'deleted' => 'Events.deleted',
+        'created_at' => 'Events.created_at'
+    ];
+    
+    $sortField = $validSortFields[$sortField] ?? 'Events.created_at';
+    $sortOrder = strtoupper($sortOrder) === 'ASC' ? 'ASC' : 'DESC';
+    
     $stmt = $pdo->prepare("
-        SELECT ID_user, username, name, surname, deleted, created_at
-        FROM users
-        WHERE role = :role
-        ORDER BY created_at DESC
+        SELECT * FROM Events 
+        WHERE user_id = :userId 
+        ORDER BY {$sortField} {$sortOrder}
         LIMIT :limit OFFSET :offset
     ");
-    $stmt->bindValue(':role', $role, PDO::PARAM_STR);
+    $stmt->bindValue(':userId', $userId, PDO::PARAM_INT);
+    $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+function getEventsCreatedByUserCount($userId) {
+    global $pdo;
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM Events WHERE user_id = :userId");
+    $stmt->execute([':userId' => $userId]);
+    return (int)$stmt->fetchColumn();
+}
+
+function getPaginatedEventsUserVolunteered($userId, $limit, $offset, $sortField = 'created_at', $sortOrder = 'DESC') {
+    global $pdo;
+    
+    $validSortFields = [
+        'title' => 'Events.title',
+        'description' => 'Events.description',
+        'date' => 'Events.date',
+        'status' => 'Volunteers.status',
+        'created_at' => 'Events.created_at'
+    ];
+    
+    $sortField = $validSortFields[$sortField] ?? 'Events.created_at';
+    $sortOrder = strtoupper($sortOrder) === 'ASC' ? 'ASC' : 'DESC';
+    
+    $stmt = $pdo->prepare("
+        SELECT Events.*, Volunteers.status 
+        FROM Volunteers 
+        JOIN Events ON Volunteers.event_id = Events.ID_Event 
+        WHERE Volunteers.user_id = :userId
+        ORDER BY {$sortField} {$sortOrder}
+        LIMIT :limit OFFSET :offset
+    ");
+    $stmt->bindValue(':userId', $userId, PDO::PARAM_INT);
+    $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+function getEventsUserVolunteeredCount($userId) {
+    global $pdo;
+    $stmt = $pdo->prepare("
+        SELECT COUNT(*) 
+        FROM Volunteers 
+        WHERE user_id = :userId
+    ");
+    $stmt->execute([':userId' => $userId]);
+    return (int)$stmt->fetchColumn();
+}
+
+function getAdminModDetails($userId) {
+    global $pdo;
+    $stmt = $pdo->prepare("
+        SELECT ID_user, username, name, surname, email, role, banned, created_at
+        FROM users 
+        WHERE ID_user = :id AND role IN ('admin', 'mod')
+    ");
+    $stmt->execute([':id' => $userId]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+function getAdminModActions($userId, $limit = 5, $offset = 0, $sortField = 'deleted_at', $sortOrder = 'DESC') {
+    global $pdo;
+    
+    $validSortFields = [
+        'ID' => 'del.ID',
+        'event_title' => 'e.title',
+        'reason' => 'del.reason',
+        'deleted_at' => 'del.deleted_at',
+        'undeleted_at' => 'del.undeleted_at'
+    ];
+    
+    $sortField = $validSortFields[$sortField] ?? 'del.deleted_at';
+    $sortOrder = strtoupper($sortOrder) === 'ASC' ? 'ASC' : 'DESC';
+    
+    $stmt = $pdo->prepare("
+        SELECT 
+            del.ID,
+            del.event_id,
+            del.admin_id,
+            del.reason,
+            del.deleted_at,
+            del.undeleted_at,
+            e.title as event_title
+        FROM DeletedEventsLog del
+        JOIN Events e ON del.event_id = e.ID_Event
+        WHERE del.admin_id = :userId
+        ORDER BY {$sortField} {$sortOrder}
+        LIMIT :limit OFFSET :offset
+    ");
+    $stmt->bindValue(':userId', $userId, PDO::PARAM_INT);
+    $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+function getAdminModActionsCount($userId) {
+    global $pdo;
+    $stmt = $pdo->prepare("
+        SELECT COUNT(*) 
+        FROM DeletedEventsLog 
+        WHERE admin_id = :userId
+    ");
+    $stmt->execute([':userId' => $userId]);
+    return (int)$stmt->fetchColumn();
+}
+// -------- check who can manage ---------------
+function canManageUser($currentUserRole, $targetUserRole) {
+    if ($currentUserRole === 'super-admin') {
+        return true; 
+    }
+    if ($currentUserRole === 'admin' && $targetUserRole === 'mod') {
+        return true; 
+    }
+    return false;
+}
+
+function banAdminMod($userId) {
+    global $pdo;
+    $stmt = $pdo->prepare("UPDATE users SET banned = 1 WHERE ID_user = :id AND role IN ('admin', 'mod')");
+    $stmt->execute([':id' => $userId]);
+}
+
+function unbanAdminMod($userId) {
+    global $pdo;
+    $stmt = $pdo->prepare("UPDATE users SET banned = 0 WHERE ID_user = :id AND role IN ('admin', 'mod')");
+    $stmt->execute([':id' => $userId]);
+}
+
+function deleteAdminMod($userId) {
+    global $pdo;
+    $stmt = $pdo->prepare("UPDATE users SET deleted = 1 WHERE ID_user = :id AND role IN ('admin', 'mod')");
+    $stmt->execute([':id' => $userId]);
+}
+
+function getTodaysVolunteersCount() {
+    global $pdo;
+    $stmt = $pdo->prepare("
+        SELECT COUNT(*) 
+        FROM Volunteers 
+        WHERE DATE(created_at) = CURDATE()
+    ");
+    $stmt->execute();
+    return (int)$stmt->fetchColumn();
+}
+
+function getTodaysVolunteers($limit = 5, $offset = 0) {
+    global $pdo;
+    $stmt = $pdo->prepare("
+        SELECT v.ID_Volunteers, v.status, v.created_at, 
+               u.username, e.title
+        FROM Volunteers v
+        JOIN users u ON v.user_id = u.ID_user
+        JOIN Events e ON v.event_id = e.ID_Event
+        WHERE DATE(v.created_at) = CURDATE()
+        ORDER BY v.created_at DESC
+        LIMIT :limit OFFSET :offset
+    ");
     $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
     $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
     $stmt->execute();

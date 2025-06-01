@@ -17,7 +17,7 @@ $login_email = $_SESSION['login_email'] ?? '';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vietējais Brīvprātīgais Centrs</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../css/style-main.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;600&display=swap">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="script.js" defer></script> 
@@ -30,7 +30,7 @@ $login_email = $_SESSION['login_email'] ?? '';
     <div class="container d-flex justify-content-center align-items-center vh-100">
         <div class="card p-4 shadow-lg" style="width: 350px;">
             <h3 class="text-center">Pieslēgties</h3>
-            <form action="../database/auth_functions.php" method="POST">
+            <form action="../functions/auth_functions.php" method="POST">
                 <div class="mb-3">
                     <label class="form-label">E-pasts</label>
                     <input type="email" name="epasts" class="form-control" required value="<?= htmlspecialchars($login_email) ?>">
