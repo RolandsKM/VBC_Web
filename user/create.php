@@ -25,6 +25,7 @@ include '../css/templates/header.php';  ?>
 <body id="cb">
    
     <section id="create-top" class="hero-section">
+        <a href="javascript:history.back()" class="btn">⬅ Atpakaļ</a>
         <div class="container">
             <h1 class="hero-title">Sadarbojies ar vietējiem!</h1>
             <h2 class="hero-subtitle">Izveido sludinājumu/pasākumu</h2>
@@ -92,9 +93,10 @@ include '../css/templates/header.php';  ?>
 
                 <div class="form-section">
                     <div class="form-group">
-                        <label class="form-label">Datums</label>
-                        <input type="date" id="event-date" class="form-control form-input" required>
+                        <label class="form-label">Datums un laiks</label>
+                        <input type="datetime-local" id="event-date" class="form-control form-input" required>
                     </div>
+
                 </div>
 
 

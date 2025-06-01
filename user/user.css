@@ -16,7 +16,13 @@ body {
 }
 #user {
     
-    padding: 5rem 0;
+    padding: 5rem 0 0;
+}
+.load-btn .btn{
+    margin-bottom: 1rem;
+    padding-bottom: .5rem 1rem;
+    border: #128c4a .1rem solid;
+    color: #128c4a;
 }
 
 .hidden {
@@ -198,7 +204,7 @@ nav ul li a.active {
   justify-content: flex-start; 
 }
 #my-event i{
-    color: #4CAF50;
+    color: #2c3e50;
 }
 #my-event strong{
     color: #444;
@@ -220,6 +226,7 @@ nav ul li a.active {
   width: 1px;
   background: #ddd;
 }
+
 .stat-card h5 {
     
     font-size: 1rem;
@@ -234,7 +241,10 @@ nav ul li a.active {
     
 }
 
-
+#my-event .card{
+border-radius: 1rem !important;
+border: none !important;
+}
 .box {
     
     
@@ -446,9 +456,10 @@ textarea {
 /* Base spacing */
 #my-event {
     margin-top: 1.5rem;
+    
 }
 #my-event a{
-    background: #45a049;
+    background: #2c3e50;
     color: #fff;
 }
 #my-event a:hover{
@@ -469,6 +480,7 @@ textarea {
     margin: .5rem;
     
 }
+
 #event-details {
     border-radius: 1rem;
 }
@@ -501,16 +513,38 @@ textarea {
 
 #my-event-info .amount-joined p {
   margin: 0;
-  font-size: 1.2rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: #2c3e50;
 }
+#table .btn-stat{
+    background: #2c3e50;
+    padding: .5rem 1rem;
+    color: #fff;
+    border-radius: .5rem;
+}
+#table .btn-stat:hover{
+    background: #333;
 
+}
 #my-event-info .amount-joined i {
   font-size: 1.2rem;
   color: #45a049;
 }
-
+#my-event-info .amount-joined .wait {
+  font-size: 1.2rem;
+  color: #fff020;
+}
+#my-event-info .amount-joined .den {
+  font-size: 1.2rem;
+  color: #ff2020;
+}
+#my-event h1{
+color: #2c3e50;
+}
+#my-event p strong{
+    color: #2c3e50;
+}
 
 #my-event-info .amount-joined h5 {
   font-size: 1rem;
@@ -839,7 +873,15 @@ textarea {
         font-size: 0.9rem;
     }
 }
-
+#create-top .btn{
+    background: #2c3e50;
+    color: #fff;
+    
+}
+#create-top .btn:hover{
+    background: #333;
+    color: #fff;
+}
 @media (max-width: 768px) {
     #info {
         padding-top: 3rem;
@@ -1247,8 +1289,17 @@ aside{
 }
 
 
-
-
+.btn-back{
+    background: #2c3e50;
+    color: #fff;
+    padding: .5rem 1rem;
+    border-radius: .5rem;
+     text-decoration: none;
+}
+.btn-back:hover{
+    background: #333;
+    color: #fff;
+}
 /* Main Chat Area */
 #msg main.chat-container {
     flex-grow: 1;
@@ -1262,7 +1313,7 @@ aside{
     flex-grow: 1;
     display: flex;
     flex-direction: column;
-    background: #e5ddd5;
+        background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
     position: relative;
     height: calc(100% - 56px); /* Subtract header height */
 }
@@ -1287,7 +1338,7 @@ aside{
 #msg .chat-messages {
     flex-grow: 1;
     overflow-y: auto;
-    padding: 1rem;
+    padding: .1rem;
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
@@ -1309,13 +1360,14 @@ aside{
 
 .msg-bubble {
     max-width: 80%;
-    padding: 10px 14px;
+    padding: .5rem 1rem;
+    margin: .5rem;
     border-radius: 18px;
     font-size: 14px;
     line-height: 1.4;
     word-wrap: break-word;
     overflow-wrap: break-word;
-    white-space: pre-wrap;
+    
     position: relative;
 }
 
@@ -1333,26 +1385,35 @@ aside{
     font-size: 0.7rem;
     color: #666;
     text-align: right;
-    margin-top: 4px;
+    margin-top: 1px;
 }
 
 .message-container.received .message-time {
     text-align: left;
 }
 
-/* Input Area */
 #chatInputWrapper {
     position: fixed;
     bottom: 0;
-    width: 100%;
+    left: 350px;    
+    right: 0;      
     background: white;
     padding: 10px 15px;
     border-top: 1px solid #ddd;
     display: flex;
     gap: 8px;
-    z-index: 10;
-    transition: transform 0.3s ease;
+    z-index: 1100;
+    transition: transform 0.3s ease, left 0.3s ease;
 }
+@media (max-width: 991px) {
+    #chatInputWrapper {
+        left: 0;    
+        right: 0;
+    }
+}
+
+
+
 
 #chatInputWrapper.active {
     transform: translateY(0);
@@ -1452,6 +1513,11 @@ aside{
     height: 100%;
     color: #999;
 }
+@media (max-width: 992px) {
+    #msg main.chat-container {
+        width: 100%;
+    }
+}
 
 @media (min-width: 992px) {
     #msg aside.contacts {
@@ -1512,4 +1578,10 @@ aside{
     .message-time {
         font-size: 0.6rem;
     }
+}
+.load-btn .btn:hover{
+    margin-bottom: 1rem;
+    padding-bottom: .5rem 1rem;
+    border: #333 .1rem solid;
+    color: #333;
 }

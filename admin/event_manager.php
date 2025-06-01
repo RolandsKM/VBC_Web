@@ -53,7 +53,10 @@ $popularEvent = getMostPopularEvent();
             --warning-color: #f6c23e;
             --text-color: #5a5c69;
         }
-        
+        .drop-table a{
+   color:#fff;
+}
+
     </style>
 </head>
 <body>
@@ -65,136 +68,116 @@ $popularEvent = getMostPopularEvent();
         
         <div class="container-fluid py-4">
         
-            <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                <h1 class="h3 mb-0 text-gray-800">Events Dashboard</h1>
 
-            </div>
-            <div class="row mb-4">
-                <div class="col-xl-3 col-md-6 mb-4">
-                    <div class="card stat-card border-left-primary shadow h-100 py-2">
-                        <div class="card-body">
-                            <div class="row no-gutters align-items-center">
-                                <div class="col mr-2">
-                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                        Total Events</div>
-                                    <div class="h5 mb-0 font-weight-bold text-gray-800"><?= count($events) ?></div>
-                                </div>
-                                <div class="col-auto">
-                                    <i class="fas fa-calendar-alt fa-2x text-gray-300"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Sludinājumu Panelis</h1>
+</div>
 
-                <div class="col-xl-3 col-md-6 mb-4">
-                    <div class="card stat-card border-left-danger shadow h-100 py-2">
-                        <div class="card-body">
-                            <div class="row no-gutters align-items-center">
-                                <div class="col mr-2">
-                                    <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
-                                        Deleted Events</div>
-                                    <div class="h5 mb-0 font-weight-bold text-gray-800"><?= $deletedCount ?></div>
-                                </div>
-                                <div class="col-auto">
-                                    <i class="fas fa-trash-alt fa-2x text-gray-300"></i>
-                                </div>
-                            </div>
-                        </div>
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stat-card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Kopā Sludinājumi</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800"><?= count($events) ?></div>
                     </div>
-                </div>
-                <div class="col-xl-3 col-md-6 mb-4">
-                    <div class="card stat-card border-left-warning shadow h-100 py-2">
-                        <div class="card-body">
-                            <div class="row no-gutters align-items-center">
-                                <div class="col mr-2">
-                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                        Volunteers </div>
-                                    <div class="h5 mb-0 font-weight-bold text-gray-800"><?= $popularEvent['volunteer_count'] ?? 0 ?></div>
-                                </div>
-                                <div class="col-auto">
-                                    <i class="fas fa-users fa-2x text-gray-300"></i>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="col-auto">
+                        <i class="fas fa-calendar-alt fa-2x text-gray-300"></i>
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold ">All Events</h6>
-                    <div class="dropdown no-arrow">
-                        <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" 
-                           data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end shadow animated--fade-in" 
-                            aria-labelledby="dropdownMenuLink">
-                            <li><a class="dropdown-item" href="#">Export to CSV</a></li>
-                            <li><a class="dropdown-item" href="#">Print</a></li>
-                            <li><a class="dropdown-item" href="#">Filter by Status</a></li>
-                        </ul>
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stat-card border-left-danger shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                            Izdzēstie Sludinājumi</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800"><?= $deletedCount ?></div>
                     </div>
-                </div>
-                <div class="card-body">
-                   <div class="table-responsive">
-                        <table class="table table-bordered table-hover" width="100%" cellspacing="0">
-                            <thead>
-                                <tr>
-                                    <th>Event ID</th>
-                                    <th>Title</th>
-                                    <th>Created By</th>
-                                    <th>Deleted</th>
-                                    <th>Created At</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="events-body">
-                                <?php foreach($events as $event): ?>
-                                <tr class="<?= $event['deleted'] ? 'table-danger' : '' ?>">
-                                    <td><?= htmlspecialchars($event['ID_Event']) ?></td>
-                                    <td><?= htmlspecialchars($event['title']) ?></td>
-                                    <td><?= htmlspecialchars($event['name'] . ' ' . $event['surname'] . ' (' . $event['username'] . ')') ?></td>
-                                  
-                                    <td>
-                                        <span class="status-badge <?= $event['deleted'] ? 'status-deleted' : 'status-active' ?>">
-                                            <?= $event['deleted'] ? 'Yes' : 'No' ?>
-                                        </span>
-                                    </td>
-                                    <td><?= date('Y-m-d H:i', strtotime($event['created_at'])) ?></td>
-                                    <td>
-                                        <a href="event_details.php?id=<?= $event['ID_Event'] ?>" class="btn btn-sm btn-primary">
-                                            <i class="fas fa-eye"></i> View
-                                        </a>
-                                    </td>
-                                </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                          <div id="events-pagination" class="pagination-container"></div>
-                    </div>
-                  
-                </div>
-            </div>
-
-       
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="card shadow mb-4">
-                        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                            <h6 class="m-0 font-weight-bold">Event Creation Trends</h6>
-
-                        </div>
-                        <div class="card-body">
-                            <div class="chart-container" style="height: 400px;">
-                                <canvas id="eventsByDayChart"></canvas>
-                            </div>
-
-                        </div>
+                    <div class="col-auto">
+                        <i class="fas fa-trash-alt fa-2x text-gray-300"></i>
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stat-card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Pieteikušies</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800"><?= $popularEvent['volunteer_count'] ?? 0 ?></div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-users fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+        <h6 class="m-0 font-weight-bold">Visi Sludinājumi</h6>
+        <div class="dropdown drop-table no-arrow">
+            <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" 
+               data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
+                <li><a id="export-csv" class="dropdown-item" href="#">Eksportēt uz CSV</a></li>
+                <li><a id="print-table" class="dropdown-item" href="#">Drukāt</a></li>
+            </ul>
+
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>Sludinājuma ID</th>
+                        <th>Nosaukums</th>
+                        <th>Izveidoja</th>
+                        <th>Dzēsts</th>
+                        <th>Izveidots</th>
+                        <th>Darbības</th>
+                    </tr>
+                </thead>
+                <tbody id="events-body">
+               
+                </tbody>
+            </table>
+            <div id="events-pagination" class="pagination-container"></div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold">Sludinājumi</h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-container" style="height: 400px;">
+                    <canvas id="eventsByDayChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
         </div>
     </div>
 </div>
@@ -225,9 +208,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        tbody.innerHTML = events.map(event => `
+        tbody.innerHTML = events.map((event, index) => `
             <tr class="${event.deleted ? 'table-danger' : ''}">
-                <td>${escapeHtml(event.ID_Event)}</td>
+                <td>${index + 1}</td>
                 <td>${escapeHtml(event.title)}</td>
                 <td>${escapeHtml(event.name + ' ' + event.surname + ' (' + event.username + ')')}</td>
                 <td>
@@ -300,6 +283,67 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     fetchEvents(1);
+    document.getElementById('print-table').addEventListener('click', (e) => {
+        e.preventDefault();
+        const table = document.querySelector('.table.table-bordered');
+        if (!table) {
+            alert('Tabula nav atrasta!');
+            return;
+        }
+        const printWindow = window.open('', '', 'width=900,height=600');
+        printWindow.document.write('<html><head><title>Drukāt Sludinājumus</title>');
+        printWindow.document.write('<style>table { width: 100%; border-collapse: collapse; } table, th, td { border: 1px solid black; padding: 5px; } body { font-family: Arial, sans-serif; }</style>');
+        printWindow.document.write('</head><body>');
+        printWindow.document.write(table.outerHTML);
+        printWindow.document.write('</body></html>');
+        printWindow.document.close();
+        printWindow.focus();
+        printWindow.print();
+        printWindow.close();
+    });
+
+    // Export visible events table to CSV
+    document.getElementById('export-csv').addEventListener('click', (e) => {
+        e.preventDefault();
+        const rows = document.querySelectorAll('#events-body tr');
+        if (rows.length === 0) {
+            alert('Nav datu, ko eksportēt!');
+            return;
+        }
+
+        // Prepare CSV header
+        const headers = ['Sludinājuma ID', 'Nosaukums', 'Izveidoja', 'Dzēsts', 'Izveidots'];
+
+        // Collect CSV rows
+        const csvRows = [];
+        csvRows.push(headers.join(','));
+
+        rows.forEach(row => {
+            const cols = row.querySelectorAll('td');
+            if (cols.length < 5) return; // skip if unexpected format
+            const rowData = [
+                cols[0].innerText.trim(), // ID
+                `"${cols[1].innerText.trim().replace(/"/g, '""')}"`, // Title, quotes for safety
+                `"${cols[2].innerText.trim().replace(/"/g, '""')}"`, // Created by
+                cols[3].innerText.trim(), // Deleted
+                cols[4].innerText.trim(), // Created at
+            ];
+            csvRows.push(rowData.join(','));
+        });
+
+        // Create CSV Blob and trigger download
+        const csvString = csvRows.join('\n');
+        const blob = new Blob([csvString], {type: 'text/csv;charset=utf-8;'});
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `sludinajumi_${new Date().toISOString().slice(0,10)}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    });
 });
 </script>
 

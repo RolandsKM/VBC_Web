@@ -39,7 +39,7 @@ include '../css/templates/header.php';
     <div class="group">
         <div class="amount-joined  p-4">
             <p id="count-waiting">0</p>
-            <i class="fa-solid fa-people-group"></i>
+            <i class="fa-solid fa-people-group wait"></i>
             <h5>Pieteikušies</h5>
         </div>
         <div class="amount-joined  p-4">
@@ -49,7 +49,7 @@ include '../css/templates/header.php';
         </div>
         <div class="amount-joined  p-4">
             <p id="count-denied">0</p>
-            <i class="fa-solid fa-people-group"></i>
+            <i class="fa-solid fa-people-group den"></i>
             <h5>Noraidīti</h5>
         </div>
     </div>
@@ -65,7 +65,7 @@ include '../css/templates/header.php';
     <option value="accepted">Apstiprināt</option>
     <option value="denied">Noraidīt</option>
   </select>
-  <button class="btn btn-primary batch-update-btn" data-table="waiting">Mainīt izvēlētajiem</button>
+  <button class="btn-stat batch-update-btn" data-table="waiting">Mainīt izvēlētajiem</button>
 </div>
 
 <table class="table table-striped" id="waiting-table">
@@ -94,7 +94,7 @@ include '../css/templates/header.php';
                 <option value="waiting">Pieteicies</option>
                 <option value="denied">Noraidīt</option>
             </select>
-            <button class="btn btn-primary batch-update-btn" data-table="accepted">Mainīt izvēlētajiem</button>
+            <button class="btn-stat batch-update-btn" data-table="accepted">Mainīt izvēlētajiem</button>
         </div>
 
       <table class="table table-striped" id="accepted-table">
@@ -123,7 +123,7 @@ include '../css/templates/header.php';
                 <option value="waiting">Pieteicies</option>
                 <option value="accepted">Apstiprināt</option>
             </select>
-            <button class="btn btn-primary batch-update-btn" data-table="denied">Mainīt izvēlētajiem</button>
+            <button class="btn-stat batch-update-btn" data-table="denied">Mainīt izvēlētajiem</button>
         </div>
 
       <table class="table table-striped" id="denied-table">

@@ -12,7 +12,7 @@ if (!isset($_SESSION['ID_user']) || $_SESSION['role'] !== 'admin') {
 
 
 <header class="admin-header d-flex justify-content-between align-items-center px-4">
-    <a class="btn">VBC-Sadaļa</a>
+    <a href="../main/index.php" class="btn">VBC-Sadaļa</a>
 
     <div class="dropdown">
         <button class="dropbtn">

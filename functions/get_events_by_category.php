@@ -71,7 +71,7 @@ if ($search !== '') {
             <div class='event border p-3 mb-3 shadow-sm position-relative'>
 
                 <div class='event-user-info'>
-                    <img src='../uploads/$profilePic' alt='Profile picture' class='event-user-pic'>
+                    <img src='../functions/assets//$profilePic' alt='Profile picture' class='event-user-pic'>
                     <span class='event-username'>$username</span>
                 </div>
 

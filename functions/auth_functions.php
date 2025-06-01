@@ -1,6 +1,8 @@
 <?php
 require_once '../config/con_db.php';
+
 session_start();
+
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (isset($_POST['ielogoties'])) {
@@ -51,6 +53,8 @@ function handleLogin() {
         $_SESSION['surname'] = $user['surname'];
         $_SESSION['email'] = $user['email'];
         $_SESSION['role'] = $user['role'];
+        $_SESSION['profile_pic'] = $user['profile_pic']; // $user = fetched DB row with user info
+
         $_SESSION['ID_user'] = $user['ID_user'];
 
         unset($_SESSION['login_error'], $_SESSION['login_email']);
@@ -83,19 +87,16 @@ function handleRegister() {
     $lietotajvards = htmlspecialchars(trim($_POST['username']));
     $parole = trim($_POST['password']);
     $confirm_parole = trim($_POST['confirm_password']);
-
     $name = htmlspecialchars(trim($_POST['name']));
     $surname = htmlspecialchars(trim($_POST['surname']));
     $email = filter_var(trim($_POST['email']), FILTER_VALIDATE_EMAIL);
 
-    // CSRF
     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
         $_SESSION['form_errors']['csrf'] = "Nederīgs CSRF tokens!";
         header("Location: ../main/register.php");
         exit();
     }
 
-    // Validācijas
     if (!$email) {
         $_SESSION['form_errors']['email'] = "Nederīgs e-pasta formāts!";
     }
@@ -111,39 +112,52 @@ function handleRegister() {
     if (strlen($parole) < 8) {
         $_SESSION['form_errors']['password'] = "Parolei jābūt vismaz 8 simbolus garai!";
     }
+
     if ($parole !== $confirm_parole) {
         $_SESSION['form_errors']['confirm_password'] = "Paroles nesakrīt!";
     }
 
-  
     if (empty($_SESSION['form_errors'])) {
-        $stmt = $pdo->prepare("SELECT ID_user FROM users WHERE email = ?");
-        $stmt->execute([$email]);
-        if ($stmt->fetch()) {
-            $_SESSION['form_errors']['email'] = "E-pasts jau reģistrēts!";
+        try {
+            $stmt = $pdo->prepare("SELECT ID_user FROM users WHERE email = ?");
+            $stmt->execute([$email]);
+            if ($stmt->fetch()) {
+                $_SESSION['form_errors']['email'] = "E-pasts jau reģistrēts!";
+                header("Location: ../main/register.php");
+                exit();
+            }
+
+            $hashed_password = password_hash($parole, PASSWORD_DEFAULT);
+
+            $insert = $pdo->prepare("
+                INSERT INTO users (username, password, name, surname, email, profile_pic, location, role)
+                VALUES (?, ?, ?, ?, ?, NULL, NULL, 'user')
+            ");
+
+            $success = $insert->execute([$lietotajvards, $hashed_password, $name, $surname, $email]);
+
+            if ($success) {
+                unset($_SESSION['form_data'], $_SESSION['form_errors']);
+                header("Location: ../main/login.php");
+                exit();
+            } else {
+                $_SESSION['form_errors']['general'] = "Reģistrācija neizdevās!";
+                header("Location: ../main/register.php");
+                exit();
+            }
+
+        } catch (PDOException $e) {
+            error_log("Registration DB Error: " . $e->getMessage());
+            $_SESSION['form_errors']['general'] = "Reģistrācija neizdevās! (DB kļūda)";
+            header("Location: ../main/register.php");
+            exit();
         }
-    }
-
-    if (!empty($_SESSION['form_errors'])) {
-        header("Location: ../main/register.php");
-        exit();
-    }
-
-    $hashed_password = password_hash($parole, PASSWORD_DEFAULT);
-    $stmt = $pdo->prepare("INSERT INTO users (username, password, name, surname, email, profile_pic, location, role)
-                           VALUES (?, ?, ?, ?, ?, NULL, NULL, 'user')");
-    $success = $stmt->execute([$lietotajvards, $hashed_password, $name, $surname, $email]);
-
-    if ($success) {
-        unset($_SESSION['form_data'], $_SESSION['form_errors']);
-        header("Location: ../main/login.php");
-        exit();
     } else {
-        $_SESSION['form_errors']['general'] = "Reģistrācija neizdevās!";
         header("Location: ../main/register.php");
         exit();
     }
 }
+
 
 // -------------------------
 // LOGOUT

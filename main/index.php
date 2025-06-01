@@ -2,6 +2,17 @@
 
 include '../css/templates/header.php'; 
   include '../functions/get_categories_count.php'; 
+include '../config/con_db.php';
+
+// Get count of upcoming events (date > NOW and not deleted)
+$stmtEvents = $pdo->prepare("SELECT COUNT(*) as count FROM Events WHERE date > NOW() AND deleted = 0");
+$stmtEvents->execute();
+$upcomingEvents = $stmtEvents->fetch()['count'] ?? 0;
+
+// Get count of active users (not banned)
+$stmtUsers = $pdo->prepare("SELECT COUNT(*) as count FROM users WHERE banned = 0");
+$stmtUsers->execute();
+$activeUsers = $stmtUsers->fetch()['count'] ?? 0;
 
 ?>
 
@@ -20,6 +31,103 @@ include '../css/templates/header.php';
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script> 
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+/* Stats Section */
+:root {
+  --primary-color: #4CAF50;
+  --primary-dark: #3e8e41;
+  --secondary-color: #2196F3;
+  --secondary-dark: #0b7dda;
+  --accent-color: #FF9800;
+  --dark-color: #333;
+  --light-color: #f8f9fa;
+  --gray-color: #6c757d;
+  --light-gray: #e9ecef;
+  --white: #fff;
+  --black: #000;
+  --box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  --transition: all 0.3s ease;
+}
+
+/* Existing styles (for reference) */
+.stats-section {
+  background-color: var(--primary-color);
+  color: var(--white);
+  padding: 3rem 0;
+  text-align: center;
+}
+
+.stats-container {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: nowrap; /* Keep next to each other */
+  gap: 30px;
+}
+
+.stat-item {
+  flex: 1;
+  min-width: 150px;
+}
+
+.stat-number {
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.stat-label {
+  font-size: 1.1rem;
+}
+
+/* Responsive tweaks */
+@media (max-width: 480px) {
+  .stats-section {
+    padding: 2rem 1rem;
+  }
+  
+  .stats-container {
+    gap: 15px;
+  }
+  
+  .stat-item {
+    min-width: 100px;
+  }
+  
+  .stat-number {
+    font-size: 2rem;
+    margin-bottom: 6px;
+  }
+  
+  .stat-label {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .stats-section {
+    padding: 1.5rem 0.5rem;
+  }
+  
+  .stats-container {
+    gap: 10px;
+  }
+  
+  .stat-item {
+    min-width: 90px;
+  }
+  
+  .stat-number {
+    font-size: 1.6rem;
+    margin-bottom: 4px;
+  }
+  
+  .stat-label {
+    font-size: 0.8rem;
+  }
+}
+
+
+</style>
 </head>
 
 <body>
@@ -55,10 +163,20 @@ include '../css/templates/header.php';
 
 
 
-    <section id="posters">
-        <h2>Populārākie Paziņojumi</h2>
-       Šī section tiks izveidota vēlāk
-    </section>
+
+    <section class="stats-section">
+    <div class="stats-container">
+        <div class="stat-item">
+            <div class="stat-number" id="volunteers-count"><?= htmlspecialchars($activeUsers) ?></div>
+            <div class="stat-label">Aktīvi brīvprātīgie</div>
+        </div>
+
+        <div class="stat-item">
+            <div class="stat-number" id="events-count"><?= htmlspecialchars($upcomingEvents) ?></div>
+            <div class="stat-label">Aktīvi sludinājumi</div>
+        </div>
+    </div>
+</section>
 
     <section class="about-us" id="about">
         <h1>Par Mums</h1>

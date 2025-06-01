@@ -1,3 +1,5 @@
+
+
 <?php 
 session_start();
 if (!isset($_SESSION['ID_user'])) {
@@ -14,48 +16,110 @@ include '../css/templates/header.php';  ?>
     <title>Vietējais Brīvprātīgais Centrs</title>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="user.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;600&display=swap">
+    <link rel="stylesheet" href="user-style.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="../functions/script.js"></script>
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script> 
+    <style>
+        #user {
+                
+                padding: 5rem 0 0;
+            }
+    </style>
 </head>
 <body id="user">
 
-<section id="info" class="py-5">
+<section id="profile-header" class="py-4">
     <div class="container">
-        <div class="profile-container d-flex align-items-start gap-4 flex-wrap">
-            
-            <div class="left-profile d-flex flex-column align-items-center">
-                <div class="avatar mb-2">
-                    <img src="<?= htmlspecialchars($_SESSION['profile_pic']) ?>" class="img-fluid rounded-circle" alt="Avatar" width="100">
+        <div class="profile-card">
+            <div class="profile-main">
+
+
+                <div class="profile-avatar">
+                  <img src="../functions/assets/<?= htmlspecialchars($_SESSION['profile_pic']) ?>">
+
+
                 </div>
-                <p class="mb-0"><strong></strong> <strong><?= htmlspecialchars($_SESSION['username']) ?></strong></p>
+                <div class="profile-info">
+                    <h1><?= htmlspecialchars($_SESSION['username']) ?></h1>
+                    <p class="text-muted"><?= htmlspecialchars($_SESSION['email']) ?></p>
+                </div>
+                <div class="profile-actions">
+                    <a href="messages.php" class="btn-action" title="Ziņas">
+                        <i class="bi bi-chat-dots"></i>
+                    </a>
+                    <a href="account_info.php" class="btn-action" title="Iestatījumi">
+                        <i class="fas fa-cog"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="profile-stats">
+                <div class="stat-item">
+                    <span class="stat-number" id="post-count">0</span>
+                    <span class="stat-label">Sludinājumi</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="joined-count">0</span>
+                    <span class="stat-label">Pieteikumi</span>
+                </div>
             </div>
 
-          
-            <div class="right-profile flex-grow-1">
-                <div class="stats-boxes d-flex gap-4 flex-wrap">
-                    <div class="stat-card box text-center">
-                        <p>0</p>
-                        <h5>Sludinājumi</h5>
-                    </div>
-                    <div class="stat-card box text-center">
-                        <p>0</p>
-                        <h5>Pieteicies</h5>
-                        
-                    </div>
+
+             
+        </div>
+    </div>
+</section>
+
+<!-- Events Section -->
+<section id="event" class="py-3">
+    <div class="container">
+
+        <div class="button-box">
+            <div class="action-btn">
+                <button class="sludinajumi-btn active">Sludinājumi</button>
+                <button class="pieteicies-btn">Pieteicies</button>
+            </div>
+
+            <div class="create-btn">
+                <a href="create.php" class="btn">Izveidot</a>
+            </div>
+        </div>
+
+        <div class="event-container active">
+            <div class="events-grid" id="own-events-grid">
+                <div class="empty-state">
+                    <i class="fas fa-calendar-plus"></i>
+                    <p>Nav sludinājuma</p>
                 </div>
             </div>
-            <a href="messages.php" class="msg-btn">
-                <i class="bi bi-chat-dots-fill"></i>
-            </a>
-            <a href="setting.php" class="msg-btn">
-                <i class="fa-solid fa-gear"></i>
-            </a>
+            <div class="text-center mt-3 load-btn">
+                <button id="load-more-own" class="btn">Ielādēt vēl</button>
+            </div>
+        </div>
+
+        <div class="joined-container">
+            <div class="events-grid" id="joined-events-grid">
+                <div class="empty-state">
+                    <i class="fas fa-users"></i>
+                    <p>Pagaidām nav pieteikumu</p>
+                </div>
+            </div>
+            <div class="text-center mt-3 load-btn">
+                <button id="load-more-joined" class="btn">Ielādēt vēl</button>
+            </div>
+
+
+        </div>
+    </div>
+    
+</section>
+
+
+<style>
+
+</style>
 
 <script>
   const icon = document.querySelector('.msg-btn i');
@@ -69,40 +133,12 @@ include '../css/templates/header.php';  ?>
     icon.classList.remove('bi-chat-dots');
     icon.classList.add('bi-chat-dots-fill');
   });
+
+
 </script>
 
-        </div>
-    </div>
-</section>
-
-<section id="event">
-    <div class="button-box">
-        <div class="action-btn">
-            <button class="sludinajumi-btn active">Sludinājumi</button>
-            <button class="pieteicies-btn">Pieteicies</button>
-        </div>
-
-        <div class="create-btn">
-           
-            <a href="create.php" class="btn">Izveidot</a>
-        </div>
-
-    </div>
-
-    <div class="event-container">
-  
-    <p>Nav sludinājuma.</p>
-    </div>
-
-    <div class="joined-container" style="display: none;">
-        <p>Pagaidām nav pieteikumu.</p>
-    </div>
-
-</section>
-
-
-<?php include '../main/footer.php'; ?>
-
-
+<?php include '../css/templates/footer.php'; ?>
 </body>
 </html>
+
+

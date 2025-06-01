@@ -14,31 +14,90 @@ body {
     display: flex;
     min-height: 100vh;
 }
-
-/* Sidebar */
-aside {
-    width: 15.6rem;        
-    background-color: #ffffff;
-    
-    border-right: 0.1rem solid #ddd; 
-}
-aside h3{
-    padding: 1rem 1rem .5rem;
-}
-aside nav a,
-aside nav button {
-    color: #383838;
-    background: none;
-    transition: 0.3s;
+.admin-sidebar {
+    width: 100%;
+    background-color: #fff;
+    border-right: 1px solid #eee;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
 }
 
-aside nav a:hover,
-aside nav button:hover,
-aside nav a.active,
-aside nav button.active {
-    color: #fff;
-    background: #45a049;
+@media (min-width: 992px) {
+    .admin-sidebar {
+        width: 280px;
+        min-height: calc(100vh - 120px);
+    }
 }
+
+.admin-sidebar-title {
+    padding: 20px;
+    margin: 0;
+    font-weight: 600;
+    color: var(--primary-color);
+    border-bottom: 1px solid #eee;
+}
+
+.admin-nav {
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-nav a,
+.dropdown-toggle-admin {
+    padding: 12px 20px;
+    text-decoration: none;
+    color: var(--dark-gray);
+    background-color: transparent;
+    border: none;
+    text-align: left;
+    width: 100%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+}
+
+.admin-nav a:hover,
+.dropdown-toggle-admin:hover,
+.admin-nav a.active,
+.dropdown-toggle-admin.active {
+    color: var(--primary-color);
+    background-color: var(--light-gray);
+    border-left: 4px solid var(--secondary-color);
+    padding-left: 16px;
+}
+
+.dropdown-admin {
+    display: flex;
+    flex-direction: column;
+}
+
+.dropdown-content-admin {
+    display: none;
+    flex-direction: column;
+    margin-left: 10px;
+    padding-left: 10px;
+    border-left: 2px solid #eee;
+}
+
+.dropdown-admin.open .dropdown-content-admin {
+    display: flex;
+}
+h5{
+    color: #333;
+}
+
+.dropdown-content-admin a {
+    padding: 10px 20px;
+    font-size: 0.95rem;
+    color: var(--dark-gray);
+}
+
+.dropdown-content-admin a.active {
+    color: var(--primary-color);
+    background-color: var(--light-gray);
+    border-left: 4px solid var(--secondary-color);
+    padding-left: 16px;
+}
+
 
 .main-content {
     flex-grow: 1;
@@ -179,22 +238,21 @@ header .btn:hover {
     margin-top: 10rem;
 }
 .card-header{
-    background: #4CAF50 !important;
+    background: #4caf4fad !important;
     
 }
+card
 .dropdown .dropdown-toggle {
     color: #fff !important;
 }
 .dropdown li a{
     color: #333 !important;
 }
-#bannedActiveChart{
 
-}
-#newUsersChart{
+/* #newUsersChart{
       height: 20rem !important;
     width: 100% !important;
-}
+} */
 
 
 /* event managaer */
@@ -272,7 +330,12 @@ h6{
     background-color: var(--danger-color);
     color: white;
 }
-
+.btn-darb{
+    color: #fff;
+}
+.btn-darb:hover{
+    color: #333;
+}
 .chart-container {
     position: relative;
     height: 300px;

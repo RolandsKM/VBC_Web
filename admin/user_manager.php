@@ -5,7 +5,7 @@ if (isset($_GET['chart']) && $_GET['chart'] === 'bannedActive' && isset($_GET['p
     $period = $_GET['period'];
     try {
         $bannedCount = getBannedUsersCountByPeriod($period);
-        $activeCount = getUsersCountByPeriod($period); // active = not banned users count
+        $activeCount = getUsersCountByPeriod($period); 
         echo json_encode(['success' => true, 'banned' => $bannedCount, 'active' => $activeCount]);
     } catch (PDOException $e) {
         echo json_encode(['success' => false, 'message' => $e->getMessage()]);
@@ -67,7 +67,7 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
             'perPage' => $perPage
         ]);
     } catch (PDOException $e) {
-        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+     
     }
     exit;
 }
@@ -83,7 +83,7 @@ try {
     $allBannedCount = getBannedUsersCountByPeriod($filterPeriod);
 
 } catch (PDOException $e) {
-    echo "Kļūda, neizdevās ielādēt lietotājus: " . $e->getMessage();
+  
     $todaysUsers = [];
     $todaysUsersCount = 0;
     $todaysBannedCount = 0;
@@ -120,6 +120,9 @@ try {
         }
         
 
+.drop-table a{
+   color:#fff;
+}
 
     </style>
 </head>
@@ -208,12 +211,42 @@ try {
                     </div>
                 </div>
             </div>
-
-            <!-- Today's Users Section -->
+            <div class="d-flex justify-content-end mb-3">
+                <select id="filter-period" class="form-select form-select-sm me-2 filter-control">
+                    <option value="all" <?= $filterPeriod === 'all' ? 'selected' : '' ?>>Visi</option>
+                    <option value="week" <?= $filterPeriod === 'week' ? 'selected' : '' ?>>Šonedēļ</option>
+                    <option value="month" <?= $filterPeriod === 'month' ? 'selected' : '' ?>>Šomēnes</option>
+                    <option value="year" <?= $filterPeriod === 'year' ? 'selected' : '' ?>>Šogad</option>
+                </select>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    <div class="card shadow-sm border-0 mb-4">
+                        <div class="card-header bg-white border-bottom-0 d-flex align-items-center justify-content-between">
+                            <h6 class="m-0 fw-semibold text-muted">Lietotāju Statuss & Jauno Lietotāju Dinamika</h6>
+                        </div>
+                        <div class="card-body p-3">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="chart-container">
+                                        <canvas id="bannedActiveChart"></canvas>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="chart-container">
+                                        <canvas id="newUsersChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <div class="card shadow mb-4">
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                     <h6 class="m-0 font-weight-bold ">Šodien Reģistrētie Lietotāji</h6>
-                    <div class="dropdown no-arrow">
+                    <div class="dropdown drop-table drop-table no-arrow">
                         <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" 
                            data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
@@ -276,13 +309,8 @@ try {
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                     <h6 class="m-0 font-weight-bold">Visi Lietotāji</h6>
                     <div class="d-flex">
-                        <select id="filter-period" class="form-select form-select-sm me-2 filter-control">
-                            <option value="all" <?= $filterPeriod === 'all' ? 'selected' : '' ?>>Visi</option>
-                            <option value="week" <?= $filterPeriod === 'week' ? 'selected' : '' ?>>Šonedēļ</option>
-                            <option value="month" <?= $filterPeriod === 'month' ? 'selected' : '' ?>>Šomēnes</option>
-                            <option value="year" <?= $filterPeriod === 'year' ? 'selected' : '' ?>>Šogad</option>
-                        </select>
-                        <div class="dropdown no-arrow">
+
+                        <div class="dropdown drop-table drop-table no-arrow">
                             <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" 
                                data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
@@ -291,7 +319,7 @@ try {
                                 aria-labelledby="dropdownMenuLink">
                                 <li><a class="dropdown-item" href="#">Eksportēt uz CSV</a></li>
                                 <li><a class="dropdown-item" href="#">Drukāt</a></li>
-                                <li><a class="dropdown-item" href="#">Filtrēt pēc statusa</a></li>
+                               
                             </ul>
                         </div>
                     </div>
@@ -337,35 +365,9 @@ try {
             </div>
 
    
-            <div class="row">
-                <div class="col-xl-6 col-lg-6">
-                    <div class="card shadow mb-4">
-                        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                            <h6 class="m-0 font-weight-bold">Lietotāju Statuss: Bloķēti vs Aktīvi</h6>
-                          
-                        </div>
-                        <div class="card-body">
-                            <div class="chart-area">
-                                <canvas id="bannedActiveChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
-                <div class="col-xl-6 col-lg-6">
-                    <div class="card shadow mb-4">
-                        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                            <h6 class="m-0 font-weight-bold ">Jauno Lietotāju Dinamika</h6>
 
-                        </div>
-                        <div class="card-body">
-                            <div class="chart-area">
-                                <canvas id="newUsersChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+
         </div>
     </div>
 </div>

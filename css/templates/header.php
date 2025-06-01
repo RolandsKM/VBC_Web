@@ -117,5 +117,96 @@ $user_role = isset($_SESSION['role']) ? $_SESSION['role'] : '';
     font-weight: bold;
 }
 
+header {
+    background-color: #ffffff;
+    color: #333;
+    padding: 1.5rem 12%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+
+body {
+    padding-top: 80px;
+}
+
+
+header nav ul {
+    list-style: none;
+    display: flex;
+    gap: 1rem;
+    margin: 0;
+    padding: 0;
+}
+
+header nav {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+header .nav-left {
+    display: flex;
+    gap: 1rem;
+    flex-grow: 1;
+}
+
+header .nav-right {
+    display: flex;
+    gap: 1rem;
+  
+    padding: .5rem;
+}
+
+
+header nav ul li {
+    margin: 0;
+}
+
+nav ul li a {
+    color: #383838;
+    font-weight: 100;
+    padding: 0.5rem 1rem;
+    text-decoration: none;
+}
+
+nav ul li a.active {
+    border-bottom: .1rem solid #4CAF50;
+    color: #45a049;
+    font-weight: bold;
+}
+
+/* Navigation wrapper for mobile */
+.nav-links {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+
+
+.nav-right {
+    display: flex;
+    gap: 1rem;
+    margin-left: auto;
+}
+
+/* Hamburger Button */
+.hamburger {
+    display: none;
+    font-size: 2rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
 
 </style>

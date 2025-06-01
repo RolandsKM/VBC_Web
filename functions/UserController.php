@@ -29,7 +29,10 @@ function getUserStats() {
         $events = (int) $stmtEvents->fetchColumn();
 
         $stmtVols = $pdo->prepare(
-            "SELECT COUNT(*) AS cnt FROM Volunteers WHERE user_id = ?"
+             "SELECT COUNT(*) AS cnt
+     FROM Volunteers v
+     JOIN Events e ON v.event_id = e.ID_Event
+     WHERE v.user_id = ? AND v.status = 'waiting' AND e.deleted = 0"
         );
         $stmtVols->execute([$userId]);
         $volunteers = (int) $stmtVols->fetchColumn();

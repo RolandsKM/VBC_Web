@@ -34,12 +34,15 @@ $isLoggedIn = isset($_SESSION['ID_user']);
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="style-post.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <script>
         var userId = <?= $isLoggedIn ? $_SESSION['ID_user'] : 'null' ?>;
         var eventId = <?= $eventId ?>;
     </script>
+    <style>
 
+
+    </style>
     <script src="../functions/script.js" defer></script> 
 </head>
 <body>
@@ -54,10 +57,19 @@ $isLoggedIn = isset($_SESSION['ID_user']);
     </div>
 
 
-    <div class="container first">
-        <a href="javascript:history.back()" class="btn mb-3">⬅ Atpakaļ</a>
+    <div class="container first shadow">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <a href="javascript:history.back()" class="btn">⬅ Atpakaļ</a>
+            <?php if ($isLoggedIn && $_SESSION['ID_user'] != $event['user_id']): ?>
+                <button id="reportBtn" class="btn btn-warning">
+                    <i class="fa-solid fa-flag"></i>
+                </button>
+            <?php endif; ?>
+        </div>
 
         <div class=" p-4">
+
+
             <h1><?= htmlspecialchars($event['title']) ?></h1>
             <!-- <p><strong>🏷️ Kategorija:</strong> <?= htmlspecialchars($event['category_name']) ?></p> -->
             
@@ -78,8 +90,9 @@ $isLoggedIn = isset($_SESSION['ID_user']);
                     <p><strong>🗓 Datums:</strong> <?= $eventDate ?></p>
                 </div>
                 <div class="small-box ms-auto">
-                    <p><strong>Pievienojusies</strong></p>
+                    <p><strong>Pievienojusies:</strong> <?= intval($event['accepted_count']) ?> cilvēki</p>
                 </div>
+
                 
             </div>
         <hr>
@@ -88,7 +101,8 @@ $isLoggedIn = isset($_SESSION['ID_user']);
 
                     <div class=" p-3">
                             <div class="d-flex align-items-center">
-                                <img src="<?= htmlspecialchars($event['profile_pic']) ?>" alt="User Profile Picture" class="rounded-circle" width="100" height="100">
+                                <img src="../functions/assets/<?= htmlspecialchars($event['profile_pic']) ?>" alt="User Profile Picture" class="rounded-circle" width="100" height="100">
+                                
                                 <div class="ms-3">
                                     <h5 class="mb-0 text-start"><?= htmlspecialchars($event['username']) ?></h5>
                                     <p class="text-muted mb-0 text-start"><?= htmlspecialchars($event['email']) ?></p>
@@ -112,6 +126,43 @@ $isLoggedIn = isset($_SESSION['ID_user']);
             </div>
         </div>
     </section>
+<div id="reportModalOverlay"></div>
+<div id="reportModal">
+    <h3>Ziņot par pasākumu</h3>
+    <p>Lūdzu, izvēlieties iemeslu:</p>
+    
+    <div class="report-option">
+        <input type="radio" id="reason1" name="reportReason" value="Nepareiza atrašanās vieta">
+        <label for="reason1">Nepareiza atrašanās vieta</label>
+    </div>
+    
+    <div class="report-option">
+        <input type="radio" id="reason2" name="reportReason" value="Nepareizs datums/laiks">
+        <label for="reason2">Nepareizs datums/laiks</label>
+    </div>
+    
+    <div class="report-option">
+        <input type="radio" id="reason3" name="reportReason" value="Aizvainojošs saturs">
+        <label for="reason3">Aizvainojošs saturs</label>
+    </div>
+    
+    <div class="report-option">
+        <input type="radio" id="reason4" name="reportReason" value="Mākslīgais pasākums">
+        <label for="reason4">Mākslīgais pasākums</label>
+    </div>
+    
+    <div class="report-option">
+        <input type="radio" id="reason5" name="reportReason" value="Citi">
+        <label for="reason5">Citi</label>
+    </div>
+    
+    <textarea id="reportCustomReason" placeholder="Lūdzu, aprakstiet problēmu..." class="form-control"></textarea>
+    
+    <div id="reportModalButtons">
+        <button id="cancelReport" class="btn btn-outline-secondary">Atcelt</button>
+        <button id="submitReport" class="btn btn-danger">Iesniegt ziņojumu</button>
+    </div>
+</div>
 
     <script>
         const APP_DATA = {

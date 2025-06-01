@@ -1,7 +1,5 @@
 <?php 
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+
 session_start();
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -33,7 +31,7 @@ include '../css/templates/header.php';
 <div class="container d-flex justify-content-center align-items-center vh-100">
     <div class="card p-4 shadow-lg" style="width: 350px;">
         <h3 class="text-center">Reģistrācija</h3>
-        <form action="../database/auth_functions.php" method="POST">
+        <form action="../functions/auth_functions.php" method="POST">
             <?php if (!empty($errors['general'])): ?>
                 <div class="alert alert-danger"><?= $errors['general'] ?></div>
             <?php endif; ?>
@@ -101,7 +99,7 @@ include '../css/templates/header.php';
         <p class="text-center mt-3"><a href="login.php">Atpakaļ uz ielogošanos</a></p>
     </div>
 </div>
-<?php include '../css/templates/footer.php'; ?>
+<!--  -->
 
 </body>
 </html>

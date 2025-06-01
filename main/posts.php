@@ -20,8 +20,9 @@ $dateTo = isset($_GET['date_to']) ? $_GET['date_to'] : '';
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <link rel="stylesheet" href="style.css">
+    <style></style>
 </head>
-<body style="  overflow-x: hidden;">
+<body style="background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);  overflow-x: hidden;">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     const categoryId = "<?= $categoryId ?>";
@@ -148,12 +149,20 @@ $dateTo = isset($_GET['date_to']) ? $_GET['date_to'] : '';
                             </div>
                     </form>
                 </aside>
-        
+       
+           
+
 
                 <main class="col-md-9">
-                    <div class="mb-3 input-wrapper">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div class="create-btn">
+                        <a href="../user/create.php" class="btn" id="left_button" type="button">Izveidot</a>
+                    </div>
+                    <div class="input-wrapper" style="flex-grow: 1; margin-left: 20px;">
                         <input type="text" class="form" id="search_input" placeholder="Meklēt pasākumus pēc nosaukuma vai apraksta...">
                     </div>
+                </div>
+
 
                     <section id="events">
                         <p>Izvēlieties kategoriju, lai redzētu pasākumus.</p>

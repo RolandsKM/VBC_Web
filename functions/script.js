@@ -1,38 +1,63 @@
-
 $(document).ready(function () {
-   function loadEvents() {
+    let ownOffset = 0;
+    let joinedOffset = 0;
+    const limit = 4;
+
+    function loadEvents(append = false) {
         $.ajax({
-            url: '../functions/event_functions.php?action=own',
+            url: `../functions/event_functions.php?action=own&offset=${ownOffset}&limit=${limit}`,
             type: 'GET',
+            dataType: 'json',
             success: function (response) {
-                $(".event-container").html(response);
-            },
-            error: function () {
-                alert("Kļūda: Neizdevās ielādēt notikumus.");
+                if (append) {
+                    $("#own-events-grid").append(response.html);
+                } else {
+                    $("#own-events-grid").html(response.html);
+                }
+
+
+                if (!response.hasMore || $.trim(response.html) === "") {
+                    $("#load-more-own").hide();
+                } else {
+                    $("#load-more-own").show();
+                }
             }
         });
     }
 
-    function loadJoinedEvents() {
+    function loadJoinedEvents(append = false) {
         $.ajax({
-            url: '../functions/event_functions.php?action=joined',
+            url: `../functions/event_functions.php?action=joined&offset=${joinedOffset}&limit=${limit}`,
             type: 'GET',
+            dataType: 'json',
             success: function (response) {
-                $(".joined-container").html(response);
-            },
-            error: function () {
-                alert("Kļūda: Neizdevās ielādēt pieteiktos notikumus.");
+                if (append) {
+                    $("#joined-events-grid").append(response.html);
+                } else {
+                    $("#joined-events-grid").html(response.html);
+                }
+
+                if (!response.hasMore || $.trim(response.html) === "") {
+                    $("#load-more-joined").hide();
+                } else {
+                    $("#load-more-joined").show();
+                }
             }
         });
     }
 
-    $(".event-container").show();
-    $(".joined-container").hide();
-    $(".action-btn button").removeClass("active");
-    $(".sludinajumi-btn").addClass("active");
+    $("#load-more-own").click(function () {
+        ownOffset += limit;
+        loadEvents(true);
+    });
 
+    $("#load-more-joined").click(function () {
+        joinedOffset += limit;
+        loadJoinedEvents(true);
+    });
 
     $(".sludinajumi-btn").click(function () {
+        ownOffset = 0;
         $(".event-container").show();
         $(".joined-container").hide();
         $(".action-btn button").removeClass("active");
@@ -40,21 +65,24 @@ $(document).ready(function () {
         loadEvents();
     });
 
-    
     $(".pieteicies-btn").click(function () {
+        joinedOffset = 0;
         $(".event-container").hide();
         $(".joined-container").show();
         $(".action-btn button").removeClass("active");
         $(this).addClass("active");
-        loadJoinedEvents(); 
+        loadJoinedEvents();
     });
 
-  
+    $(".event-container").show();
+    $(".joined-container").hide();
+    $(".sludinajumi-btn").addClass("active");
     loadEvents();
 
     
-    setInterval(loadEvents, 30000);
+
 });
+
 
 $(document).ready(function () {
 
@@ -86,7 +114,7 @@ $(document).ready(function () {
             if (response === "success") {
                
                 alert("Pasākums izveidots veiksmīgi!");
-                window.location.href = "user.php"; // redirect to user page
+                window.location.href = "user.php"; 
             } else {
                     alert("Kļūda: " + response); 
                 }
@@ -97,6 +125,7 @@ $(document).ready(function () {
         });
         
     });
+     
 function loadCategories() {
     $.ajax({
         url: '../functions/get_categories.php',
@@ -110,7 +139,7 @@ function loadCategories() {
                 const text = $(this).text();
                 const styleAttr = $(this).attr("style") || "";
                 let colorMatch = styleAttr.match(/background-color:\s*([^;]+)/i);
-                let bgColor = colorMatch ? colorMatch[1].trim() : "#f8f9fa"; // default fallback
+                let bgColor = colorMatch ? colorMatch[1].trim() : "#f8f9fa"; 
 
                 if (val) {
                     cardsHtml += `
@@ -511,7 +540,7 @@ $(document).ready(function () {
         const selectedCity = $('#city').val();
         const selectedDateFrom = $('#date_from').val();
         const selectedDateTo = $('#date_to').val();
-        const searchTerm = searchInput.val();  // Get the current input
+        const searchTerm = searchInput.val();  
     
         loadEvents(selectedCatId, selectedCity, selectedDateFrom, selectedDateTo, searchTerm);
     });
@@ -661,7 +690,6 @@ $(document).ready(function() {
 
 
 $(document).ready(function() {
-    
     $.ajax({
         url: '../functions/UserController.php',
         method: 'GET',
@@ -674,14 +702,15 @@ $(document).ready(function() {
             return;
         }
 
-        var cards = $('.stat-card');
-        cards.eq(0).find('p').text(response.events);
-        cards.eq(1).find('p').text(response.volunteers);
+        // Update new stat elements by ID
+        $('#post-count').text(response.events);
+        $('#joined-count').text(response.volunteers);
     })
     .fail(function(jqXHR, textStatus, errorThrown) {
         console.error('AJAX error:', textStatus, errorThrown);
     });
 });
+
 
 // ||||||||||||
 // ||  CHAT  ||
@@ -802,3 +831,76 @@ function sendMessage() {
     }
 });
 
+// ----- REPORT- -----
+$(document).ready(function () {
+    
+    $("#reportBtn").click(function () {
+        $("#reportModalOverlay").show();
+        $("#reportModal").show();
+    });
+
+    $("input[name='reportReason']").change(function() {
+        if ($(this).val() === "Citi") {
+            $("#reportCustomReason").show();
+        } else {
+            $("#reportCustomReason").hide();
+        }
+    });
+
+    $("#cancelReport").click(function() {
+        closeReportModal();
+    });
+
+    $("#reportModalOverlay").click(function() {
+        closeReportModal();
+    });
+
+    function closeReportModal() {
+        $("#reportModal").hide();
+        $("#reportModalOverlay").hide();
+        $("input[name='reportReason']").prop('checked', false);
+        $("#reportCustomReason").val('').hide();
+    }
+
+    $("#submitReport").click(function () {
+        const selectedReason = $("input[name='reportReason']:checked").val();
+        let customReason = $("#reportCustomReason").val().trim();
+        
+        if (!selectedReason) {
+            alert("Lūdzu, izvēlieties iemeslu!");
+            return;
+        }
+        
+        let finalReason = selectedReason;
+        if (selectedReason === "Citi" && !customReason) {
+            alert("Lūdzu, aprakstiet iemeslu!");
+            return;
+        }
+        
+        if (selectedReason === "Citi") {
+            finalReason = "Citi: " + customReason;
+        }
+
+        $.ajax({
+            url: '../functions/event_functions.php',
+            method: 'POST',
+            data: {
+                action: 'report',
+                event_id: eventId,
+                user_id: userId,
+                reason: finalReason
+            },
+            success: function (response) {
+                if (response === "success") {
+                    alert("Paldies! Jūsu ziņojums ir saņemts.");
+                    closeReportModal();
+                } else {
+                    alert("Kļūda: " + response);
+                }
+            },
+            error: function () {
+                alert("Neizdevās iesniegt ziņojumu.");
+            }
+        });
+    });
+});

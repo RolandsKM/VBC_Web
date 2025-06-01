@@ -134,38 +134,40 @@ function formatDate(dateString) {
     const bannedActiveCtx = document.getElementById('bannedActiveChart').getContext('2d');
     const newUsersCtx = document.getElementById('newUsersChart').getContext('2d');
 
-    let bannedActiveChart = new Chart(bannedActiveCtx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Aktīvi lietotāji', 'Bloķēti lietotāji'],
-            datasets: [{
-                label: 'Lietotāji',
-                data: [0, 0],
-                backgroundColor: ['#0d6efd', '#dc3545'],
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { position: 'bottom' },
-                datalabels: {
-                    color: '#fff',
-                    formatter: (value, context) => {
-                        let total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                        let percentage = total ? (value / total * 100).toFixed(1) : 0;
-                        return `${value}\n(${percentage}%)`;
-                    },
-                    font: {
-                        weight: 'bold',
-                        size: 14,
-                    },
-                    anchor: 'center',
-                    align: 'center',
-                }
+let bannedActiveChart = new Chart(bannedActiveCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Aktīvi lietotāji', 'Bloķēti lietotāji'],
+        datasets: [{
+            label: 'Lietotāji',
+            data: [0, 0],
+            backgroundColor: ['#0d6efd', '#dc3545'],
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false, // << Important
+        plugins: {
+            legend: { position: 'bottom' },
+            datalabels: {
+                color: '#fff',
+                formatter: (value, context) => {
+                    let total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                    let percentage = total ? (value / total * 100).toFixed(1) : 0;
+                    return `${value}\n(${percentage}%)`;
+                },
+                font: {
+                    weight: 'bold',
+                    size: 14,
+                },
+                anchor: 'center',
+                align: 'center',
             }
-        },
-        plugins: [ChartDataLabels],
-    });
+        }
+    },
+    plugins: [ChartDataLabels],
+});
+
 
     let newUsersChart = new Chart(newUsersCtx, {
         type: 'bar',
@@ -217,3 +219,48 @@ function formatDate(dateString) {
 
     updateCharts(filterPeriodSelect.value);
 
+document.addEventListener('DOMContentLoaded', () => {
+  // Export to CSV
+  document.querySelectorAll('.dropdown-item').forEach(item => {
+    if (item.textContent.trim() === 'Eksportēt uz CSV') {
+      item.addEventListener('click', () => {
+        exportTableToCSV('users.csv');
+      });
+    }
+    if (item.textContent.trim() === 'Drukāt') {
+      item.addEventListener('click', () => {
+        window.print();
+      });
+    }
+  });
+});
+
+// Helper function to export HTML table to CSV
+function exportTableToCSV(filename) {
+  let csv = [];
+  const table = document.querySelector('.table'); // assumes you want to export the first table (you can be more specific)
+  const rows = table.querySelectorAll('tr');
+
+  rows.forEach(row => {
+    const cols = row.querySelectorAll('td, th');
+    const rowData = [];
+    cols.forEach(col => {
+      // Escape double quotes by doubling them
+      let data = col.innerText.replace(/"/g, '""');
+      // Wrap data containing commas or quotes in double quotes
+      if (data.search(/("|,|\n)/g) >= 0) data = `"${data}"`;
+      rowData.push(data);
+    });
+    csv.push(rowData.join(','));
+  });
+
+  // Create a blob and download it
+  const csvFile = new Blob([csv.join('\n')], {type: 'text/csv'});
+  const downloadLink = document.createElement('a');
+  downloadLink.download = filename;
+  downloadLink.href = URL.createObjectURL(csvFile);
+  downloadLink.style.display = 'none';
+  document.body.appendChild(downloadLink);
+  downloadLink.click();
+  document.body.removeChild(downloadLink);
+}

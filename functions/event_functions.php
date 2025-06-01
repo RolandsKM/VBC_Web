@@ -14,7 +14,8 @@ function fetchEventData($eventId) {
         SELECT e.title, e.description, e.date, e.location, e.city, e.zip, e.created_at, 
                c.Nosaukums AS category_name,
                u.ID_user AS user_id, 
-               u.username, u.email, u.profile_pic
+               u.username, u.email, u.profile_pic,
+               (SELECT COUNT(*) FROM Volunteers v WHERE v.event_id = e.ID_Event AND v.status = 'accepted') AS accepted_count
         FROM Events e
         LEFT JOIN Event_Categories ec ON e.ID_Event = ec.event_id
         LEFT JOIN VBC_Kategorijas c ON ec.category_id = c.Kategorijas_ID
@@ -34,9 +35,35 @@ function fetchEventData($eventId) {
 }
 
 
+// ------------------------
+// REPORT
+// ------------------------
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'report') {
+    $userId = intval($_POST['user_id']);
+    $eventId = intval($_POST['event_id']);
+    $reason = trim($_POST['reason']);
+
+    if ($userId <= 0 || $eventId <= 0 || empty($reason)) {
+        echo "Nepareizi dati.";
+        exit;
+    }
+
+
+    try {
+        $stmt = $pdo->prepare("INSERT INTO event_reports (ID_user, ID_event, reason) VALUES (?, ?, ?)");
+        $stmt->execute([$userId, $eventId, $reason]);
+        echo "success";
+    } catch (PDOException $e) {
+        echo "Kļūda datubāzē: " . $e->getMessage();
+    }
+
+    exit;
+}
 // -------------------------
 // HANDLE AJAX REQUESTS
 // -------------------------
+
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $action = $_POST['action'];
     $userId = isset($_SESSION['ID_user']) ? intval($_SESSION['ID_user']) : 0;
@@ -240,21 +267,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
         echo "Neautorizēta piekļuve!";
         exit();
     }
+    $offset = isset($_GET['offset']) ? (int)$_GET['offset'] : 0;
+    $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 4;
 
-    if ($action === 'own') {
-        try {
-            $stmt = $pdo->prepare("SELECT * FROM Events WHERE user_id = ? AND deleted = 0 ORDER BY created_at DESC");
-            $stmt->execute([$userId]);
-            $output = '';
+if ($action === 'own') {
+    try {
+      
+        $countStmt = $pdo->prepare("SELECT COUNT(*) FROM Events WHERE user_id = ? AND deleted = 0");
+        $countStmt->execute([$userId]);
+        $totalCount = $countStmt->fetchColumn();
 
-            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                $title = htmlspecialchars($row['title'], ENT_QUOTES, 'UTF-8');
-                $description = htmlspecialchars($row['description'], ENT_QUOTES, 'UTF-8');
-                $event_date = date("d.m.Y", strtotime($row['date']));
-                $created_date = date("d.m.Y", strtotime($row['created_at']));
-                $event_id = $row['ID_Event'];
+      
+        $stmt = $pdo->prepare("SELECT * FROM Events WHERE user_id = ? AND deleted = 0 ORDER BY created_at DESC LIMIT ? OFFSET ?");
+        $stmt->bindValue(1, $userId, PDO::PARAM_INT);
+        $stmt->bindValue(2, $limit, PDO::PARAM_INT);
+        $stmt->bindValue(3, $offset, PDO::PARAM_INT);
+        $stmt->execute();
 
-                $output .= "
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $title = htmlspecialchars($row['title'], ENT_QUOTES, 'UTF-8');
+            $description = htmlspecialchars($row['description'], ENT_QUOTES, 'UTF-8');
+            $event_date = date("d.m.Y", strtotime($row['date']));
+            $created_date = date("d.m.Y", strtotime($row['created_at']));
+            $event_id = $row['ID_Event'];
+
+            $output .= "
                 <a href='user-event.php?id=$event_id' class='event-link'>
                     <div class='event'>
                         <h2>$title</h2>
@@ -266,59 +303,84 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
                         </div>
                     </div>
                 </a>";
-            }
-
-            echo $output ?: "<p>Nav sludinājuma.</p>";
-        } catch (PDOException $e) {
-            error_log("Error fetching own events: " . $e->getMessage());
-            echo "<p>Kļūda! Mēģiniet vēlāk.</p>";
         }
-        exit();
+
+        echo json_encode([
+            'html' => $output ?: "<p>Nav sludinājuma.</p>",
+            'hasMore' => ($offset + $limit) < $totalCount
+        ]);
+    } catch (PDOException $e) {
+        error_log("Error fetching own events: " . $e->getMessage());
+        echo json_encode([
+            'html' => "<p>Kļūda! Mēģiniet vēlāk.</p>",
+            'hasMore' => false
+        ]);
     }
+    exit();
+}
 
-    if ($action === 'joined') {
-        try {
-            $stmt = $pdo->prepare("
-                SELECT e.ID_Event, e.title, e.description, e.date, e.created_at
-                FROM Events e
-                JOIN Volunteers v ON e.ID_Event = v.event_id
-                WHERE v.user_id = :user_id AND (v.status = 'joined' OR v.status = 'waiting') AND e.deleted = 0
-                ORDER BY e.date DESC
-            ");
-            $stmt->execute(['user_id' => $userId]);
-            $results = $stmt->fetchAll();
+if ($action === 'joined') {
+    try {
+   
+        $countStmt = $pdo->prepare("
+            SELECT COUNT(*) FROM Events e
+            JOIN Volunteers v ON e.ID_Event = v.event_id
+            WHERE v.user_id = :user_id AND (v.status = 'joined' OR v.status = 'waiting') AND e.deleted = 0
+        ");
+        $countStmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
+        $countStmt->execute();
+        $totalCount = $countStmt->fetchColumn();
 
-            if ($results) {
-                foreach ($results as $row) {
-                    $event_id = $row['ID_Event'];
-                    $title = htmlspecialchars($row['title']);
-                    $description = htmlspecialchars($row['description']);
-                    $event_date = date("d.m.Y", strtotime($row['date']));
-                    $created_date = date("d.m.Y", strtotime($row['created_at']));
+ 
+        $stmt = $pdo->prepare("
+            SELECT e.ID_Event, e.title, e.description, e.date, e.created_at
+            FROM Events e
+            JOIN Volunteers v ON e.ID_Event = v.event_id
+            WHERE v.user_id = :user_id AND (v.status = 'joined' OR v.status = 'waiting') AND e.deleted = 0
+            ORDER BY e.date DESC
+            LIMIT :limit OFFSET :offset
+        ");
+        $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
 
-                    echo "
-                        <a  class='event-link'>
-                            <div class='event'>
-                                <h2>$title</h2>
-                                <div class='description'>$description</div>
-                                <hr>
-                                <div class='dates'>
-                                    <p class='event-date'>🗓 $event_date</p>
-                                    <p class='created-date'>Izveidots: $created_date</p>
-                                </div>
-                            </div>
-                        </a>
-                    ";
-                }
-            } else {
-                echo "<p>Pagaidām nav pieteikumu.</p>";
-            }
-        } catch (PDOException $e) {
-            error_log("Error fetching joined events: " . $e->getMessage());
-            echo "<p>Kļūda! Mēģiniet vēlāk.</p>";
+        $results = $stmt->fetchAll();
+
+        foreach ($results as $row) {
+            $event_id = $row['ID_Event'];
+            $title = htmlspecialchars($row['title']);
+            $description = htmlspecialchars($row['description']);
+            $event_date = date("d.m.Y", strtotime($row['date']));
+            $created_date = date("d.m.Y", strtotime($row['created_at']));
+
+            $output .= "
+                <a href='../main/post-event.php?id=$event_id' class='event-link text-decoration-none text-dark'>
+                    <div class='event'>
+                        <h2>$title</h2>
+                        <div class='description'>$description</div>
+                        <hr>
+                        <div class='dates'>
+                            <p class='event-date'>🗓 $event_date</p>
+                            <p class='created-date'>Izveidots: $created_date</p>
+                        </div>
+                    </div>
+                </a>";
         }
-        exit();
+
+        echo json_encode([
+            'html' => $output ?: "<p>Pagaidām nav pieteikumu.</p>",
+            'hasMore' => ($offset + $limit) < $totalCount
+        ]);
+    } catch (PDOException $e) {
+        error_log("Error fetching joined events: " . $e->getMessage());
+        echo json_encode([
+            'html' => "<p>Kļūda! Mēģiniet vēlāk.</p>",
+            'hasMore' => false
+        ]);
     }
+    exit();
+}
 if ($action === 'fetch_joined_users') {
     $event_id = $_GET['id'] ?? null;
 

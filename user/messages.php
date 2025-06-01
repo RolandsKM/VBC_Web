@@ -2,6 +2,7 @@
 
 
 session_start();
+date_default_timezone_set('Europe/Riga'); 
 if (!isset($_SESSION['ID_user'])) {
     header("Location: ../main/login.php");
     exit();
@@ -52,6 +53,7 @@ $contacts = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <aside class="contacts show">
         <div class="contact-header p-3 border-bottom bg-light d-flex justify-content-between align-items-center">
             <h2 class="m-0">Sarakstes</h2>
+            <a href="javascript:history.back()" class="btn-back mb-3">⬅ Atpakaļ</a>
         </div>
         <div class="p-3 border-bottom">
             <input type="text" class="form-control" id="contactSearch" placeholder="Meklēt kontaktu..." />
@@ -61,7 +63,7 @@ $contacts = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <li class="contact px-3 py-2 d-flex align-items-start gap-2" 
                     data-user-id="<?= $contact['ID_user'] ?>" 
                     data-event-id="<?= $contact['event_id'] ?>">
-                    <img src="<?= htmlspecialchars($contact['profile_pic']) ?>" alt="pfp" width="40" height="40" class="rounded-circle mt-1" />
+                    <img src="../functions/assets<?= htmlspecialchars($contact['profile_pic']) ?>" alt="pfp" width="40" height="40" class="rounded-circle mt-1" />
                     <div class="contact-info flex-grow-1">
                         <div class="fw-semibold"><?= htmlspecialchars($contact['username']) ?></div>
                         <div class="text-muted small">
@@ -123,19 +125,19 @@ function loadMessages(withUserId, eventId) {
         const chatBox = $('#chatMessages');
 
         if (res.status === 'success') {
-            const isAtBottom = chatBox[0].scrollHeight - chatBox.scrollTop() <= chatBox.outerHeight() + 100;
+            const isAtBottom = Math.abs(chatBox[0].scrollHeight - chatBox[0].scrollTop - chatBox.outerHeight()) < 10;
 
             chatBox.find('.no-chat-selected').remove();
-            
+
             if (res.messages.length === 0) {
-                chatBox.append('<div class="text-center text-muted mt-3">Nav ziņu šim notikumam ar šo lietotāju.</div>');
+                chatBox.html('<div class="text-center text-muted mt-3">Nav ziņu šim notikumam ar šo lietotāju.</div>');
             } else {
                 chatBox.empty();
                 res.messages.forEach(msg => {
                     const isSent = msg.from_user_id == currentUserId;
                     const bubbleClass = isSent ? 'msg-bubble msg-sent' : 'msg-bubble msg-received';
                     const timeString = formatMessageTime(msg.sent_at);
-                    
+
                     chatBox.append(`
                         <div class="message-container ${isSent ? 'sent' : 'received'}">
                             <div class="${bubbleClass}">
@@ -145,10 +147,10 @@ function loadMessages(withUserId, eventId) {
                         </div>
                     `);
                 });
-            }
 
-            if (isAtBottom || res.messages.length < 5) {
-                chatBox.scrollTop(chatBox[0].scrollHeight);
+                if (isAtBottom) {
+                    chatBox.scrollTop(chatBox[0].scrollHeight);
+                }
             }
         } else {
             chatBox.empty().append(`<div class="text-danger p-3">${res.message}</div>`);
@@ -156,10 +158,19 @@ function loadMessages(withUserId, eventId) {
     });
 }
 
+
 function formatMessageTime(timestamp) {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const rigaTime = new Date(timestamp);
+
+    const formatter = new Intl.DateTimeFormat('lv-LV', {
+        timeZone: 'Europe/Riga',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+
+    return formatter.format(rigaTime);
 }
+
 
 function startPolling() {
     if (pollingInterval) clearInterval(pollingInterval);
@@ -167,7 +178,7 @@ function startPolling() {
         if (selectedUserId && selectedEventId) {
             loadMessages(selectedUserId, selectedEventId);
         }
-    }, 3000);
+    }, 2000);
 }
 
 function sendMessage() {
@@ -226,6 +237,26 @@ $('#chatInput').on('input', function() {
     this.style.height = 'auto';
     this.style.height = (this.scrollHeight) + 'px';
 });
+$('#contactSearch').on('input', function() {
+    const query = $(this).val().toLowerCase().trim();
+
+    
+    const $contacts = $('#contactList .contact');
+    const $matches = $contacts.filter(function() {
+        const username = $(this).find('.fw-semibold').text().toLowerCase();
+        return username.indexOf(query) !== -1;
+    });
+    const $nonMatches = $contacts.filter(function() {
+        const username = $(this).find('.fw-semibold').text().toLowerCase();
+        return username.indexOf(query) === -1;
+    });
+
+    
+    $('#contactList').empty().append($matches).append($nonMatches);
+});
+
+
+
 </script>
 <!--  -->
 
