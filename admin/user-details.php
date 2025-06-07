@@ -105,14 +105,132 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
         .main-content {
             flex: 1;
             overflow-x: hidden;
+            padding: 1rem;
         }
         
         .admin-body {
-            padding: 2rem;
+            padding: 1rem;
             background-color: white;
             border-radius: 12px;
             box-shadow: 0 2px 15px rgba(0,0,0,0.08);
-            margin: 1.5rem;
+            margin: 1rem;
+        }
+
+        .container {
+            width: 100%;
+            padding-right: 15px;
+            padding-left: 15px;
+            margin-right: auto;
+            margin-left: auto;
+        }
+        
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            margin-right: -15px;
+            margin-left: -15px;
+        }
+        
+        .col-md-8 {
+            flex: 0 0 100%;
+            max-width: 100%;
+            padding: 0 15px;
+        }
+
+        .d-flex {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .user-info-table {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .stats-cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .stat-card {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-bottom: 1rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+
+        .action-buttons .btn {
+            flex: 1;
+            min-width: 120px;
+            max-width: 200px;
+        }
+
+        @media (min-width: 768px) {
+            .main-content {
+                padding: 1.5rem;
+            }
+
+            .admin-body {
+                padding: 1.5rem;
+                margin: 1.5rem;
+            }
+
+            .col-md-8 {
+                flex: 0 0 66.666667%;
+                max-width: 66.666667%;
+            }
+
+            .d-flex {
+                flex-wrap: nowrap;
+            }
+
+            .stats-cards {
+                margin-top: 0;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .table th, .table td {
+                padding: 0.5rem;
+                font-size: 0.9rem;
+            }
+
+            .section-title {
+                font-size: 1.2rem;
+                margin-bottom: 1rem;
+            }
+
+            .stat-card {
+                min-width: 100%;
+            }
+
+            .action-buttons .btn {
+                width: 100%;
+                max-width: none;
+            }
+
+            .pagination-container {
+                flex-wrap: wrap;
+            }
+
+            .pagination-btn {
+                padding: 0.3rem 0.6rem;
+                font-size: 0.9rem;
+            }
         }
         
         .card-header-style {
@@ -254,16 +372,6 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
             border-bottom: 1px solid var(--border-color);
         }
         
-        .action-buttons {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 2.5rem;
-        }
-        
-        .action-buttons .btn {
-            min-width: 120px;
-        }
-        
         .pagination-container {
             margin-top: 1.5rem;
             display: flex;
@@ -323,56 +431,6 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
             box-shadow: 0 0 0 0.2rem rgba(76, 175, 80, 0.25);
         }
 
-        .stats-cards {
-            display: flex;
-            flex-direction: row;
-            gap: 1rem;
-            min-width: 250px;
-        }
-
-        .stat-card {
-            background: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 2px 15px rgba(0,0,0,0.08);
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            width: 100%;
-            min-width: 200px;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
-        }
-
-        .stat-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 12px;
-            background: var(--primary-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 1.5rem;
-        }
-
-        .stat-content h3 {
-            margin: 0;
-            font-size: 1.8rem;
-            font-weight: 600;
-            color: var(--text-color);
-        }
-
-        .stat-content p {
-            margin: 0;
-            color: #666;
-            font-size: 0.9rem;
-        }
-
         .stat-card:nth-child(1) .stat-icon {
             background: var(--primary-color);
         }
@@ -400,7 +458,7 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
                 <div class="row">
                     <div class="col-md-8">
                 <h4 class="section-title">Lietotāja informācija</h4>
-                        <div class="d-flex gap-4">
+                        <div class="d-flex">
                 <table class="table user-info-table">
                     <tr><th>Lietotājvārds</th><td><?= htmlspecialchars($user['username']) ?></td></tr>
                     <tr><th>Vārds</th><td><?= htmlspecialchars($user['name']) ?></td></tr>
@@ -448,37 +506,41 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
                     </div>
                 </div>
 
-                <h4 class="section-title">Lietotāja izveidotie pasākumi</h4>
-                <table class="table">
-                    <thead>
-                        <tr class="table-header-style">
-                            <th class="sortable" data-sort="title">Nosaukums</th>
-                            <th class="sortable" data-sort="description">Apraksts</th>
-                            <th class="sortable" data-sort="date">Datums</th>
-                            <th class="sortable" data-sort="deleted">Statuss</th>
-                            <th>Darbības</th>
-                        </tr>
-                    </thead>
-                    <tbody id="created-events-body">
-                       
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <h4 class="section-title">Lietotāja izveidotie pasākumi</h4>
+                    <table class="table">
+                        <thead>
+                            <tr class="table-header-style">
+                                <th class="sortable" data-sort="title">Nosaukums</th>
+                                <th class="sortable" data-sort="description">Apraksts</th>
+                                <th class="sortable" data-sort="date">Datums</th>
+                                <th class="sortable" data-sort="deleted">Statuss</th>
+                                <th>Darbības</th>
+                            </tr>
+                        </thead>
+                        <tbody id="created-events-body">
+                           
+                        </tbody>
+                    </table>
+                </div>
                 <div class="pagination-container" id="created-events-pagination"></div>
 
-                <h4 class="section-title">Pievienotie pasākumi kā brīvprātīgais</h4>
-                <table class="table">
-                    <thead>
-                        <tr class="table-header-style">
-                            <th class="sortable" data-sort="title">Nosaukums</th>
-                            <th class="sortable" data-sort="description">Apraksts</th>
-                            <th class="sortable" data-sort="date">Datums</th>
-                            <th class="sortable" data-sort="status">Statuss</th>
-                        </tr>
-                    </thead>
-                    <tbody id="volunteered-events-body">
-                       
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <h4 class="section-title">Pievienotie pasākumi kā brīvprātīgais</h4>
+                    <table class="table">
+                        <thead>
+                            <tr class="table-header-style">
+                                <th class="sortable" data-sort="title">Nosaukums</th>
+                                <th class="sortable" data-sort="description">Apraksts</th>
+                                <th class="sortable" data-sort="date">Datums</th>
+                                <th class="sortable" data-sort="status">Statuss</th>
+                            </tr>
+                        </thead>
+                        <tbody id="volunteered-events-body">
+                           
+                        </tbody>
+                    </table>
+                </div>
                 <div class="pagination-container" id="volunteered-events-pagination"></div>
             </div>
         </div>

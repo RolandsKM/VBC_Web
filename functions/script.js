@@ -10,19 +10,32 @@ $(document).ready(function () {
             type: 'GET',
             dataType: 'json',
             success: function (response) {
+              
                 if (append) {
-                    $("#own-events-grid").append(response.html);
+                    if (response.html && $.trim(response.html) !== "") {
+                        $("#own-events-grid").append(response.html);
+                    }
                 } else {
-                    $("#own-events-grid").html(response.html);
+                    if (!response.html || $.trim(response.html) === "") {
+                        $("#own-events-grid").html(`
+                            <div class="empty-state">
+                                <i class="fas fa-calendar-plus"></i>
+                                <p>Nav sludinājumu</p>
+                                <a href="create.php" class="btn btn-primary mt-3">Izveidot sludinājumu</a>
+                            </div>
+                        `);
+                        $("#load-more-own").hide();
+                    } else {
+                        $("#own-events-grid").html(response.html);
+                        if (response.hasMore) {
+                            $("#load-more-own").show();
+                        } else {
+                            $("#load-more-own").hide();
+                        }
+                    }
                 }
-
-
-                if (!response.hasMore || $.trim(response.html) === "") {
-                    $("#load-more-own").hide();
-                } else {
-                    $("#load-more-own").show();
-                }
-            }
+            },
+           
         });
     }
 
@@ -33,15 +46,27 @@ $(document).ready(function () {
             dataType: 'json',
             success: function (response) {
                 if (append) {
-                    $("#joined-events-grid").append(response.html);
+                    if (response.html && $.trim(response.html) !== "") {
+                        $("#joined-events-grid").append(response.html);
+                    }
                 } else {
-                    $("#joined-events-grid").html(response.html);
-                }
-
-                if (!response.hasMore || $.trim(response.html) === "") {
-                    $("#load-more-joined").hide();
-                } else {
-                    $("#load-more-joined").show();
+                    if (!response.html || $.trim(response.html) === "") {
+                        $("#joined-events-grid").html(`
+                            <div class="empty-state">
+                                <i class="fas fa-users"></i>
+                                <p>Pagaidām nav pieteikumu</p>
+                                <a href="../main/index.php" class="btn btn-primary mt-3">Apskatīt sludinājumus</a>
+                            </div>
+                        `);
+                        $("#load-more-joined").hide();
+                    } else {
+                        $("#joined-events-grid").html(response.html);
+                        if (response.hasMore) {
+                            $("#load-more-joined").show();
+                        } else {
+                            $("#load-more-joined").hide();
+                        }
+                    }
                 }
             }
         });
@@ -116,7 +141,7 @@ $(document).ready(function () {
             if (response === "success") {
                
                 alert("Pasākums izveidots veiksmīgi!");
-                window.location.href = "user/"; 
+                window.location.href = "profile.php"; 
             } else {
                     alert("Kļūda: " + response); 
                 }
@@ -182,13 +207,11 @@ $(document).ready(function () {
     let originalData = {};
 
     $(document).on("click", ".edit-event-btn.bi-pencil", function () {
-        const dateText = $(".date").text().replace("🗓 Datums:", "").trim();
-        
-        const locationText = $(".location").text().replace("📍 Pilsēta:", "").trim();
-        const locationParts = locationText.split("|");
-        const city = locationParts[0]?.trim().split(",")[0]?.trim();
-        const location = locationParts[0]?.trim().split(",")[1]?.trim();
-        const zip = locationParts[1]?.replace("Zip:", "").trim();
+        const dateText = $(".date").text().replace(/.*Datums:/, "").trim();
+        const locationText = $(".location").text().replace(/.*Pilsēta:/, "").trim();
+        const [locationPart, zipPart] = locationText.split("|").map(part => part.trim());
+        const [city, location] = locationPart.split(",").map(part => part.trim());
+        const zip = zipPart.replace("Zip:", "").trim();
 
         originalData = {
             title: $(".title").text(),
@@ -375,9 +398,21 @@ $(document).ready(function () {
                 else if (user.status === 'denied') deniedUsers.push(user);
             });
 
+            // Update counts in table headers
+            $('#waiting-count').text(waitingUsers.length);
+            $('#accepted-count').text(acceptedUsers.length);
+            $('#denied-count').text(deniedUsers.length);
+
+            // Update counts in badges
+            $('#count-waiting-badge').text(waitingUsers.length);
+            $('#count-accepted-badge').text(acceptedUsers.length);
+            $('#count-denied-badge').text(deniedUsers.length);
+
+            // Update main counts
             $('#count-waiting').text(waitingUsers.length);
             $('#count-accepted').text(acceptedUsers.length);
             $('#count-denied').text(deniedUsers.length);
+            $('#joined-count').text(users.length);
 
             paginateData(waitingUsers, 'waiting-pagination', 'waiting');
             paginateData(acceptedUsers, 'accepted-pagination', 'accepted');
@@ -388,11 +423,81 @@ $(document).ready(function () {
 
 function paginateData(dataArray, containerId, tableId, rowsPerPage = 10) {
     let currentPage = 1;
+    let currentSort = {
+        column: null,
+        direction: 'asc'
+    };
+    let searchTerm = '';
+
+    function sortData(data, column, direction) {
+        return [...data].sort((a, b) => {
+            let valueA = a[column];
+            let valueB = b[column];
+
+            // Handle special cases
+            if (column === 'username') {
+                valueA = a.username;
+                valueB = b.username;
+            } else if (column === 'email') {
+                valueA = a.email;
+                valueB = b.email;
+            }
+
+            if (direction === 'asc') {
+                return valueA > valueB ? 1 : -1;
+            } else {
+                return valueA < valueB ? 1 : -1;
+            }
+        });
+    }
+
+    function filterData(data) {
+        if (!searchTerm) return data;
+        
+        const searchLower = searchTerm.toLowerCase();
+        return data.filter(user => 
+            user.username.toLowerCase().includes(searchLower) ||
+            user.email.toLowerCase().includes(searchLower)
+        );
+    }
+
+    function getStatusOptions(tableId, currentStatus) {
+        switch(tableId) {
+            case 'waiting':
+                return `
+                    <option value="waiting" ${currentStatus === 'waiting' ? 'selected' : ''}>Pieteicies</option>
+                    <option value="accepted" ${currentStatus === 'accepted' ? 'selected' : ''}>Apstiprināts</option>
+                    <option value="denied" ${currentStatus === 'denied' ? 'selected' : ''}>Noraidīts</option>
+                `;
+            case 'accepted':
+                return `
+                    <option value="accepted" ${currentStatus === 'accepted' ? 'selected' : ''}>Apstiprināts</option>
+                    <option value="denied" ${currentStatus === 'denied' ? 'selected' : ''}>Noraidīts</option>
+                `;
+            case 'denied':
+                return `
+                    <option value="denied" ${currentStatus === 'denied' ? 'selected' : ''}>Noraidīts</option>
+                    <option value="accepted" ${currentStatus === 'accepted' ? 'selected' : ''}>Apstiprināts</option>
+                `;
+            default:
+                return '';
+        }
+    }
 
     function renderPage(page) {
+        // Filter data based on search term
+        let filteredData = filterData(dataArray);
+        
         const start = (page - 1) * rowsPerPage;
         const end = start + rowsPerPage;
-        const paginatedData = dataArray.slice(start, end);
+        let paginatedData = filteredData;
+
+        // Apply sorting if a column is selected
+        if (currentSort.column) {
+            paginatedData = sortData(paginatedData, currentSort.column, currentSort.direction);
+        }
+
+        paginatedData = paginatedData.slice(start, end);
 
         let tableHtml = '';
         paginatedData.forEach((user, index) => {
@@ -406,9 +511,7 @@ function paginateData(dataArray, containerId, tableId, rowsPerPage = 10) {
                     <td>${user.email}</td>
                     <td>
                         <select class="form-select status-select" data-id="${user.id_volunteer}">
-                            <option value="waiting" ${user.status === 'waiting' ? 'selected' : ''}>Pieteicies</option>
-                            <option value="accepted" ${user.status === 'accepted' ? 'selected' : ''}>Apstiprināts</option>
-                            <option value="denied" ${user.status === 'denied' ? 'selected' : ''}>Noraidīts</option>
+                            ${getStatusOptions(tableId, user.status)}
                         </select>
                     </td>
                     <td>
@@ -423,29 +526,85 @@ function paginateData(dataArray, containerId, tableId, rowsPerPage = 10) {
         $(`#${tableId}-table tbody`).html(tableHtml);
 
         // Pagination controls
-        const totalPages = Math.ceil(dataArray.length / rowsPerPage);
+        const totalPages = Math.ceil(filteredData.length / rowsPerPage);
         let paginationHtml = '';
 
         if (totalPages > 1) {
-            paginationHtml += `<button class="btn btn-sm btn-outline-secondary me-1" ${page === 1 ? 'disabled' : ''} data-page="1">⏮</button>`;
-            paginationHtml += `<button class="btn btn-sm btn-outline-secondary me-1" ${page === 1 ? 'disabled' : ''} data-page="${page - 1}">⬅</button>`;
+            paginationHtml += `<button class="btn btn-sm btn-outline-secondary me-1 pagination-btn" ${page === 1 ? 'disabled' : ''} data-page="1">⏮</button>`;
+            paginationHtml += `<button class="btn btn-sm btn-outline-secondary me-1 pagination-btn" ${page === 1 ? 'disabled' : ''} data-page="${page - 1}">⬅</button>`;
 
             for (let i = 1; i <= totalPages; i++) {
-                paginationHtml += `<button class="btn btn-sm ${i === page ? 'btn-primary' : 'btn-outline-secondary'} me-1" data-page="${i}">${i}</button>`;
+                paginationHtml += `<button class="btn btn-sm ${i === page ? 'btn-primary' : 'btn-outline-secondary'} me-1 pagination-btn" data-page="${i}">${i}</button>`;
             }
 
-            paginationHtml += `<button class="btn btn-sm btn-outline-secondary me-1" ${page === totalPages ? 'disabled' : ''} data-page="${page + 1}">➡</button>`;
-            paginationHtml += `<button class="btn btn-sm btn-outline-secondary" ${page === totalPages ? 'disabled' : ''} data-page="${totalPages}">⏭</button>`;
+            paginationHtml += `<button class="btn btn-sm btn-outline-secondary me-1 pagination-btn" ${page === totalPages ? 'disabled' : ''} data-page="${page + 1}">➡</button>`;
+            paginationHtml += `<button class="btn btn-sm btn-outline-secondary pagination-btn" ${page === totalPages ? 'disabled' : ''} data-page="${totalPages}">⏭</button>`;
         }
 
         $(`#${containerId}`).html(paginationHtml);
     }
 
-    
+    // Add search input to the table header only if it doesn't exist
+    if (!$(`#${tableId}-search`).length) {
+        const searchHtml = `
+            <div class="search-container mb-3">
+                <div class="position-relative" style="max-width: 300px; margin-left: auto;">
+                    <input type="text" id="${tableId}-search" class="form-control search-input" 
+                           placeholder="Meklēt pēc lietotājvārda vai e-pasta..." 
+                           style="border-radius: 20px; padding-left: 40px;">
+                    <i class="bi bi-search position-absolute" 
+                       style="left: 15px; top: 50%; transform: translateY(-50%); color: #6c757d;"></i>
+                </div>
+            </div>
+        `;
+        $(`#${tableId}-table`).before(searchHtml);
+    }
+
+    // Handle search input for this specific table
+    $(`#${tableId}-search`).on('input', function() {
+        searchTerm = $(this).val().trim();
+        currentPage = 1; // Reset to first page when searching
+        renderPage(currentPage);
+    });
+
+    // Initialize sorting headers
+    const table = document.getElementById(`${tableId}-table`);
+    if (table) {
+        const headers = table.querySelectorAll('th');
+        headers.forEach((header, index) => {
+            if (index > 0 && index < 4) { // Skip checkbox column and action column
+                header.style.cursor = 'pointer';
+                header.addEventListener('click', () => {
+                    const column = index === 1 ? 'rowNumber' : 
+                                 index === 2 ? 'username' : 
+                                 index === 3 ? 'email' : null;
+                    
+                    if (column) {
+                        if (currentSort.column === column) {
+                            currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+                        } else {
+                            currentSort.column = column;
+                            currentSort.direction = 'asc';
+                        }
+
+                        // Update header indicators
+                        headers.forEach(h => {
+                            h.innerHTML = h.innerHTML.replace(/ [↑↓]/, '');
+                        });
+                        header.innerHTML += currentSort.direction === 'asc' ? ' ↑' : ' ↓';
+
+                        renderPage(currentPage);
+                    }
+                });
+            }
+        });
+    }
+
+    // Initial render
     renderPage(currentPage);
 
- 
-    $(document).off(`click`, `#${containerId} button`).on(`click`, `#${containerId} button`, function () {
+    // Handle pagination
+    $(`#${containerId}`).on('click', '.pagination-btn', function() {
         const selectedPage = parseInt($(this).data('page'));
         if (!isNaN(selectedPage)) {
             currentPage = selectedPage;
@@ -472,7 +631,19 @@ function paginateData(dataArray, containerId, tableId, rowsPerPage = 10) {
                 user_id: userId
             },
             success: function(response) {
-                const data = JSON.parse(response);
+                let data;
+                try {
+                    data = typeof response === 'string' ? JSON.parse(response) : response;
+                } catch (e) {
+                    console.error('Error parsing response:', e);
+                    alert('Kļūda ielādējot lietotāja informāciju');
+                    return;
+                }
+
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
                 
                 // Update modal content
                 $('#userProfilePic').attr('src', data.profile_pic || '../assets/default-profile.png');
@@ -482,8 +653,8 @@ function paginateData(dataArray, containerId, tableId, rowsPerPage = 10) {
                 $('#userCreatedAt').text(new Date(data.created_at).toLocaleDateString('lv-LV'));
                 
                 // Update statistics
-                $('#createdEvents').text(data.created_events);
-                $('#completedEvents').text(data.completed_events);
+                $('#createdEvents').text(data.created_events || 0);
+                $('#completedEvents').text(data.completed_events || 0);
                 
                 // Show modal
                 new bootstrap.Modal(document.getElementById('userDetailsModal')).show();
@@ -519,7 +690,8 @@ function paginateData(dataArray, containerId, tableId, rowsPerPage = 10) {
             data: {
                 action: 'batch_update_status',
                 ids: selectedIds,
-                status: newStatus
+                status: newStatus,
+                seen: 0
             },
             success: function (response) {
                 if (response.trim() === 'success') {
@@ -541,7 +713,8 @@ function paginateData(dataArray, containerId, tableId, rowsPerPage = 10) {
             data: {
                 action: 'update_volunteer_status',
                 volunteer_id: volunteerId,
-                status: newStatus
+                status: newStatus,
+                seen: 0
             },
             success: function (response) {
                 if (response.trim() === 'success') {
@@ -764,16 +937,14 @@ $(document).ready(function() {
     let retryCount = 0;
     const maxRetries = 3;
     const retryDelay = 1000; 
-    let lastUpdateTime = 0;
 
     function loadStats() {
-        
         $('#post-count').html('<i class="fas fa-spinner fa-spin"></i>');
         $('#joined-count').html('<i class="fas fa-spinner fa-spin"></i>');
 
-    $.ajax({
-        url: '../functions/UserController.php',
-        method: 'GET',
+        $.ajax({
+            url: '../functions/UserController.php',
+            method: 'GET',
             data: { 
                 action: 'get_stats',
                 _: new Date().getTime() 
@@ -785,28 +956,23 @@ $(document).ready(function() {
                 'Pragma': 'no-cache',
                 'Expires': '0'
             }
-    })
-    .done(function(response) {
-        if (response.error) {
-            console.error('Error fetching stats:', response.error);
-                retryLoad();
-            return;
-        }
-
-          
-            if (response.timestamp > lastUpdateTime) {
-                lastUpdateTime = response.timestamp;
-                
-              
-                updateStatWithAnimation('#post-count', response.events || '0');
-                updateStatWithAnimation('#joined-count', response.volunteers || '0');
+        })
+        .done(function(response) {
+            if (response.error) {
+                console.error('Error fetching stats:', response.error);
+                $('#post-count').text('0');
+                $('#joined-count').text('0');
+                return;
             }
-          
+            
+            updateStatWithAnimation('#post-count', response.events || '0');
+            updateStatWithAnimation('#joined-count', response.volunteers || '0');
             retryCount = 0;
-    })
-    .fail(function(jqXHR, textStatus, errorThrown) {
-        console.error('AJAX error:', textStatus, errorThrown);
-            retryLoad();
+        })
+        .fail(function(jqXHR, textStatus, errorThrown) {
+            console.error('AJAX error:', textStatus, errorThrown);
+            $('#post-count').text('0');
+            $('#joined-count').text('0');
         });
     }
 
@@ -819,6 +985,8 @@ $(document).ready(function() {
             element.fadeOut(200, function() {
                 element.text(value).fadeIn(200);
             });
+        } else {
+            element.text(value);
         }
     }
 
@@ -829,20 +997,13 @@ $(document).ready(function() {
             setTimeout(loadStats, retryDelay * retryCount);
         } else {
             console.error('Failed to load stats after maximum retries');
-            // Show error state instead of 0
-            $('#post-count').html('<i class="fas fa-exclamation-circle" title="Failed to load"></i>');
-            $('#joined-count').html('<i class="fas fa-exclamation-circle" title="Failed to load"></i>');
+            $('#post-count').text('0');
+            $('#joined-count').text('0');
         }
     }
 
+    // Load stats only once when page loads
     loadStats();
-
-    
-    setInterval(loadStats, 15000);
-
-    $(window).on('focus', function() {
-        loadStats();
-    });
 });
 
 
@@ -1194,5 +1355,173 @@ $(document).ready(function() {
             alert('Kļūda: ' + (xhr.responseJSON?.error || xhr.responseText));
         });
     });
+});
+
+// Profile Page Scripts
+$(document).ready(function() {
+    // Message button hover effect
+    const icon = document.querySelector('.msg-btn i');
+    if (icon) {
+        document.querySelector('.msg-btn').addEventListener('mouseenter', () => {
+            icon.classList.remove('bi-chat-dots-fill');
+            icon.classList.add('bi-chat-dots');
+        });
+
+        document.querySelector('.msg-btn').addEventListener('mouseleave', () => {
+            icon.classList.remove('bi-chat-dots');
+            icon.classList.add('bi-chat-dots-fill');
+        });
+    }
+
+    // Joined Events Loading
+    let joinedOffset = 0;
+    const limit = 4;
+
+    function loadJoinedEvents(append = false) {
+        $.ajax({
+            url: `../functions/event_functions.php?action=joined&offset=${joinedOffset}&limit=${limit}`,
+            type: 'GET',
+            dataType: 'json',
+            success: function (response) {
+                if (append) {
+                    if (response.html && $.trim(response.html) !== "") {
+                        $("#joined-events-grid").append(response.html);
+                    }
+                } else {
+                    if (!response.html || $.trim(response.html) === "") {
+                        $("#joined-events-grid").html(`
+                            <div class="empty-state">
+                                <i class="fas fa-users"></i>
+                                <p>Pagaidām nav pieteikumu</p>
+                                <a href="../main/index.php" class="btn btn-primary mt-3">Apskatīt sludinājumus</a>
+                            </div>
+                        `);
+                        $("#load-more-joined").hide();
+                    } else {
+                        $("#joined-events-grid").html(response.html);
+                        if (response.hasMore) {
+                            $("#load-more-joined").show();
+                        } else {
+                            $("#load-more-joined").hide();
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    $("#load-more-joined").click(function() {
+        joinedOffset += limit;
+        loadJoinedEvents(true);
+    });
+
+    $(".pieteicies-btn").click(function() {
+        joinedOffset = 0;
+        $(".event-container").hide();
+        $(".joined-container").show();
+        $(".action-btn button").removeClass("active");
+        $(this).addClass("active");
+        loadJoinedEvents();
+    });
+
+    // Initial load for joined events if button is active
+    if ($(".pieteicies-btn").hasClass("active")) {
+        loadJoinedEvents();
+    }
+
+    // Notifications System
+    let unreadCount = 0;
+
+    function loadNotifications() {
+        $.ajax({
+            url: '../functions/event_functions.php',
+            method: 'GET',
+            data: { action: 'get_notifications' },
+            success: function(response) {
+                const data = JSON.parse(response);
+                unreadCount = data.unread_count;
+                updateNotificationBadge();
+                
+                let html = '';
+                data.notifications.forEach(notification => {
+                    let icon, statusClass, statusText;
+                    
+                    switch(notification.status) {
+                        case 'accepted':
+                            icon = 'bi-check-lg';
+                            statusClass = 'accepted';
+                            statusText = 'Apstiprināts';
+                            break;
+                        case 'denied':
+                            icon = 'bi-x-lg';
+                            statusClass = 'denied';
+                            statusText = 'Noraidīts';
+                            break;
+                    }
+                    
+                    html += `
+                        <div class="notification-item ${notification.seen ? '' : 'unread'}">
+                            <div class="notification-icon ${statusClass}">
+                                <i class="bi ${icon}"></i>
+                            </div>
+                            <div class="notification-content">
+                                <div class="notification-title">${notification.event_title}</div>
+                                <div class="notification-text">Jūsu pieteikums ir ${statusText}</div>
+                                <div class="notification-time">${notification.changed_at}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                $('#notificationsList').html(html || '<div class="text-center p-3">Nav jaunu notifikāciju</div>');
+            }
+        });
+    }
+
+    function updateNotificationBadge() {
+        const badge = $('.notifications-btn .notification-badge');
+        if (unreadCount > 0) {
+            if (badge.length === 0) {
+                $('.notifications-btn').append(`<span class="notification-badge">${unreadCount}</span>`);
+            } else {
+                badge.text(unreadCount);
+            }
+        } else {
+            badge.remove();
+        }
+    }
+
+    $('.notifications-btn').click(function() {
+        $('#notificationsSidebar').addClass('active');
+        $('#notificationsOverlay').addClass('active');
+        loadNotifications();
+        
+        // Mark notifications as seen when opening the sidebar
+        $.ajax({
+            url: '../functions/event_functions.php',
+            method: 'POST',
+            data: { 
+                action: 'mark_notifications_seen'
+            },
+            success: function(response) {
+                if (response === 'success') {
+                    unreadCount = 0;
+                    updateNotificationBadge();
+                    $('.notification-item').removeClass('unread');
+                }
+            }
+        });
+    });
+
+    $('#closeNotifications, #notificationsOverlay').click(function() {
+        $('#notificationsSidebar').removeClass('active');
+        $('#notificationsOverlay').removeClass('active');
+    });
+
+    // Load notifications every 30 seconds
+    setInterval(loadNotifications, 30000);
+    
+    // Initial load of notifications
+    loadNotifications();
 });
 

@@ -59,9 +59,10 @@ $popularEvents = $stmtPopularEvents->fetchAll();
   <h2>Populārās Kategorijas</h2>
 
   <div class="categories-container" id="categories-container">
-    <button class="nav-button left" onclick="scrollCategories(-1)">&#10094;</button>
-
+   
+  <button class="nav-button left" onclick="scrollCategories(-1)">&#10094;</button>
     <div class="category-scroll-wrapper">
+    
       <div class="category-list">
         <?php foreach ($categories as $category): ?>
           <div class="category" onclick="window.location.href='posts.php?category_id=<?= $category['Kategorijas_ID']; ?>'"

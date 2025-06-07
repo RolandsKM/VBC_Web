@@ -89,11 +89,9 @@ $isLoggedIn = isset($_SESSION['ID_user']);
                 <div class="small-box">
                     <p><strong>🗓 Datums:</strong> <?= $eventDate ?></p>
                 </div>
-                <div class="small-box ms-auto">
-                    <p><strong>Pievienojusies:</strong> <?= intval($event['accepted_count']) ?> cilvēki</p>
+                <div class="small-box">
+                    <p><strong>✅ Pievienojusies:</strong> <?= intval($event['accepted_count']) ?> cilvēki</p>
                 </div>
-
-                
             </div>
         <hr>
         <div class="top row g-4">

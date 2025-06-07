@@ -165,6 +165,88 @@ $user = $query->fetch();
             cursor: pointer;
             color: var(--dark-gray);
         }
+
+        .section-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+        }
+
+        .section-divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .section-divider::before,
+        .section-divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .section-divider span {
+            padding: 0 1rem;
+            color: var(--primary-color);
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .password-strength {
+            height: 4px;
+            background: #eee;
+            margin-top: 5px;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .password-strength-bar {
+            height: 100%;
+            width: 0;
+            transition: width 0.3s ease;
+        }
+
+        .sections-container {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-container {
+            flex: 1;
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .vertical-divider {
+            width: 1px;
+            background-color: #e0e0e0;
+            margin: 0 1rem;
+        }
+
+        .section-title {
+            color: var(--primary-color);
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--light-gray);
+        }
+
+        @media (max-width: 992px) {
+            .sections-container {
+                flex-direction: column;
+            }
+
+            .vertical-divider {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
@@ -174,83 +256,240 @@ $user = $query->fetch();
     <main class="settings-main">
         <h2 class="mb-4">Konta informācija</h2>
         
-        <div class="form-section">
-           
-            <div class="mb-4">
-                <label for="username" class="form-label">Lietotājvārds</label>
-                <input type="text" id="username" value="<?= htmlspecialchars($user['username']); ?>" readonly class="form-control">
+        <div class="sections-container">
+            <!-- Account Info Section -->
+            <div class="section-container">
+                <h3 class="section-title">Profila informācija</h3>
+                <div class="mb-4">
+                    <label for="username" class="form-label">Lietotājvārds</label>
+                    <input type="text" id="username" value="<?= htmlspecialchars($user['username']); ?>" readonly class="form-control">
+                </div>
+
+                <div class="mb-4">
+                    <label for="name" class="form-label">Vārds</label>
+                    <input type="text" id="name" value="<?= htmlspecialchars($user['name']); ?>" readonly class="form-control">
+                </div>
+
+                <div class="mb-4">
+                    <label for="surname" class="form-label">Uzvārds</label>
+                    <input type="text" id="surname" value="<?= htmlspecialchars($user['surname']); ?>" readonly class="form-control">
+                </div>
+
+                <div class="d-flex justify-content-end mb-4">
+                    <button id="editMainButton" class="btn-edit me-2">
+                        <i class="bi bi-pencil-square me-1"></i> Rediģēt
+                    </button>
+                    <button id="saveMainButton" class="btn-save" style="display:none;">
+                        <i class="bi bi-check-lg me-1"></i> Saglabāt
+                    </button>
+                </div>
+
+                <div class="mb-4">
+                    <label for="email" class="form-label">E-pasts</label>
+                    <input type="email" id="email" value="<?= htmlspecialchars($user['email']); ?>" readonly class="form-control">
+                </div>
+
+                <div class="input-group mb-4" id="emailPasswordGroup" style="display:none;">
+                    <input type="password" id="emailPassword" class="form-control" placeholder="Ievadiet paroli, lai apstiprinātu">
+                    <span class="password-toggle" id="toggleEmailPassword">
+                        <i class="bi bi-eye"></i>
+                    </span>
+                </div>
+
+                <div class="d-flex justify-content-end mb-4">
+                    <button id="editEmailButton" class="btn-edit me-2">
+                        <i class="bi bi-pencil-square me-1"></i> Rediģēt
+                    </button>
+                    <button id="saveEmailButton" class="btn-save" style="display:none;">
+                        <i class="bi bi-check-lg me-1"></i> Saglabāt
+                    </button>
+                </div>
+
+                <div class="mb-4">
+                    <label for="location" class="form-label">Atrašanās vieta</label>
+                    <input type="text" id="location" value="<?= htmlspecialchars($user['location'] ?? ''); ?>" readonly class="form-control">
+                </div>
+
+                <div class="d-flex justify-content-end mb-4">
+                    <button id="editLocationButton" class="btn-edit me-2">
+                        <i class="bi bi-pencil-square me-1"></i> Rediģēt
+                    </button>
+                    <button id="saveLocationButton" class="btn-save" style="display:none;">
+                        <i class="bi bi-check-lg me-1"></i> Saglabāt
+                    </button>
+                </div>
             </div>
 
-            <div class="mb-4">
-                <label for="name" class="form-label">Vārds</label>
-                <input type="text" id="name" value="<?= htmlspecialchars($user['name']); ?>" readonly class="form-control">
-            </div>
+            <!-- Vertical Divider -->
+            <div class="vertical-divider"></div>
 
-            <div class="mb-4">
-                <label for="surname" class="form-label">Uzvārds</label>
-                <input type="text" id="surname" value="<?= htmlspecialchars($user['surname']); ?>" readonly class="form-control">
-            </div>
+            <!-- Password Section -->
+            <div class="section-container">
+                <h3 class="section-title">Parole</h3>
+                <div id="password-dummies">
+                    <div class="mb-4">
+                        <label class="form-label">Pašreizējā parole</label>
+                        <input type="password" class="form-control" value="••••••••" readonly>
+                    </div>
+                </div>
 
-            <div class="d-flex justify-content-end mb-4">
-                <button id="editMainButton" class="btn-edit me-2">
-                    <i class="bi bi-pencil-square me-1"></i> Rediģēt
-                </button>
-                <button id="saveMainButton" class="btn-save" style="display:none;">
-                    <i class="bi bi-check-lg me-1"></i> Saglabāt
-                </button>
-            </div>
+                <div id="password-inputs" style="display: none;">
+                    <div class="mb-4">
+                        <label for="current_password" class="form-label">Pašreizējā parole</label>
+                        <input type="password" id="current_password" class="form-control">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="new_password" class="form-label">Jaunā parole</label>
+                        <input type="password" id="new_password" class="form-control">
+                        <div class="password-strength">
+                            <div class="password-strength-bar" id="passwordStrengthBar"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="confirm_password" class="form-label">Apstipriniet jauno paroli</label>
+                        <input type="password" id="confirm_password" class="form-control">
+                    </div>
+                </div>
 
-            <div class="mb-4">
-                <label for="email" class="form-label">E-pasts</label>
-                <input type="email" id="email" value="<?= htmlspecialchars($user['email']); ?>" readonly class="form-control">
-            </div>
-
-            <div class="input-group mb-4" id="emailPasswordGroup" style="display:none;">
-                <input type="password" id="emailPassword" class="form-control" placeholder="Ievadiet paroli, lai apstiprinātu">
-                <span class="password-toggle" id="toggleEmailPassword">
-                    <i class="bi bi-eye"></i>
-                </span>
-            </div>
-
-            <div class="d-flex justify-content-end mb-4">
-                <button id="editEmailButton" class="btn-edit me-2">
-                    <i class="bi bi-pencil-square me-1"></i> Rediģēt
-                </button>
-                <button id="saveEmailButton" class="btn-save" style="display:none;">
-                    <i class="bi bi-check-lg me-1"></i> Saglabāt
-                </button>
-            </div>
-
-            <div class="mb-4">
-                <label for="location" class="form-label">Atrašanās vieta</label>
-                <input type="text" id="location" value="<?= htmlspecialchars($user['location'] ?? ''); ?>" readonly class="form-control">
-            </div>
-
-            <div class="d-flex justify-content-end">
-                <button id="editLocationButton" class="btn-edit me-2">
-                    <i class="bi bi-pencil-square me-1"></i> Rediģēt
-                </button>
-                <button id="saveLocationButton" class="btn-save" style="display:none;">
-                    <i class="bi bi-check-lg me-1"></i> Saglabāt
-                </button>
+                <div class="d-flex justify-content-end mt-4">
+                    <button id="editPasswordButton" class="btn-edit me-2">
+                        <i class="bi bi-pencil-square me-1"></i> Mainīt paroli
+                    </button>
+                    <button id="savePasswordButton" class="btn-save" style="display:none;">
+                        <i class="bi bi-check-lg me-1"></i> Saglabāt
+                    </button>
+                </div>
             </div>
         </div>
-        <form id="profileForm" method="post" enctype="multipart/form-data">
-            <div class="mb-4">
-                <label for="profile_pic" class="form-label">Profila bilde</label><br>
-                <?php if (!empty($user['profile_pic'])): ?>
-                    <img src="../functions/assets/<?= htmlspecialchars($user['profile_pic']) ?>" alt="Profila bilde" width="100" height="100" class="rounded-circle mb-2">
-                <?php else: ?>
-                    <img src="../images/default-profile.png" alt="Default Profile" width="100" height="100" class="rounded-circle mb-2">
-                <?php endif; ?>
-                <input type="file" name="profile_pic" id="profile_pic" class="form-control" accept="image/jpeg,image/png,image/gif">
-            </div>
 
-            <button type="submit" class="btn btn-primary">Augšupielādēt attēlu</button>
-        </form>
+        <!-- Profile Picture Section -->
+        <div class="section-divider mt-4">
+            <span>Profila bilde</span>
+        </div>
 
+        <div class="section-container mt-4">
+            <form id="profileForm" method="post" enctype="multipart/form-data">
+                <div class="mb-4">
+                    <label for="profile_pic" class="form-label">Profila bilde</label><br>
+                    <?php if (!empty($user['profile_pic'])): ?>
+                        <img src="../functions/assets/<?= htmlspecialchars($user['profile_pic']) ?>" alt="Profila bilde" width="100" height="100" class="rounded-circle mb-2">
+                    <?php else: ?>
+                        <img src="../images/default-profile.png" alt="Default Profile" width="100" height="100" class="rounded-circle mb-2">
+                    <?php endif; ?>
+                    <input type="file" name="profile_pic" id="profile_pic" class="form-control" accept="image/jpeg,image/png,image/gif">
+                </div>
+
+                <button type="submit" class="btn btn-primary">Augšupielādēt attēlu</button>
+            </form>
+        </div>
     </main>
 </div>
+
+<script>
+$(document).ready(function() {
+    // Password change functionality
+    $('#editPasswordButton').click(function() {
+        $('#password-dummies').hide();
+        $('#password-inputs').show();
+        $('#editPasswordButton').hide();
+        $('#savePasswordButton').show();
+    });
+
+    $('#savePasswordButton').click(function() {
+        const currentPassword = $('#current_password').val();
+        const newPassword = $('#new_password').val();
+        const confirmPassword = $('#confirm_password').val();
+
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            alert('Lūdzu, aizpildiet visus laukus!');
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            alert('Jaunā parole un apstiprinājums nesakrīt!');
+            return;
+        }
+
+        // Password strength validation
+        if (newPassword.length < 8) {
+            alert('Parolei jābūt vismaz 8 rakstzīmēm garai!');
+            return;
+        }
+
+        $.ajax({
+            url: '../functions/UserController.php',
+            method: 'POST',
+            data: {
+                action: 'change_password',
+                current_password: currentPassword,
+                new_password: newPassword
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    alert(response.message || 'Parole veiksmīgi nomainīta!');
+                    // Reset form
+                    $('#current_password').val('');
+                    $('#new_password').val('');
+                    $('#confirm_password').val('');
+                    $('#password-inputs').hide();
+                    $('#password-dummies').show();
+                    $('#savePasswordButton').hide();
+                    $('#editPasswordButton').show();
+                } else {
+                    alert('Kļūda: ' + (response.error || 'Neizdevās nomainīt paroli'));
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('AJAX Error:', status, error);
+                alert('Kļūda sazinoties ar serveri. Lūdzu, mēģiniet vēlreiz.');
+            }
+        });
+    });
+
+    // Password strength indicator
+    $('#new_password').on('input', function() {
+        const password = $(this).val();
+        let strength = 0;
+        
+        if (password.length >= 8) strength += 25;
+        if (password.match(/[a-z]/)) strength += 25;
+        if (password.match(/[A-Z]/)) strength += 25;
+        if (password.match(/[0-9]/)) strength += 25;
+
+        const strengthBar = $('#passwordStrengthBar');
+        strengthBar.css('width', strength + '%');
+
+        // Update color based on strength
+        if (strength <= 25) {
+            strengthBar.css('background-color', '#ff4444');
+        } else if (strength <= 50) {
+            strengthBar.css('background-color', '#ffbb33');
+        } else if (strength <= 75) {
+            strengthBar.css('background-color', '#00C851');
+        } else {
+            strengthBar.css('background-color', '#007E33');
+        }
+    });
+
+    // Toggle password visibility
+    $('#toggleEmailPassword').click(function() {
+        const input = $('#emailPassword');
+        const icon = $(this).find('i');
+        if (input.attr('type') === 'password') {
+            input.attr('type', 'text');
+            icon.removeClass('bi-eye').addClass('bi-eye-slash');
+        } else {
+            input.attr('type', 'password');
+            icon.removeClass('bi-eye-slash').addClass('bi-eye');
+        }
+    });
+
+    // Rest of your existing JavaScript code...
+});
+</script>
 
 <script src="../functions/script.js"></script>
 <?php include '../main/footer.php'; ?>

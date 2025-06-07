@@ -29,171 +29,180 @@ include '../css/templates/header.php';
         <input type="hidden" id="edit-event-id" value="<?= htmlspecialchars($_GET['id']) ?>">
 
         <div class="card shadow p-4" id="event-details">
-           
+            <!-- Event details will be loaded here -->
         </div>
     </div>
 </section>
 
 <section id="my-event-info">
-    <section id="my-event-info">
-    <div class="group">
-        <div class="amount-joined  p-4">
-            <p id="count-waiting">0</p>
-            <i class="fa-solid fa-people-group wait"></i>
-            <h5>Pieteikušies</h5>
-        </div>
-        <div class="amount-joined  p-4">
-            <p id="count-accepted">0</p>
-            <i class="fa-solid fa-people-group"></i>
-            <h5>Apstiprināti</h5>
-        </div>
-        <div class="amount-joined  p-4">
-            <p id="count-denied">0</p>
-            <i class="fa-solid fa-people-group den"></i>
-            <h5>Noraidīti</h5>
+    <div class="container">
+        
+
+        <!-- User Tables -->
+        <div class="card mt-4">
+            <div class="card-header bg-white">
+                <ul class="nav nav-tabs card-header-tabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-bs-toggle="tab" href="#waiting">
+                            Gaida <span class="badge bg-warning" id="count-waiting-badge">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#accepted">
+                            Apstiprināti <span class="badge bg-success" id="count-accepted-badge">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#denied">
+                            Noraidīti <span class="badge bg-danger" id="count-denied-badge">0</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content">
+                    <!-- Waiting Tab -->
+                    <div class="tab-pane fade show active" id="waiting">
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="waiting-table">
+                                <thead>
+                                    <tr>
+                                        <th><input type="checkbox" class="select-all" data-table="waiting"></th>
+                                        <th>#</th>
+                                        <th>Lietotājs</th>
+                                        <th>E-pasts</th>
+                                        <th class="status-header">
+                                            Pieteicies
+                                            <i class="bi bi-chevron-down status-indicator"></i>
+                                        </th>
+                                        <th>Darbības</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                        <div id="waiting-pagination" class="mt-3"></div>
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <div>
+                                <select class="form-select batch-status" data-table="waiting">
+                                    <option value="accepted">Apstiprināt</option>
+                                    <option value="denied">Noraidīt</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-primary batch-update-btn" data-table="waiting">Atjaunināt izvēlētos</button>
+                        </div>
+                    </div>
+
+                    <!-- Accepted Tab -->
+                    <div class="tab-pane fade" id="accepted">
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="accepted-table">
+                                <thead>
+                                    <tr>
+                                        <th><input type="checkbox" class="select-all" data-table="accepted"></th>
+                                        <th>#</th>
+                                        <th>Lietotājs</th>
+                                        <th>E-pasts</th>
+                                        <th class="status-header">
+                                            Pieteicies
+                                            <i class="bi bi-chevron-down status-indicator"></i>
+                                        </th>
+                                        <th>Darbības</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                        <div id="accepted-pagination" class="mt-3"></div>
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <div>
+                                <select class="form-select batch-status" data-table="accepted">
+                                    <option value="denied">Noraidīt</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-primary batch-update-btn" data-table="accepted">Atjaunināt izvēlētos</button>
+                        </div>
+                    </div>
+
+                    <!-- Denied Tab -->
+                    <div class="tab-pane fade" id="denied">
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="denied-table">
+                                <thead>
+                                    <tr>
+                                        <th><input type="checkbox" class="select-all" data-table="denied"></th>
+                                        <th>#</th>
+                                        <th>Lietotājs</th>
+                                        <th>E-pasts</th>
+                                        <th class="status-header">
+                                            Pieteicies
+                                            <i class="bi bi-chevron-down status-indicator"></i>
+                                        </th>
+                                        <th>Darbības</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                        <div id="denied-pagination" class="mt-3"></div>
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <div>
+                                <select class="form-select batch-status" data-table="denied">
+                                    <option value="accepted">Apstiprināt</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-primary batch-update-btn" data-table="denied">Atjaunināt izvēlētos</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-</section>
-
-</section>
-
-<section id="table">
-  <h4 class="mb-3">Pieteikušies</h4>
-  <div class="d-flex mb-2">
-    <select class="form-select me-2 batch-status" data-table="waiting" style="max-width: 200px;">
-      <option disabled selected>Izvēlies statusu</option>
-      <option value="accepted">Apstiprināt</option>
-      <option value="denied">Noraidīt</option>
-    </select>
-    <button class="btn-stat batch-update-btn" data-table="waiting">Mainīt izvēlētajiem</button>
-  </div>
-
-  <div class="table-responsive">
-    <table class="table table-hover" id="waiting-table">
-      <thead>
-        <tr>
-          <th><input type="checkbox" class="select-all" data-table="waiting"></th>
-          <th>Nr.</th>
-          <th>Lietotājvārds</th>
-          <th>E-pasts</th>
-          <th>Status</th>
-          <th>Darbības</th>
-        </tr>
-      </thead>
-      <tbody>
-      </tbody>
-    </table>
-  </div>
-  <div class="pagination-controls" id="waiting-pagination"></div>
-  
-  <div class="row mt-5">
-    <div class="col-md-6 mb-4">
-      <h4 class="mb-3">Apstiprināti</h4>
-      <div class="d-flex mb-2">
-        <select class="form-select me-2 batch-status" data-table="accepted" style="max-width: 200px;">
-          <option disabled selected>Izvēlies statusu</option>
-          <option value="waiting">Pieteicies</option>
-          <option value="denied">Noraidīt</option>
-        </select>
-        <button class="btn-stat batch-update-btn" data-table="accepted">Mainīt izvēlētajiem</button>
-      </div>
-
-      <div class="table-responsive">
-        <table class="table table-hover" id="accepted-table">
-          <thead>
-            <tr>
-              <th><input type="checkbox" class="select-all" data-table="accepted"></th>
-              <th>Nr.</th>
-              <th>Lietotājvārds</th>
-              <th>E-pasts</th>
-              <th>Status</th>
-              <th>Darbības</th>
-            </tr>
-          </thead>
-          <tbody>
-          </tbody>
-        </table>
-      </div>
-      <div class="pagination-controls" id="accepted-pagination"></div>
-    </div>
-
-    <div class="col-md-6 mb-4">
-      <h4 class="mb-3">Noraidītie</h4>
-      <div class="d-flex mb-2">
-        <select class="form-select me-2 batch-status" data-table="denied" style="max-width: 200px;">
-          <option disabled selected>Izvēlies statusu</option>
-          <option value="waiting">Pieteicies</option>
-          <option value="accepted">Apstiprināt</option>
-        </select>
-        <button class="btn-stat batch-update-btn" data-table="denied">Mainīt izvēlētajiem</button>
-      </div>
-
-      <div class="table-responsive">
-        <table class="table table-hover" id="denied-table">
-          <thead>
-            <tr>
-              <th><input type="checkbox" class="select-all" data-table="denied"></th>
-              <th>Nr.</th>
-              <th>Lietotājvārds</th>
-              <th>E-pasts</th>
-              <th>Status</th>
-              <th>Darbības</th>
-            </tr>
-          </thead>
-          <tbody>
-          </tbody>
-        </table>
-      </div>
-      <div class="pagination-controls" id="denied-pagination"></div>
-    </div>
-  </div>
 </section>
 
 <!-- User Details Modal -->
-<div class="modal fade" id="userDetailsModal" tabindex="-1" aria-labelledby="userDetailsModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="userDetailsModalLabel">Lietotāja informācija</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <div class="row">
-          <div class="col-md-4 text-center">
-            <img id="userProfilePic" src="" alt="Profile Picture" class="img-fluid rounded-circle mb-3" style="max-width: 150px;">
-          </div>
-          <div class="col-md-8">
-            <h4 id="userName"></h4>
-            <p><strong>E-pasts:</strong> <span id="userEmail"></span></p>
-            <p><strong>Atrašanās vieta:</strong> <span id="userLocation"></span></p>
-            <p><strong>Reģistrējies:</strong> <span id="userCreatedAt"></span></p>
-          </div>
-        </div>
-        <hr>
-        <div class="row mt-3">
-          <div class="col-md-6">
-            <div class="card">
-              <div class="card-body">
-                <h5 class="card-title">Izveidotie pasākumi</h5>
-                <p class="card-text" id="createdEvents">0</p>
-              </div>
+<div class="modal fade" id="userDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Lietotāja informācija</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-          </div>
-          <div class="col-md-6">
-            <div class="card">
-              <div class="card-body">
-                <h5 class="card-title">Pabeigtie pasākumi</h5>
-                <p class="card-text" id="completedEvents">0</p>
-              </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-4 text-center">
+                        <img id="userProfilePic" src="../assets/default-profile.png" class="rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                        <h4 id="userName" class="mb-2"></h4>
+                        <p id="userEmail" class="text-muted"></p>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">Statistika</h5>
+                                <div class="row text-center">
+                                    <div class="col-6">
+                                        <h6>Izveidotie pasākumi</h6>
+                                        <p id="createdEvents" class="fs-4">0</p>
+                                    </div>
+                                    <div class="col-6">
+                                        <h6>Pabeigtie pasākumi</h6>
+                                        <p id="completedEvents" class="fs-4">0</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Papildu informācija</h5>
+                                <p><strong>Atrašanās vieta:</strong> <span id="userLocation">Nav norādīts</span></p>
+                                <p><strong>Reģistrējies:</strong> <span id="userCreatedAt"></span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Aizvērt</button>
-      </div>
     </div>
-  </div>
 </div>
 
 <style>
@@ -318,12 +327,67 @@ include '../css/templates/header.php';
 .card:hover {
     transform: translateY(-5px);
 }
+
+.status-select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background: #fff url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") no-repeat right 8px center;
+    background-size: 16px;
+    padding: 8px 32px 8px 12px;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #495057;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.status-select:hover {
+    border-color: #adb5bd;
+}
+
+.status-select:focus {
+    outline: none;
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
+.status-select option {
+    padding: 8px;
+}
+
+.status-select option[value="waiting"] {
+    color: #ffc107;
+}
+
+.status-select option[value="accepted"] {
+    color: #28a745;
+}
+
+.status-select option[value="denied"] {
+    color: #dc3545;
+}
+
+.status-select option[value="left"] {
+    color: #6c757d;
+}
 </style>
 
 <?php include '../main/footer.php'; ?>
 
 <script>
 $(document).ready(function() {
+    const eventId = $('#edit-event-id').val();
+    
+    $.get(`../functions/event_functions.php?action=fetch_event_details&id=${eventId}`, function (data) {
+        $('#event-details').html(data);
+    });
+
+    $.getJSON(`../functions/event_functions.php?action=fetch_event_info&id=${eventId}`, function (data) {
+        $('#joined-count').text(data.total_joined);
+    });
+    
     loadJoinedUsers();
 });
 </script>

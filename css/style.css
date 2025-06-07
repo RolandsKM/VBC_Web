@@ -64,8 +64,8 @@
 .hero p {
   font-size: 1.2rem;
   max-width: 800px;
-  margin: 0 0 2rem; 
-  text-align: left; 
+  margin: 0 auto 2rem; 
+  text-align: center; 
   position: relative;
   z-index: 1;
   color: #fff;
@@ -123,15 +123,18 @@ section h1::after, section h2::after {
   display: flex;
   align-items: center;
   justify-content: center;
-  max-width: 1200px;
+  max-width: 1260px;
   margin: 0 auto;
   gap: 10px;
+  position: relative;
+  padding: 0 40px;
 }
 
 .category-scroll-wrapper {
   overflow: hidden;
   width: 100%;
   max-width: 90rem;
+  position: relative;
 }
 
 .category-list {
@@ -172,7 +175,7 @@ section h1::after, section h2::after {
 .category i {
   font-size: 2.5rem;
   margin-bottom: 15px;
-  color: var(--primary-color);
+  color: var(--light-color);
 }
 
 .category p {
@@ -214,11 +217,11 @@ section h1::after, section h2::after {
 }
 
 .nav-button.left {
-  left: 10px;
+  left: 0;
 }
 
 .nav-button.right {
-  right: 10px;
+  right: 0;
 }
 
 /* Popular Events Section */
@@ -658,27 +661,30 @@ section h1::after, section h2::after {
 }
 
 .small-box {
-  background: var(--white);
-  padding: 1rem 1.5rem;
-  border-radius: 12px;
-  box-shadow: var(--box-shadow);
+  background: #ffffff !important;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
   flex: 1;
-  min-width: 250px;
-  transition: var(--transition);
+  min-width: 200px;
+  transition: transform 0.2s ease;
+  border: 1px solid #eee;
 }
 
 .small-box:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
 .small-box p {
   margin: 0;
-  font-size: 1.1rem;
+  color: #555;
+  font-size: 0.95rem;
 }
 
 .small-box strong {
-  color: var(--primary-color);
+  color: #2c3e50;
+  font-weight: 600;
 }
 
 .top {
@@ -1026,10 +1032,22 @@ section h1::after, section h2::after {
   }
 
   .small-box {
-    min-width: 100%;
+    min-width: 150px;
+    padding: 0.8rem;
+  }
+
+  .small-box p {
+    font-size: 0.9rem;
   }
 
   .chat-sidebar {
     width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .small-box {
+    min-width: 100%;
+    margin-bottom: 0.5rem;
   }
 } 

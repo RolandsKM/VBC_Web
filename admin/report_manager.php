@@ -285,6 +285,14 @@ checkModeratorAccess();
             <div class="container-fluid py-4">
                 <div class="d-sm-flex align-items-center justify-content-between mb-4">
                     <h1 class="h3 mb-0 text-gray-800">Ziņojumu Pārvaldība</h1>
+                    <div class="d-flex align-items-center">
+                        <div class="input-group" style="width: 300px;">
+                            <input type="text" id="searchReports" class="form-control form-control-sm rounded-pill" placeholder="Meklēt pēc pasākuma vai veidotāja...">
+                            <button class="btn btn-sm btn-outline-secondary rounded-pill ms-2" type="button" id="clearReportSearch">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="card shadow mb-4">

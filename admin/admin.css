@@ -13,19 +13,55 @@ body {
 .admin-layout {
     display: flex;
     min-height: 100vh;
+    position: relative;
 }
+
 .admin-sidebar {
-    width: 100%;
+    width: var(--sidebar-width);
     background-color: #fff;
     border-right: 1px solid #eee;
     box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+    position: fixed;
+    height: 100vh;
+    z-index: 1000;
+    overflow-y: auto;
 }
 
-@media (min-width: 992px) {
-    .admin-sidebar {
-        width: 280px;
-        min-height: calc(100vh - 120px);
-    }
+.admin-sidebar.collapsed {
+    width: var(--sidebar-collapsed-width);
+}
+
+.admin-sidebar.collapsed .admin-sidebar-title,
+.admin-sidebar.collapsed .admin-nav a span,
+.admin-sidebar.collapsed .dropdown-toggle-admin span {
+    display: none;
+}
+
+.admin-sidebar.collapsed .admin-nav a,
+.admin-sidebar.collapsed .dropdown-toggle-admin {
+    text-align: center;
+    padding: 12px 5px;
+}
+
+.admin-sidebar.collapsed .admin-nav a i,
+.admin-sidebar.collapsed .dropdown-toggle-admin i {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.admin-sidebar.collapsed .dropdown-content-admin {
+    position: absolute;
+    left: 100%;
+    top: 0;
+    width: 200px;
+    background: white;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    display: none;
+}
+
+.admin-sidebar.collapsed .dropdown-admin:hover .dropdown-content-admin {
+    display: block;
 }
 
 .admin-sidebar-title {
@@ -100,10 +136,14 @@ h5{
 
 
 .main-content {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
+    margin-left: var(--sidebar-width);
+    transition: margin-left 0.3s ease;
+    width: calc(100% - var(--sidebar-width));
+}
+
+.main-content.expanded {
+    margin-left: var(--sidebar-collapsed-width);
+    width: calc(100% - var(--sidebar-collapsed-width));
 }
 
 /* Header */
@@ -492,6 +532,8 @@ h6{
     --hover-color: #2e59d9;
     --warning-color: #f6c23e;
     --info-color: #36b9cc;
+    --sidebar-width: 280px;
+    --sidebar-collapsed-width: 70px;
 }
 
 /* Admin Dashboard Styles */
@@ -1062,4 +1104,71 @@ h6{
     background-color: var(--danger-color);
     color: white;
     border: none;
+}
+
+/* Toggle Button */
+.sidebar-toggle {
+    position: fixed;
+    left: var(--sidebar-width);
+    top: 20px;
+    z-index: 1001;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 0 4px 4px 0;
+    padding: 10px;
+    cursor: pointer;
+    transition: left 0.3s ease;
+}
+
+.sidebar-toggle.collapsed {
+    left: var(--sidebar-collapsed-width);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .admin-sidebar {
+        transform: translateX(-100%);
+        position: fixed;
+        left: 0;
+        top: 0;
+        height: 100vh;
+        z-index: 1050;
+        background: white;
+    }
+    
+    .admin-sidebar.show {
+        transform: translateX(0);
+        box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    }
+    
+    .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+    
+    .sidebar-toggle {
+        left: 0;
+        z-index: 1051;
+    }
+    
+    .sidebar-toggle.collapsed {
+        left: 0;
+    }
+
+    /* Overlay when sidebar is open on mobile */
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1040;
+    }
+
+    .sidebar-overlay.show {
+        display: block;
+    }
 }

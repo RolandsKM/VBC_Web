@@ -45,14 +45,15 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
     $offset = ($page - 1) * $perPage;
     $sortField = $_GET['sort'] ?? 'created_at'; 
     $sortOrder = $_GET['order'] ?? 'DESC'; 
+    $search = $_GET['search'] ?? '';
 
     try {
         if ($table === 'todays') {
             $users = getTodaysUsers($perPage, $offset, $sortField, $sortOrder);
             $total = getTodaysUsersCount();
         } elseif ($table === 'all') {
-            $users = getAllUsers($perPage, $offset, $sortField, $sortOrder);
-            $total = getAllUsersCount();
+            $users = getAllUsers($perPage, $offset, $sortField, $sortOrder, $search);
+            $total = getAllUsersCount($search);
         } else {
             echo json_encode(['success' => false, 'message' => 'Invalid table']);
             exit;
@@ -104,7 +105,90 @@ try {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
-    
+    <style>
+        :root {
+            --primary-color: #4CAF50;
+            --secondary-color: #f8f9fc;
+            --text-color: #333;
+            --border-color: #e0e0e0;
+            --hover-color: #45a049;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --success-color: #28a745;
+            --info-color: #17a2b8;
+        }
+
+        .table-header-style {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+        }
+
+        .table-header-style th {
+            background-color: var(--primary-color);
+            transition: background-color 0.2s ease;
+        }
+
+        .table-header-style th:hover {
+            background-color: var(--hover-color);
+            cursor: pointer;
+        }
+        
+        .table {
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+        }
+        
+        .table th {
+            font-weight: 600;
+            padding: 1rem;
+            border-bottom: 2px solid rgba(0,0,0,0.1);
+        }
+        
+        .table td {
+            padding: 1rem;
+            vertical-align: middle;
+        }
+        
+        .table-hover tbody tr:hover {
+            background-color: rgba(76, 175, 80, 0.05);
+            transition: background-color 0.2s ease;
+        }
+
+        .pagination-container {
+            margin-top: 1.5rem;
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        
+        .pagination-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            background-color: white;
+            color: var(--text-color);
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+        
+        .pagination-btn:hover:not(:disabled) {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        .pagination-btn:disabled {
+            background-color: #f5f5f5;
+            color: #999;
+            cursor: not-allowed;
+        }
+    </style>
 </head>
 <body>
 <div class="admin-layout">
@@ -117,7 +201,6 @@ try {
             <div class="d-sm-flex align-items-center justify-content-between mb-4">
                 <h1 class="h3 mb-0 text-gray-800">Lietotāju Pārvalde</h1>
                 <div class="d-none d-sm-inline-block">
-                
                 </div>
             </div>
 
@@ -199,6 +282,7 @@ try {
                     <option value="year" <?= $filterPeriod === 'year' ? 'selected' : '' ?>>Šogad</option>
                 </select>
             </div>
+
             <div class="row">
                 <div class="col-12">
                     <div class="card shadow-sm border-0 mb-4">
@@ -241,7 +325,7 @@ try {
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-bordered table-hover" width="100%" cellspacing="0">
-                            <thead class="thead-light ">
+                            <thead>
                                 <tr class="table-header-style">
                                     <th>Lietotājvārds</th>
                                     <th>E-pasts</th>
@@ -254,34 +338,39 @@ try {
                               
                             </tbody>
                         </table>
-                        <div id="todays-users-pagination" class="pagination-container"></div>
+                        <div class="pagination-container" id="todays-users-pagination"></div>
                     </div>
                 </div>
             </div>
-
+            <div class="d-flex justify-content-end mb-3">
+                <div class="input-group" style="width: 300px;">
+                    <input type="text" id="searchUsers" class="form-control form-control-sm rounded-pill" placeholder="Meklēt pēc lietotājvārda vai e-pasta...">
+                    <button class="btn btn-sm btn-outline-secondary rounded-pill ms-2" type="button" id="clearSearch">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
      
             <div class="card shadow mb-4">
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                     <h6 class="m-0 font-weight-bold">Visi Lietotāji</h6>
-                    <div class="d-flex">
-                        <div class="dropdown drop-table drop-table no-arrow">
-                            <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" 
-                               data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end shadow animated--fade-in" 
-                                aria-labelledby="dropdownMenuLink">
-                                <li><a class="dropdown-item" href="#">Eksportēt uz CSV</a></li>
-                                <li><a class="dropdown-item" href="#">Drukāt</a></li>
-                            </ul>
-                        </div>
+                    <div class="dropdown drop-table drop-table no-arrow">
+                        <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" 
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow animated--fade-in" 
+                            aria-labelledby="dropdownMenuLink">
+                            <li><a class="dropdown-item" href="#">Eksportēt uz CSV</a></li>
+                            <li><a class="dropdown-item" href="#">Drukāt</a></li>
+                        </ul>
                     </div>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-bordered table-hover" width="100%" cellspacing="0">
-                            <thead class="thead-light">
-                                <tr>
+                            <thead>
+                                <tr class="table-header-style">
                                     <th>Lietotājvārds</th>
                                     <th>E-pasts</th>
                                     <th>Reģistrācijas Datums</th>
@@ -293,7 +382,7 @@ try {
                                
                             </tbody>
                         </table>
-                        <div id="all-users-pagination" class="pagination-container"></div>
+                        <div class="pagination-container" id="all-users-pagination"></div>
                     </div>
                 </div>
             </div>

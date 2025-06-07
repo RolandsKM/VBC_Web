@@ -1,6 +1,8 @@
 let currentPage = 1;
 let currentSortField = 'reported_at';
 let currentSortOrder = 'DESC';
+let reportSearchTimeout;
+let currentReportSearch = '';
 const perPage = 5;
 
 function escapeHtml(text) {
@@ -31,7 +33,8 @@ function loadReports() {
             limit: perPage,
             offset: (currentPage - 1) * perPage,
             sort_by: currentSortField,
-            sort_order: currentSortOrder
+            sort_order: currentSortOrder,
+            search: currentReportSearch
         },
         success: function(response) {
             if (response.success) {
@@ -592,5 +595,23 @@ $(document).ready(function() {
                 }
             });
         }
+    });
+
+    // Add search functionality
+    $(document).on('input', '#searchReports', function() {
+        clearTimeout(reportSearchTimeout);
+        const value = $(this).val();
+        reportSearchTimeout = setTimeout(() => {
+            currentReportSearch = value;
+            currentPage = 1;
+            loadReports();
+        }, 300);
+    });
+
+    $(document).on('click', '#clearReportSearch', function() {
+        $('#searchReports').val('');
+        currentReportSearch = '';
+        currentPage = 1;
+        loadReports();
     });
 }); 

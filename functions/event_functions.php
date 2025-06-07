@@ -15,7 +15,9 @@ function fetchEventData($eventId) {
                c.Nosaukums AS category_name,
                u.ID_user AS user_id, 
                u.username, u.email, u.profile_pic,
-               (SELECT COUNT(*) FROM Volunteers v WHERE v.event_id = e.ID_Event AND v.status = 'accepted') AS accepted_count
+               (SELECT COUNT(*) FROM Volunteers v WHERE v.event_id = e.ID_Event AND v.status = 'accepted') AS accepted_count,
+               (SELECT COUNT(*) FROM Volunteers v WHERE v.event_id = e.ID_Event AND v.status = 'waiting') AS waiting_count,
+               (SELECT COUNT(*) FROM Volunteers v WHERE v.event_id = e.ID_Event AND v.status = 'denied') AS denied_count
         FROM Events e
         LEFT JOIN Event_Categories ec ON e.ID_Event = ec.event_id
         LEFT JOIN VBC_Kategorijas c ON ec.category_id = c.Kategorijas_ID
@@ -92,8 +94,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         }
 
         if ($action === 'leave') {
-            $stmt = $pdo->prepare("UPDATE Volunteers SET status = 'left' WHERE user_id = :user_id AND event_id = :event_id");
-            $stmt->execute(['user_id' => $userId, 'event_id' => $eventId]);
+            $date = new DateTime('now', new DateTimeZone('Europe/Riga'));
+            $timestamp = $date->format('Y-m-d H:i:s');
+            
+            // Update volunteer status
+            $stmt = $pdo->prepare("UPDATE Volunteers SET status = 'left', seen = 0, changed_at = :timestamp WHERE user_id = :user_id AND event_id = :event_id");
+            $stmt->execute([
+                'user_id' => $userId, 
+                'event_id' => $eventId,
+                'timestamp' => $timestamp
+            ]);
+            
             echo 'left';
             exit();
         }
@@ -207,55 +218,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             : ["status" => "error", "message" => "Neizdevās dzēst notikumu."]);
         exit;
     }
-    if ($action === 'update_volunteer_status' && $userId > 0) {
-        $volunteerId = intval($_POST['volunteer_id'] ?? 0);
-        $newStatus = $_POST['status'] ?? '';
-
-        $allowedStatuses = ['waiting', 'accepted', 'denied'];
-
-        if ($volunteerId > 0 && in_array($newStatus, $allowedStatuses)) {
-            try {
-                $stmt = $pdo->prepare("UPDATE Volunteers SET status = :status WHERE ID_Volunteers = :id");
-                $success = $stmt->execute([
-                    ':status' => $newStatus,
-                    ':id' => $volunteerId
-                ]);
-                echo $success ? 'success' : 'error_execute';
+    if ($action === 'update_volunteer_status') {
+        $volunteerId = intval($_POST['volunteer_id']);
+        $newStatus = $_POST['status'];
+        $seen = isset($_POST['seen']) ? intval($_POST['seen']) : 0;
+                $date = new DateTime('now', new DateTimeZone('Europe/Riga'));
+                $timestamp = $date->format('Y-m-d H:i:s');
+                
+        try {
+            $stmt = $pdo->prepare("UPDATE Volunteers SET status = ?, seen = ?, changed_at = ? WHERE ID_Volunteers = ?");
+            $stmt->execute([$newStatus, $seen, $timestamp, $volunteerId]);
+            echo "success";
             } catch (PDOException $e) {
-                echo 'db_error';
-            }
-        } else {
-            echo 'invalid_data';
+            echo "Kļūda atjauninot statusu: " . $e->getMessage();
         }
-
-        exit;
+        exit();
     }
-if ($action === 'batch_update_status') {
-    $ids = $_POST['ids'] ?? [];
-    $status = $_POST['status'] ?? '';
+    if ($action === 'batch_update_status') {
+        $ids = $_POST['ids'];
+        $newStatus = $_POST['status'];
+        $seen = isset($_POST['seen']) ? intval($_POST['seen']) : 0;
+        $date = new DateTime('now', new DateTimeZone('Europe/Riga'));
+        $timestamp = $date->format('Y-m-d H:i:s');
 
-    if (empty($ids) || !in_array($status, ['waiting', 'accepted', 'denied'])) {
-        echo 'Invalid input';
+        try {
+            $placeholders = str_repeat('?,', count($ids) - 1) . '?';
+            $stmt = $pdo->prepare("UPDATE Volunteers SET status = ?, seen = ?, changed_at = ? WHERE ID_Volunteers IN ($placeholders)");
+            $params = array_merge([$newStatus, $seen, $timestamp], $ids);
+            $stmt->execute($params);
+            echo "success";
+        } catch (PDOException $e) {
+            echo "Kļūda atjauninot statusus: " . $e->getMessage();
+        }
         exit();
     }
 
-    $placeholders = implode(',', array_fill(0, count($ids), '?'));
-
-    try {
-        $stmt = $pdo->prepare("UPDATE Volunteers SET status = ? WHERE ID_Volunteers IN ($placeholders)");
-        $stmt->execute(array_merge([$status], $ids));
-        echo 'success';
-    } catch (PDOException $e) {
-        echo 'Kļūda: ' . $e->getMessage();
+    // Add this function to handle marking notifications as seen
+    if ($action === 'mark_notifications_seen' && $userId > 0) {
+        try {
+            $stmt = $pdo->prepare("
+                UPDATE Volunteers 
+                SET seen = 1 
+                WHERE user_id = ? AND seen = 0
+            ");
+            $stmt->execute([$userId]);
+            echo 'success';
+        } catch (PDOException $e) {
+            echo 'error';
+        }
+        exit;
     }
-    exit();
-}
-
 
     echo 'invalid';
     exit();
 }
-
 // -----------------------------
 // GET REQUESTS (OWN / JOINED)
 // -----------------------------
@@ -272,24 +288,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
 
 if ($action === 'own') {
     try {
-      
         $countStmt = $pdo->prepare("SELECT COUNT(*) FROM Events WHERE user_id = ? AND deleted = 0");
         $countStmt->execute([$userId]);
         $totalCount = $countStmt->fetchColumn();
 
-      
-        $stmt = $pdo->prepare("SELECT * FROM Events WHERE user_id = ? AND deleted = 0 ORDER BY created_at DESC LIMIT ? OFFSET ?");
+        $stmt = $pdo->prepare("
+            SELECT e.*, 
+                   (SELECT COUNT(*) FROM Volunteers v 
+                    WHERE v.event_id = e.ID_Event 
+                    AND v.status = 'waiting') as waiting_joins
+            FROM Events e 
+            WHERE e.user_id = ? AND e.deleted = 0 
+            ORDER BY e.created_at DESC 
+            LIMIT ? OFFSET ?
+        ");
         $stmt->bindValue(1, $userId, PDO::PARAM_INT);
         $stmt->bindValue(2, $limit, PDO::PARAM_INT);
         $stmt->bindValue(3, $offset, PDO::PARAM_INT);
         $stmt->execute();
 
+        $output = '';
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $title = htmlspecialchars($row['title'], ENT_QUOTES, 'UTF-8');
             $description = htmlspecialchars($row['description'], ENT_QUOTES, 'UTF-8');
             $event_date = date("d.m.Y", strtotime($row['date']));
             $created_date = date("d.m.Y", strtotime($row['created_at']));
             $event_id = $row['ID_Event'];
+            $waiting_joins = $row['waiting_joins'];
 
             $output .= "
                 <a href='user-event.php?id=$event_id' class='event-link'>
@@ -301,6 +326,7 @@ if ($action === 'own') {
                             <p class='event-date'>🗓 $event_date</p>
                             <p class='created-date'>Izveidots: $created_date</p>
                         </div>
+                        " . ($waiting_joins > 0 ? "<div class='waiting-joins-badge'>$waiting_joins</div>" : "") . "
                     </div>
                 </a>";
         }
@@ -320,67 +346,68 @@ if ($action === 'own') {
 }
 
 if ($action === 'joined') {
-    try {
-   
-        $countStmt = $pdo->prepare("
-            SELECT COUNT(*) FROM Events e
-            JOIN Volunteers v ON e.ID_Event = v.event_id
-            WHERE v.user_id = :user_id AND (v.status = 'joined' OR v.status = 'waiting') AND e.deleted = 0
-        ");
-        $countStmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
-        $countStmt->execute();
-        $totalCount = $countStmt->fetchColumn();
+    $stmt = $pdo->prepare("
+        SELECT 
+            e.*,
+            v.status as volunteer_status,
+            v.seen as volunteer_seen,
+            v.created_at as volunteer_created_at
+        FROM Events e
+        JOIN Volunteers v ON e.ID_Event = v.event_id
+        WHERE v.user_id = ? AND e.deleted = 0
+        ORDER BY v.created_at DESC
+        LIMIT ? OFFSET ?
+    ");
+    $stmt->execute([$userId, $limit, $offset]);
+    $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
- 
-        $stmt = $pdo->prepare("
-            SELECT e.ID_Event, e.title, e.description, e.date, e.created_at
-            FROM Events e
-            JOIN Volunteers v ON e.ID_Event = v.event_id
-            WHERE v.user_id = :user_id AND (v.status = 'joined' OR v.status = 'waiting') AND e.deleted = 0
-            ORDER BY e.date DESC
-            LIMIT :limit OFFSET :offset
-        ");
-        $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
-        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-        $stmt->execute();
-
-        $results = $stmt->fetchAll();
-
-        foreach ($results as $row) {
-            $event_id = $row['ID_Event'];
-            $title = htmlspecialchars($row['title']);
-            $description = htmlspecialchars($row['description']);
-            $event_date = date("d.m.Y", strtotime($row['date']));
-            $created_date = date("d.m.Y", strtotime($row['created_at']));
-
-            $output .= "
-                <a href='../main/post-event.php?id=$event_id' class='event-link text-decoration-none text-dark'>
-                    <div class='event'>
-                        <h2>$title</h2>
-                        <div class='description'>$description</div>
-                        <hr>
-                        <div class='dates'>
-                            <p class='event-date'>🗓 $event_date</p>
-                            <p class='created-date'>Izveidots: $created_date</p>
-                        </div>
-                    </div>
-                </a>";
-        }
-
-        echo json_encode([
-            'html' => $output ?: "<p>Pagaidām nav pieteikumu.</p>",
-            'hasMore' => ($offset + $limit) < $totalCount
-        ]);
-    } catch (PDOException $e) {
-        error_log("Error fetching joined events: " . $e->getMessage());
-        echo json_encode([
-            'html' => "<p>Kļūda! Mēģiniet vēlāk.</p>",
-            'hasMore' => false
-        ]);
+    $html = '';
+    foreach ($events as $event) {
+        // Map the status to the correct display class and text
+        $statusMap = [
+            'waiting' => ['class' => 'waiting', 'text' => 'Pieteicies'],
+            'accepted' => ['class' => 'accepted', 'text' => 'Apstiprināts'],
+            'denied' => ['class' => 'denied', 'text' => 'Noraidīts'],
+            'left' => ['class' => 'denied', 'text' => 'Noraidīts'] // Map 'left' to 'denied' for display
+        ];
+        
+        $status = $event['volunteer_status'];
+        $statusInfo = $statusMap[$status] ?? ['class' => $status, 'text' => $status];
+        $isNew = $event['volunteer_status'] === 'accepted' && !$event['volunteer_seen'];
+        $newClass = $isNew ? 'new-acceptance' : '';
+        
+        $html .= '
+        <div class="event ' . $newClass . '">
+            <a href="../main/post-event.php?id=' . $event['ID_Event'] . '" class="event-link">
+                <h2>' . htmlspecialchars($event['title']) . '</h2>
+                <div class="description">' . htmlspecialchars($event['description']) . '</div>
+                <div class="dates">
+                    <span>🗓 ' . date('d.m.Y H:i', strtotime($event['date'])) . '</span>
+                    <span>📍 ' . htmlspecialchars($event['city']) . '</span>
+                </div>
+            </a>
+            <div class="status-badge ' . $statusInfo['class'] . '">' . $statusInfo['text'] . '</div>
+        </div>';
     }
-    exit();
+
+    // Check if there are more events
+    $stmt = $pdo->prepare("
+        SELECT COUNT(*) 
+        FROM Events e
+        JOIN Volunteers v ON e.ID_Event = v.event_id
+        WHERE v.user_id = ? AND e.deleted = 0
+    ");
+    $stmt->execute([$userId]);
+    $total = $stmt->fetchColumn();
+    $hasMore = ($offset + $limit) < $total;
+
+    echo json_encode([
+        'html' => $html,
+        'hasMore' => $hasMore
+    ]);
+    exit;
 }
+
 if ($action === 'fetch_joined_users') {
     $event_id = $_GET['id'] ?? null;
 
@@ -391,7 +418,7 @@ if ($action === 'fetch_joined_users') {
 
     try {
         $stmt = $pdo->prepare("
-            SELECT v.ID_Volunteers, u.username, u.email, v.status 
+            SELECT v.ID_Volunteers, u.ID_user as user_id, u.username, u.email, v.status 
             FROM Volunteers v 
             JOIN users u ON v.user_id = u.ID_user 
             WHERE v.event_id = :event_id AND v.status IN ('waiting', 'accepted', 'denied')
@@ -402,6 +429,7 @@ if ($action === 'fetch_joined_users') {
         $joinedUsers = array_map(function ($row) {
             return [
                 'id_volunteer' => $row['ID_Volunteers'],
+                'user_id' => $row['user_id'],
                 'username' => htmlspecialchars($row['username']),
                 'email' => htmlspecialchars($row['email']),
                 'status' => htmlspecialchars($row['status']),
@@ -542,6 +570,46 @@ if ($action === 'get_user_details') {
         echo json_encode($response);
     } catch (PDOException $e) {
         echo json_encode(['error' => 'Kļūda: ' . $e->getMessage()]);
+    }
+    exit();
+}
+
+if ($action === 'get_notifications') {
+    $userId = $_SESSION['ID_user'] ?? 0;
+    
+    if (!$userId) {
+        echo json_encode(['error' => 'Not authorized']);
+        exit();
+    }
+
+    try {
+        // Modify the get_notifications function to include seen status
+        $stmt = $pdo->prepare("
+            SELECT v.*, e.title as event_title, v.seen
+            FROM Volunteers v
+            JOIN Events e ON v.event_id = e.ID_Event
+            WHERE v.user_id = ? 
+            AND v.status IN ('accepted', 'denied')
+            AND v.changed_at IS NOT NULL
+            ORDER BY v.changed_at DESC
+        ");
+        $stmt->execute([$userId]);
+        $notifications = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Count unread notifications
+        $unreadCount = 0;
+        foreach ($notifications as $notification) {
+            if ($notification['seen'] == 0) {
+                $unreadCount++;
+            }
+        }
+
+        echo json_encode([
+            'notifications' => $notifications,
+            'unread_count' => $unreadCount
+        ]);
+    } catch (PDOException $e) {
+        echo json_encode(['error' => 'Database error']);
     }
     exit();
 }

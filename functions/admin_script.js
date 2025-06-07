@@ -8,6 +8,8 @@ let currentAdminSortField = 'created_at';
 let currentAdminSortOrder = 'DESC';
 let currentModSortField = 'created_at';
 let currentModSortOrder = 'DESC';
+let searchTimeout;
+let eventSearchTimeout;
 
 
 const filterPeriodSelect = document.getElementById('filter-period');
@@ -264,8 +266,9 @@ function renderPagination(containerId, currentPage, totalPages, table = null) {
     if (!container) return;
 
     let html = '';
-    html += `<button ${currentPage === 1 ? 'disabled' : ''} data-page="1" data-table="${table || ''}" class="pagination-btn btn btn-sm me-1">First</button>`;
-    html += `<button ${currentPage === 1 ? 'disabled' : ''} data-page="${currentPage - 1}" data-table="${table || ''}" class="pagination-btn btn btn-sm me-1">Prev</button>`;
+    
+    html += `<button ${currentPage === 1 ? 'disabled' : ''} data-page="1" data-table="${table}" class="pagination-btn btn btn-sm me-1">First</button>`;
+    html += `<button ${currentPage === 1 ? 'disabled' : ''} data-page="${currentPage - 1}" data-table="${table}" class="pagination-btn btn btn-sm me-1">Prev</button>`;
 
     let startPage = Math.max(1, currentPage - 2);
     let endPage = Math.min(totalPages, currentPage + 2);
@@ -279,17 +282,17 @@ function renderPagination(containerId, currentPage, totalPages, table = null) {
     }
 
     for (let i = startPage; i <= endPage; i++) {
-        html += `<button ${i === currentPage ? 'disabled' : ''} data-page="${i}" data-table="${table || ''}" class="pagination-btn btn btn-sm me-1">${i}</button>`;
+        html += `<button ${i === currentPage ? 'disabled' : ''} data-page="${i}" data-table="${table}" class="pagination-btn btn btn-sm me-1">${i}</button>`;
     }
 
-    html += `<button ${currentPage === totalPages ? 'disabled' : ''} data-page="${currentPage + 1}" data-table="${table || ''}" class="pagination-btn btn btn-sm me-1">Next</button>`;
-    html += `<button ${currentPage === totalPages ? 'disabled' : ''} data-page="${totalPages}" data-table="${table || ''}" class="pagination-btn btn btn-sm">Last</button>`;
+    html += `<button ${currentPage === totalPages ? 'disabled' : ''} data-page="${currentPage + 1}" data-table="${table}" class="pagination-btn btn btn-sm me-1">Next</button>`;
+    html += `<button ${currentPage === totalPages ? 'disabled' : ''} data-page="${totalPages}" data-table="${table}" class="pagination-btn btn btn-sm">Last</button>`;
 
     container.innerHTML = html;
 }
 
 
-function fetchUsers(table, page, period = 'all', sortField = currentUserSortField, sortOrder = currentUserSortOrder) {
+function fetchUsers(table, page, period = 'all', sortField = currentUserSortField, sortOrder = currentUserSortOrder, search = '') {
     currentPage = page;
     currentUserSortField = sortField;
     currentUserSortOrder = sortOrder;
@@ -297,6 +300,9 @@ function fetchUsers(table, page, period = 'all', sortField = currentUserSortFiel
     let url = `user_manager.php?ajax=1&table=${table}&page=${page}&sort=${sortField}&order=${sortOrder}`;
     if (table === 'all') {
         url += `&period=${period}`;
+        if (search) {
+            url += `&search=${encodeURIComponent(search)}`;
+        }
     }
     
     fetch(url)
@@ -315,7 +321,6 @@ function fetchUsers(table, page, period = 'all', sortField = currentUserSortFiel
             } else if (table === 'all') {
                 renderUsers('all-users-body', data.users);
                 renderPagination('all-users-pagination', data.page, totalPages, 'all');
-                
                 
                 if (totalUsersSpan) totalUsersSpan.textContent = data.total;
                 if (bannedUsersSpan) {
@@ -356,8 +361,8 @@ function updateCharts(period) {
 }
 
 // Event Table 
-function renderEvents(events) {
-    const tbody = document.getElementById('events-body');
+function renderEvents(events, tableId) {
+    const tbody = document.getElementById(tableId);
     if (!tbody) return;
 
     if (events.length === 0) {
@@ -365,7 +370,6 @@ function renderEvents(events) {
         return;
     }
 
-    
     const startNumber = (currentPage - 1) * perPage + 1;
 
     tbody.innerHTML = events.map((event, index) => `
@@ -416,21 +420,25 @@ function renderEvents(events) {
                     currentSortField = sortField;
                     currentSortOrder = newOrder;
                     
-                    fetchEvents(currentPage, sortField, newOrder);
+                    const tableType = tableId === 'todays-events-body' ? 'todays' : 'all';
+                    fetchEvents(currentPage, sortField, newOrder, tableType);
                 });
             }
         });
     }
 }
 
-
-
-function fetchEvents(page = 1, sortField = currentSortField, sortOrder = currentSortOrder) {
+function fetchEvents(page = 1, sortField = currentSortField, sortOrder = currentSortOrder, table = 'all', search = '') {
     currentPage = page;
     currentSortField = sortField;
     currentSortOrder = sortOrder;
     
-    fetch(`event_manager.php?ajax=1&page=${page}&sort=${sortField}&order=${sortOrder}`)
+    let url = `event_manager.php?ajax=1&page=${page}&sort=${sortField}&order=${sortOrder}&table=${table}`;
+    if (table === 'all' && search) {
+        url += `&search=${encodeURIComponent(search)}`;
+    }
+    
+    fetch(url)
         .then(response => response.json())
         .then(data => {
             if (!data.success) {
@@ -438,8 +446,11 @@ function fetchEvents(page = 1, sortField = currentSortField, sortOrder = current
                 return;
             }
             const totalPages = Math.ceil(data.total / data.perPage);
-            renderEvents(data.events);
-            renderPagination('events-pagination', data.page, totalPages);
+            const tableId = table === 'todays' ? 'todays-events-body' : 'events-body';
+            const paginationId = table === 'todays' ? 'todays-events-pagination' : 'events-pagination';
+            const tableType = table === 'todays' ? 'events-todays' : 'events-all';
+            renderEvents(data.events, tableId);
+            renderPagination(paginationId, data.page, totalPages, tableType);
         })
         .catch(err => alert('Kļūda ielādējot datus: ' + err));
 }
@@ -486,10 +497,10 @@ document.body.addEventListener('click', function(e) {
         if (!isNaN(page)) {
             if (table === 'todays' || table === 'all') {
                 fetchUsers(table, page, filterPeriodSelect?.value || 'all');
-            } else if (table === 'created' || table === 'volunteered') {
-                fetchEvents(table, page);
+            } else if (table === 'events-todays' || table === 'events-all') {
+                const tableType = table === 'events-todays' ? 'todays' : 'all';
+                fetchEvents(page, currentSortField, currentSortOrder, tableType);
             } else {
-                
                 fetchEvents(page, currentSortField, currentSortOrder);
             }
         }
@@ -554,7 +565,8 @@ function updateEventStatistics() {
 
 
 if (document.getElementById('events-body')) {
-    fetchEvents(1);
+    fetchEvents(1, currentSortField, currentSortOrder, 'all');
+    fetchEvents(1, currentSortField, currentSortOrder, 'todays');
     updateEventStatistics();
 }
 
@@ -822,4 +834,30 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+});
+
+document.getElementById('searchUsers')?.addEventListener('input', function(e) {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        fetchUsers('all', 1, filterPeriodSelect?.value || 'all', currentUserSortField, currentUserSortOrder, e.target.value);
+    }, 300);
+});
+
+document.getElementById('clearSearch')?.addEventListener('click', function() {
+    const searchInput = document.getElementById('searchUsers');
+    searchInput.value = '';
+    fetchUsers('all', 1, filterPeriodSelect?.value || 'all', currentUserSortField, currentUserSortOrder);
+});
+
+document.getElementById('searchEvents')?.addEventListener('input', function(e) {
+    clearTimeout(eventSearchTimeout);
+    eventSearchTimeout = setTimeout(() => {
+        fetchEvents(1, currentSortField, currentSortOrder, 'all', e.target.value);
+    }, 300);
+});
+
+document.getElementById('clearEventSearch')?.addEventListener('click', function() {
+    const searchInput = document.getElementById('searchEvents');
+    searchInput.value = '';
+    fetchEvents(1, currentSortField, currentSortOrder, 'all');
 }); 

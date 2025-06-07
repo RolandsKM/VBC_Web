@@ -39,6 +39,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             case 'update_location':
                 updateLocation();
                 break;
+            case 'change_password':
+                changePassword();
+                break;
             default:
                 http_response_code(400);
                 echo json_encode(['error' => 'Invalid action']);
@@ -168,5 +171,51 @@ function updateLocation() {
         echo json_encode(['error' => 'Database error']);
         error_log('Update location error: ' . $e->getMessage());
     }
+}
+
+function changePassword() {
+    global $pdo, $userId;
+
+    if (!isset($_POST['current_password'], $_POST['new_password'])) {
+        echo json_encode(['success' => false, 'error' => 'Trūkst obligātie lauki']);
+        exit;
+    }
+
+    $currentPassword = $_POST['current_password'];
+    $newPassword = $_POST['new_password'];
+
+    if (empty($currentPassword) || empty($newPassword)) {
+        echo json_encode(['success' => false, 'error' => 'Trūkst obligātie lauki']);
+        exit;
+    }
+
+    try {
+        // Verify current password
+        $stmt = $pdo->prepare("SELECT password FROM users WHERE ID_user = ?");
+        $stmt->execute([$userId]);
+        $user = $stmt->fetch();
+
+        if (!$user || !password_verify($currentPassword, $user['password'])) {
+            echo json_encode(['success' => false, 'error' => 'Nepareiza pašreizējā parole']);
+            exit;
+        }
+
+        // Hash new password
+        $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+
+        // Update password
+        $updateStmt = $pdo->prepare("UPDATE users SET password = ? WHERE ID_user = ?");
+        $success = $updateStmt->execute([$hashedPassword, $userId]);
+
+        if ($success) {
+            echo json_encode(['success' => true, 'message' => 'Parole veiksmīgi nomainīta']);
+        } else {
+            echo json_encode(['success' => false, 'error' => 'Neizdevās atjaunināt paroli']);
+        }
+    } catch (PDOException $e) {
+        error_log("Password change error: " . $e->getMessage());
+        echo json_encode(['success' => false, 'error' => 'Kļūda datubāzē']);
+    }
+    exit;
 }
 ?>

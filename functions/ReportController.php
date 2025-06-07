@@ -8,31 +8,37 @@ function checkModeratorAccess() {
     }
 }
 
-function getTotalReportsCount() {
+function getTotalReportsCount($search = '') {
     global $pdo;
-    $stmt = $pdo->prepare("SELECT COUNT(*) FROM event_reports WHERE status = 'waiting'");
+    $query = "SELECT COUNT(*) FROM event_reports r
+              JOIN Events e ON r.ID_event = e.ID_Event
+              JOIN users eu ON e.user_id = eu.ID_user
+              WHERE r.status = 'waiting'";
+    if (!empty($search)) {
+        $query .= " AND (e.title LIKE :search1 OR eu.username LIKE :search2)";
+    }
+    $stmt = $pdo->prepare($query);
+    if (!empty($search)) {
+        $searchTerm = '%' . $search . '%';
+        $stmt->bindValue(':search1', $searchTerm, PDO::PARAM_STR);
+        $stmt->bindValue(':search2', $searchTerm, PDO::PARAM_STR);
+    }
     $stmt->execute();
     return (int)$stmt->fetchColumn();
 }
 
-
-function getPaginatedReports($limit, $offset, $sortBy = 'reported_at', $sortOrder = 'DESC') {
+function getPaginatedReports($limit, $offset, $sortBy = 'reported_at', $sortOrder = 'DESC', $search = '') {
     global $pdo;
- 
     $allowedSortColumns = ['title', 'reported_at', 'creator_username'];
     $sortBy = in_array($sortBy, $allowedSortColumns) ? $sortBy : 'reported_at';
     $sortOrder = strtoupper($sortOrder) === 'ASC' ? 'ASC' : 'DESC';
-    
-    
     $sortColumnMap = [
         'title' => 'e.title',
         'reported_at' => 'r.reported_at',
         'creator_username' => 'eu.username'
     ];
-    
     $sortColumn = $sortColumnMap[$sortBy];
-    
-    $stmt = $pdo->prepare("
+    $query = "
         SELECT 
             r.ID_report, r.reason, r.reported_at, r.status,
             u.ID_user as reporter_id, u.username as reporter_username,
@@ -43,15 +49,22 @@ function getPaginatedReports($limit, $offset, $sortBy = 'reported_at', $sortOrde
         JOIN Events e ON r.ID_event = e.ID_Event
         JOIN users eu ON e.user_id = eu.ID_user
         WHERE r.status = 'waiting'
-        ORDER BY {$sortColumn} {$sortOrder}
-        LIMIT :limit OFFSET :offset
-    ");
+    ";
+    if (!empty($search)) {
+        $query .= " AND (e.title LIKE :search1 OR eu.username LIKE :search2)";
+    }
+    $query .= " ORDER BY {$sortColumn} {$sortOrder} LIMIT :limit OFFSET :offset";
+    $stmt = $pdo->prepare($query);
+    if (!empty($search)) {
+        $searchTerm = '%' . $search . '%';
+        $stmt->bindValue(':search1', $searchTerm, PDO::PARAM_STR);
+        $stmt->bindValue(':search2', $searchTerm, PDO::PARAM_STR);
+    }
     $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
     $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
     $stmt->execute();
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
-
 
 function getReportDetails($reportId) {
     global $pdo;
@@ -128,7 +141,6 @@ function deleteEvent($eventId, $adminId, $reason) {
     }
 }
 
-
 function getDeletionReasons() {
     return [
         'inappropriate_content' => 'Nepiemērots saturs',
@@ -150,6 +162,7 @@ function banUser($userId) {
         return false;
     }
 }
+
 //Atrinin;at vairākus ziņojumus
 function markReportsAsSolved($reportIds) {
     global $pdo;
@@ -162,7 +175,6 @@ function markReportsAsSolved($reportIds) {
         return false;
     }
 }
-
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax'])) {
     header('Content-Type: application/json');
@@ -178,9 +190,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax'])) {
                 $offset = isset($_POST['offset']) ? (int)$_POST['offset'] : 0;
                 $sortBy = $_POST['sort_by'] ?? 'reported_at';
                 $sortOrder = $_POST['sort_order'] ?? 'DESC';
+                $search = $_POST['search'] ?? '';
                 
-                $reports = getPaginatedReports($limit, $offset, $sortBy, $sortOrder);
-                $totalReports = getTotalReportsCount();
+                $reports = getPaginatedReports($limit, $offset, $sortBy, $sortOrder, $search);
+                $totalReports = getTotalReportsCount($search);
                 
                 echo json_encode([
                     'success' => true, 

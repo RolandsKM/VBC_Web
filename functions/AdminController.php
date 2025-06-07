@@ -141,14 +141,28 @@ function deleteUser($id) {
 }
 
 // ----------------- EVENT FUNCTIONS ------------------
-function getEventsCount() {
+function getEventsCount($search = '') {
     global $pdo;
-    $stmt = $pdo->prepare("SELECT COUNT(*) FROM Events");
+    $query = "SELECT COUNT(*) FROM Events";
+    
+    if (!empty($search)) {
+        $query .= " JOIN users ON Events.user_id = users.ID_user";
+        $query .= " WHERE Events.title LIKE :search1 OR users.username LIKE :search2";
+    }
+    
+    $stmt = $pdo->prepare($query);
+    
+    if (!empty($search)) {
+        $searchTerm = '%' . $search . '%';
+        $stmt->bindValue(':search1', $searchTerm, PDO::PARAM_STR);
+        $stmt->bindValue(':search2', $searchTerm, PDO::PARAM_STR);
+    }
+    
     $stmt->execute();
-    return (int) $stmt->fetchColumn();
+    return (int)$stmt->fetchColumn();
 }
 
-function getPaginatedEvents($limit, $offset, $sortField = 'created_at', $sortOrder = 'DESC') {
+function getPaginatedEvents($limit, $offset, $sortField = 'created_at', $sortOrder = 'DESC', $search = '') {
     global $pdo;
     
     $validSortFields = [
@@ -162,18 +176,39 @@ function getPaginatedEvents($limit, $offset, $sortField = 'created_at', $sortOrd
     $sortField = $validSortFields[$sortField] ?? 'Events.created_at';
     $sortOrder = strtoupper($sortOrder) === 'ASC' ? 'ASC' : 'DESC';
     
-    $stmt = $pdo->prepare("
+    $query = "
         SELECT Events.ID_Event, Events.title, Events.deleted, Events.created_at,
                users.ID_user, users.username, users.name, users.surname
         FROM Events
         JOIN users ON Events.user_id = users.ID_user
-        ORDER BY {$sortField} {$sortOrder}
-        LIMIT :limit OFFSET :offset
-    ");
-    $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
-    $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
-    $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    ";
+    
+    $params = [];
+    
+    if (!empty($search)) {
+        $query .= " WHERE Events.title LIKE :search1 OR users.username LIKE :search2";
+        $searchTerm = '%' . $search . '%';
+        $params[':search1'] = $searchTerm;
+        $params[':search2'] = $searchTerm;
+    }
+    
+    $query .= " ORDER BY {$sortField} {$sortOrder} LIMIT :limit OFFSET :offset";
+    $params[':limit'] = (int)$limit;
+    $params[':offset'] = (int)$offset;
+    
+    try {
+        $stmt = $pdo->prepare($query);
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value, is_int($value) ? PDO::PARAM_INT : PDO::PARAM_STR);
+        }
+        
+        $stmt->execute();
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $result ?: [];
+    } catch (PDOException $e) {
+        error_log("Database error in getPaginatedEvents: " . $e->getMessage());
+        return [];
+    }
 }
 
 function getEventsCreatedByUser($userId) {
@@ -208,41 +243,83 @@ function getAllEventsWithUser() {
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-function getEventsCountByDay() {
+function getEventsCountByDay($period = 'all') {
     global $pdo;
-    $stmt = $pdo->prepare("
+    $query = "
         SELECT DATE(created_at) as day, COUNT(*) as count
         FROM Events
-        GROUP BY day
-        ORDER BY day DESC
-        LIMIT 30
-    ");
+        WHERE 1=1
+    ";
+    
+    switch($period) {
+        case 'week':
+            $query .= " AND created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)";
+            break;
+        case 'month':
+            $query .= " AND created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)";
+            break;
+        case 'year':
+            $query .= " AND created_at >= DATE_SUB(CURDATE(), INTERVAL 365 DAY)";
+            break;
+    }
+    
+    $query .= " GROUP BY day ORDER BY day DESC LIMIT 30";
+    
+    $stmt = $pdo->prepare($query);
     $stmt->execute();
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-function getEventsCountByWeek() {
+function getEventsCountByWeek($period = 'all') {
     global $pdo;
-    $stmt = $pdo->prepare("
+    $query = "
         SELECT YEAR(created_at) as year, WEEK(created_at) as week, COUNT(*) as count
         FROM Events
-        GROUP BY year, week
-        ORDER BY year DESC, week DESC
-        LIMIT 12
-    ");
+        WHERE 1=1
+    ";
+    
+    switch($period) {
+        case 'week':
+            $query .= " AND created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)";
+            break;
+        case 'month':
+            $query .= " AND created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)";
+            break;
+        case 'year':
+            $query .= " AND created_at >= DATE_SUB(CURDATE(), INTERVAL 365 DAY)";
+            break;
+    }
+    
+    $query .= " GROUP BY year, week ORDER BY year DESC, week DESC LIMIT 12";
+    
+    $stmt = $pdo->prepare($query);
     $stmt->execute();
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-function getEventsCountByMonth() {
+function getEventsCountByMonth($period = 'all') {
     global $pdo;
-    $stmt = $pdo->prepare("
+    $query = "
         SELECT YEAR(created_at) as year, MONTH(created_at) as month, COUNT(*) as count
         FROM Events
-        GROUP BY year, month
-        ORDER BY year DESC, month DESC
-        LIMIT 12
-    ");
+        WHERE 1=1
+    ";
+    
+    switch($period) {
+        case 'week':
+            $query .= " AND created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)";
+            break;
+        case 'month':
+            $query .= " AND created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)";
+            break;
+        case 'year':
+            $query .= " AND created_at >= DATE_SUB(CURDATE(), INTERVAL 365 DAY)";
+            break;
+    }
+    
+    $query .= " GROUP BY year, month ORDER BY year DESC, month DESC LIMIT 12";
+    
+    $stmt = $pdo->prepare($query);
     $stmt->execute();
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
@@ -368,7 +445,7 @@ function getTodaysUsers($limit = 5, $offset = 0, $sortField = 'created_at', $sor
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-function getAllUsers($limit = 5, $offset = 0, $sortField = 'created_at', $sortOrder = 'DESC') {
+function getAllUsers($limit = 5, $offset = 0, $sortField = 'created_at', $sortOrder = 'DESC', $search = '') {
     global $pdo;
     
     $validSortFields = [
@@ -381,15 +458,27 @@ function getAllUsers($limit = 5, $offset = 0, $sortField = 'created_at', $sortOr
     $sortField = $validSortFields[$sortField] ?? 'created_at';
     $sortOrder = strtoupper($sortOrder) === 'ASC' ? 'ASC' : 'DESC';
     
-    $stmt = $pdo->prepare("
-        SELECT ID_user, username, email, banned, created_at 
-        FROM users 
-        WHERE role = 'user'
-        ORDER BY {$sortField} {$sortOrder}
-        LIMIT :limit OFFSET :offset
-    ");
+    $query = "SELECT ID_user, username, email, banned, created_at 
+              FROM users 
+              WHERE role = 'user'";
+    
+    if (!empty($search)) {
+        $query .= " AND (username LIKE :search1 OR email LIKE :search2)";
+    }
+    
+    $query .= " ORDER BY {$sortField} {$sortOrder} LIMIT :limit OFFSET :offset";
+    
+    $stmt = $pdo->prepare($query);
+    
+    if (!empty($search)) {
+        $searchTerm = '%' . $search . '%';
+        $stmt->bindValue(':search1', $searchTerm, PDO::PARAM_STR);
+        $stmt->bindValue(':search2', $searchTerm, PDO::PARAM_STR);
+    }
+    
     $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
     $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
+    
     $stmt->execute();
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
@@ -433,9 +522,22 @@ function getPaginatedTodaysUsers($limit, $offset, $statusFilter = 'all', $sortFi
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-function getAllUsersCount() {
+function getAllUsersCount($search = '') {
     global $pdo;
-    $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE role = 'user'");
+    $query = "SELECT COUNT(*) FROM users WHERE role = 'user'";
+    
+    if (!empty($search)) {
+        $query .= " AND (username LIKE :search1 OR email LIKE :search2)";
+    }
+    
+    $stmt = $pdo->prepare($query);
+    
+    if (!empty($search)) {
+        $searchTerm = '%' . $search . '%';
+        $stmt->bindValue(':search1', $searchTerm, PDO::PARAM_STR);
+        $stmt->bindValue(':search2', $searchTerm, PDO::PARAM_STR);
+    }
+    
     $stmt->execute();
     return (int)$stmt->fetchColumn();
 }
@@ -916,4 +1018,40 @@ function getTodaysVolunteers($limit = 5, $offset = 0) {
     $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
     $stmt->execute();
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+function getTodaysEvents($limit = 5, $offset = 0, $sortField = 'created_at', $sortOrder = 'DESC') {
+    global $pdo;
+    
+    $validSortFields = [
+        'ID_Event' => 'Events.ID_Event',
+        'title' => 'Events.title',
+        'username' => 'users.username',
+        'deleted' => 'Events.deleted',
+        'created_at' => 'Events.created_at'
+    ];
+    
+    $sortField = $validSortFields[$sortField] ?? 'Events.created_at';
+    $sortOrder = strtoupper($sortOrder) === 'ASC' ? 'ASC' : 'DESC';
+    
+    $stmt = $pdo->prepare("
+        SELECT Events.ID_Event, Events.title, Events.deleted, Events.created_at,
+               users.ID_user, users.username, users.name, users.surname
+        FROM Events
+        JOIN users ON Events.user_id = users.ID_user
+        WHERE DATE(Events.created_at) = CURDATE()
+        ORDER BY {$sortField} {$sortOrder}
+        LIMIT :limit OFFSET :offset
+    ");
+    $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+function getTodaysEventsCount() {
+    global $pdo;
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM Events WHERE DATE(created_at) = CURDATE()");
+    $stmt->execute();
+    return (int)$stmt->fetchColumn();
 }
