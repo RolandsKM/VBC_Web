@@ -26,8 +26,8 @@
         </div>
     </div>
     <div class="footer-bottom">
-        <a href="#">Privātuma politika</a>
-        <a href="#">Lietošanas noteikumi</a>
+        <a href="../privacy_policy.php">Privātuma politika</a>
+        <a href="../terms_of_use.php">Lietošanas noteikumi</a>
     </div>
 </footer>
 <style>

@@ -3,7 +3,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-if (!isset($_SESSION['ID_user']) || $_SESSION['role'] !== 'admin') {
+if (!isset($_SESSION['ID_user']) || !in_array($_SESSION['role'], ['admin', 'mod', 'supper-admin'])) {
     header("Location: ../main/login.php");
     exit();
 }
@@ -19,10 +19,10 @@ if (!isset($_SESSION['ID_user']) || $_SESSION['role'] !== 'admin') {
         </button>
         <div class="dropdown-content">
             <a href="../user/">Profils</a>
-            <?php if ($_SESSION['role'] === 'admin'): ?>
-                <a href="../admin/">Admin</a>
+            <?php if (in_array($_SESSION['role'], ['admin', 'mod', 'supper-admin'])): ?>
+                <a href="index.php">Admin</a>
             <?php endif; ?>
-            <a href="../database/logout.php" class="text-danger">Izlogoties</a>
+            <a href="../functions/auth_functions.php?logout=1" class="text-danger">Izlogoties</a>
         </div>
     </div>
 </header>

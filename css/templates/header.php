@@ -36,7 +36,7 @@ $user_role = isset($_SESSION['role']) ? $_SESSION['role'] : '';
         <div class="nav-links" id="navLinks">
             <ul class="nav-left">
                 <li><a href="<?= ($_SERVER['PHP_SELF'] == '/user/index.php' || strpos($_SERVER['PHP_SELF'], '/user/') !== false) ? '../main/index.php' : 'index.php' ?>" class="<?= $current_page == 'index.php' ? 'active' : '' ?>">Sākums</a></li>
-                <li><a href="<?= ($_SERVER['PHP_SELF'] == '/user/category.php' || strpos($_SERVER['PHP_SELF'], '/user/') !== false) ? '../main/category.php' : 'category.php' ?>" class="<?= $is_category_page ? 'active' : '' ?>">Kategorijas</a></li>
+                <li><a href="<?= ($_SERVER['PHP_SELF'] == '/user/posts.php' || strpos($_SERVER['PHP_SELF'], '/user/') !== false) ? '../main/posts.php' : 'posts.php' ?>" class="<?= $is_category_page ? 'active' : '' ?>">Sludinājumi</a></li>
                 <li><a href="index.php#about" class="<?= $current_page == 'index.php#about' ? 'active' : '' ?>">Par Mums</a></li>
             </ul>
             <ul class="nav-right">
@@ -45,8 +45,8 @@ $user_role = isset($_SESSION['role']) ? $_SESSION['role'] : '';
                         <a href="#" class="dropbtn"><?= htmlspecialchars($_SESSION['username']) ?> <i class="fa-solid fa-angle-down"></i></a>
                         <div class="dropdown-content">
                             <a href="../user/">Profils</a>
-                            <?php if ($user_role === 'admin'): ?>
-                                <a href="../admin/index.php">Admin</a> <!-- Admin option for admins -->
+                            <?php if (in_array($user_role, ['admin', 'mod', 'supper-admin'])): ?>
+                                <a href="../admin/index.php">Admin</a> 
                             <?php endif; ?>
                             <a href="../functions/auth_functions.php?logout=1" class="text-danger">Izlogoties</a>
                         </div>

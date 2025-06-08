@@ -236,12 +236,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php include 'header.php'; ?>
         
         <div class="container-fluid py-4">
-            <a href="event_manager.php" class="back-button">
-                <i class="fas fa-arrow-left"></i> Atpakaļ uz Sludinājumiem
-            </a>
-
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1 class="h3 mb-0 text-gray-800">Rediģēt Sludinājumu</h1>
+                <h1 class="h3 mb-0">Rediģēt sludinājumu</h1>
+                <a href="event_details.php?id=<?= $event['ID_Event'] ?>" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Atpakaļ
+                </a>
             </div>
 
             <?php if (!empty($error)) : ?>
@@ -327,7 +326,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             
                             <div class="col-12">
                                 <div class="d-flex justify-content-end gap-2">
-                                    <a href="event_manager.php" class="btn btn-secondary">
+                                    <a href="event_details.php?id=<?= htmlspecialchars($eventId) ?>" class="btn btn-secondary">
                                         <i class="fas fa-times me-2"></i> Atcelt
                                     </a>
                                     <button type="submit" class="btn btn-primary">

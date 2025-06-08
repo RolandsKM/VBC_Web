@@ -256,12 +256,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     // Add this function to handle marking notifications as seen
     if ($action === 'mark_notifications_seen' && $userId > 0) {
         try {
+            // Mark volunteer notifications as seen
             $stmt = $pdo->prepare("
                 UPDATE Volunteers 
                 SET seen = 1 
                 WHERE user_id = ? AND seen = 0
             ");
             $stmt->execute([$userId]);
+
+            // Mark deleted event notifications as seen
+            $stmt = $pdo->prepare("
+                UPDATE DeletedEventsLog d
+                JOIN Events e ON d.event_id = e.ID_Event
+                SET d.seen = 1 
+                WHERE e.user_id = ? AND d.seen = 0
+            ");
+            $stmt->execute([$userId]);
+
             echo 'success';
         } catch (PDOException $e) {
             echo 'error';
@@ -288,7 +299,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
 
 if ($action === 'own') {
     try {
-        $countStmt = $pdo->prepare("SELECT COUNT(*) FROM Events WHERE user_id = ? AND deleted = 0");
+        $countStmt = $pdo->prepare("
+            SELECT COUNT(*) 
+            FROM Events 
+            WHERE user_id = ? 
+            AND deleted = 0
+            AND date >= CURDATE()
+        ");
         $countStmt->execute([$userId]);
         $totalCount = $countStmt->fetchColumn();
 
@@ -298,8 +315,9 @@ if ($action === 'own') {
                     WHERE v.event_id = e.ID_Event 
                     AND v.status = 'waiting') as waiting_joins
             FROM Events e 
-            WHERE e.user_id = ? AND e.deleted = 0 
-            ORDER BY e.created_at DESC 
+            WHERE e.user_id = ? 
+            AND e.deleted = 0
+            ORDER BY e.date DESC 
             LIMIT ? OFFSET ?
         ");
         $stmt->bindValue(1, $userId, PDO::PARAM_INT);
@@ -315,10 +333,11 @@ if ($action === 'own') {
             $created_date = date("d.m.Y", strtotime($row['created_at']));
             $event_id = $row['ID_Event'];
             $waiting_joins = $row['waiting_joins'];
+            $is_past = strtotime($row['date']) < time();
 
             $output .= "
                 <a href='user-event.php?id=$event_id' class='event-link'>
-                    <div class='event'>
+                    <div class='event " . ($is_past ? 'past-event' : '') . "'>
                         <h2>$title</h2>
                         <div class='description'>$description</div>
                         <hr>
@@ -332,7 +351,7 @@ if ($action === 'own') {
         }
 
         echo json_encode([
-            'html' => $output ?: "<p>Nav sludinājuma.</p>",
+            'html' => $output,
             'hasMore' => ($offset + $limit) < $totalCount
         ]);
     } catch (PDOException $e) {
@@ -354,7 +373,7 @@ if ($action === 'joined') {
             v.created_at as volunteer_created_at
         FROM Events e
         JOIN Volunteers v ON e.ID_Event = v.event_id
-        WHERE v.user_id = ? AND e.deleted = 0
+        WHERE v.user_id = ? AND e.deleted = 0 AND v.status != 'left'
         ORDER BY v.created_at DESC
         LIMIT ? OFFSET ?
     ");
@@ -367,8 +386,7 @@ if ($action === 'joined') {
         $statusMap = [
             'waiting' => ['class' => 'waiting', 'text' => 'Pieteicies'],
             'accepted' => ['class' => 'accepted', 'text' => 'Apstiprināts'],
-            'denied' => ['class' => 'denied', 'text' => 'Noraidīts'],
-            'left' => ['class' => 'denied', 'text' => 'Noraidīts'] // Map 'left' to 'denied' for display
+            'denied' => ['class' => 'denied', 'text' => 'Noraidīts']
         ];
         
         $status = $event['volunteer_status'];
@@ -583,8 +601,8 @@ if ($action === 'get_notifications') {
     }
 
     try {
-        // Modify the get_notifications function to include seen status
-        $stmt = $pdo->prepare("
+        // Get volunteer notifications
+        $volunteerStmt = $pdo->prepare("
             SELECT v.*, e.title as event_title, v.seen
             FROM Volunteers v
             JOIN Events e ON v.event_id = e.ID_Event
@@ -593,19 +611,64 @@ if ($action === 'get_notifications') {
             AND v.changed_at IS NOT NULL
             ORDER BY v.changed_at DESC
         ");
-        $stmt->execute([$userId]);
-        $notifications = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $volunteerStmt->execute([$userId]);
+        $volunteerNotifications = $volunteerStmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Get event status notifications (deleted/undeleted)
+        $eventStatusStmt = $pdo->prepare("
+            SELECT d.*, e.title as event_title, d.seen,
+                   CASE 
+                       WHEN d.undeleted_at IS NOT NULL THEN d.undeleted_at
+                       ELSE d.deleted_at
+                   END as changed_at,
+                   a.username as admin_username,
+                   CASE 
+                       WHEN d.undeleted_at IS NOT NULL THEN 'undeleted'
+                       ELSE 'deleted'
+                   END as status_type
+            FROM DeletedEventsLog d
+            JOIN Events e ON d.event_id = e.ID_Event
+            JOIN users a ON d.admin_id = a.ID_user
+            WHERE e.user_id = ?
+            AND d.ID IN (
+                SELECT MAX(ID)
+                FROM DeletedEventsLog
+                WHERE event_id = d.event_id
+                GROUP BY event_id
+            )
+            ORDER BY changed_at DESC
+        ");
+        $eventStatusStmt->execute([$userId]);
+        $eventStatusNotifications = $eventStatusStmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Combine and sort all notifications
+        $allNotifications = array_merge(
+            array_map(function($n) {
+                $n['type'] = 'volunteer';
+                return $n;
+            }, $volunteerNotifications),
+            array_map(function($n) {
+                $n['type'] = $n['status_type'];
+                unset($n['status_type']);
+                return $n;
+            }, $eventStatusNotifications)
+        );
+
+        // Sort by changed_at
+        usort($allNotifications, function($a, $b) {
+            return strtotime($b['changed_at']) - strtotime($a['changed_at']);
+        });
 
         // Count unread notifications
         $unreadCount = 0;
-        foreach ($notifications as $notification) {
+        foreach ($allNotifications as $notification) {
             if ($notification['seen'] == 0) {
                 $unreadCount++;
             }
         }
 
         echo json_encode([
-            'notifications' => $notifications,
+            'notifications' => $allNotifications,
             'unread_count' => $unreadCount
         ]);
     } catch (PDOException $e) {

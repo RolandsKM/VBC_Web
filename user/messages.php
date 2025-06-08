@@ -741,160 +741,186 @@ $contacts = $stmt->fetchAll(PDO::FETCH_ASSOC);
 let currentUserId = <?= json_encode($currentUserId) ?>;
 let currentChatId = null;
 let currentEventId = null;
+let selectedUserId = null;
+let selectedEventId = null;
+let pollingInterval = null;
+let contactsPollingInterval = null;
 
-// Add chat toggle functionality
-document.addEventListener('DOMContentLoaded', function() {
-    const chatToggle = document.querySelector('.chat-toggle');
-    const contacts = document.querySelector('.contacts');
-    const chatOverlay = document.querySelector('.chat-overlay');
+function formatMessageDate(date) {
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (date.toDateString() === today.toDateString()) {
+        return 'Šodien';
+    } else if (date.toDateString() === yesterday.toDateString()) {
+        return 'Vakar';
+    } else {
+        return date.toLocaleDateString('lv-LV', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+    }
+}
+
+function formatMessageTime(date) {
+    return date.toLocaleTimeString('lv-LV', {
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+function loadMessages(userId, eventId, isInitialLoad = true) {
+    if (!userId || !eventId) return;
+    
     const chatMessages = document.querySelector('.chat-messages');
-
-    function toggleChat() {
-        if (contacts.style.display === 'none' || contacts.style.display === '') {
-            contacts.style.display = 'flex';
-            chatOverlay.style.display = 'block';
-        } else {
-            contacts.style.display = 'none';
-            chatOverlay.style.display = 'none';
-        }
-    }
-
-    // Add click handler for contacts
-    document.querySelectorAll('.contact').forEach(contact => {
-        contact.addEventListener('click', function() {
-            const userId = this.getAttribute('data-user-id');
-            const eventId = this.getAttribute('data-event-id');
-            
-            // Load messages for this contact
-            loadMessages(userId, eventId);
-            
-            // Update active state
-            document.querySelectorAll('.contact').forEach(c => c.classList.remove('active'));
-            this.classList.add('active');
-            
-            // On mobile, close the contacts panel after selection
-            if (window.innerWidth <= 768) {
-                toggleChat();
-            }
-        });
-    });
-
-    function loadMessages(userId, eventId) {
-        if (!userId || !eventId) return;
-        
+    if (isInitialLoad) {
         chatMessages.innerHTML = '<div class="text-center p-3">Loading messages...</div>';
-        
-        fetch('../functions/chat_functions.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: `action=fetch_messages&user1=${currentUserId}&user2=${userId}&event_id=${eventId}`
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                chatMessages.innerHTML = '';
-                let currentDate = null;
-
-                data.messages.forEach(msg => {
-                    const msgDate = new Date(msg.sent_at);
-                    const dateStr = formatMessageDate(msgDate);
-                    
-                    // Add date separator if date changes
-                    if (currentDate !== dateStr) {
-                        currentDate = dateStr;
-                        chatMessages.innerHTML += `
-                            <div class="date-separator">
-                                <span>${dateStr}</span>
-                            </div>
-                        `;
-                    }
-
-                    const isUser = msg.from_user_id == currentUserId;
-                    const msgClass = isUser ? 'sent' : 'received';
-                    const bubbleClass = isUser ? 'msg-bubble msg-sent' : 'msg-bubble msg-received';
-                    const timeString = formatMessageTime(msgDate);
-
-                    chatMessages.innerHTML += `
-                        <div class="message-container ${msgClass}">
-                            <div class="${bubbleClass}">
-                                <div class="message-text">${escapeHtml(msg.message)}</div>
-                                <div class="message-time">${timeString}</div>
-                            </div>
-                        </div>
-                    `;
-                });
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            } else {
-                chatMessages.innerHTML = '<div class="text-center p-3">Error loading messages</div>';
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            chatMessages.innerHTML = '<div class="text-center p-3">Error loading messages</div>';
-        });
+      
+        markMessagesAsRead(userId, currentUserId, eventId);
     }
-
-    function formatMessageDate(date) {
-        const today = new Date();
-        const yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
-
-        if (date.toDateString() === today.toDateString()) {
-            return 'Šodien';
-        } else if (date.toDateString() === yesterday.toDateString()) {
-            return 'Vakar';
-        } else {
-            return date.toLocaleDateString('lv-LV', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric'
-            });
+    
+    const scrollPosition = chatMessages.scrollTop;
+    const scrollHeight = chatMessages.scrollHeight;
+    const isAtBottom = scrollHeight - (scrollPosition + chatMessages.clientHeight) < 50;
+    
+ 
+    let lastMessageTimestamp = null;
+    let lastMessageDate = null;
+    
+    if (!isInitialLoad) {
+      
+        const messages = chatMessages.querySelectorAll('.message-container');
+        if (messages.length > 0) {
+            const lastMessage = messages[messages.length - 1];
+            const timeElement = lastMessage.querySelector('.message-time');
+            if (timeElement) {
+                lastMessageTimestamp = new Date(timeElement.getAttribute('data-timestamp'));
+                lastMessageDate = formatMessageDate(lastMessageTimestamp);
+            }
         }
     }
-
-    function formatMessageTime(date) {
-        return date.toLocaleTimeString('lv-LV', {
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    }
-
-    chatToggle.addEventListener('click', toggleChat);
-    chatOverlay.addEventListener('click', toggleChat);
-
-    // Close chat when clicking outside on mobile
-    document.addEventListener('click', function(e) {
-        if (window.innerWidth <= 768) {
-            if (!contacts.contains(e.target) && 
-                !chatToggle.contains(e.target) && 
-                contacts.style.display === 'flex') {
-                toggleChat();
+    
+    fetch('../functions/chat_functions.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `action=fetch_messages&user1=${currentUserId}&user2=${userId}&event_id=${eventId}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            if (isInitialLoad) {
+                chatMessages.innerHTML = '';
             }
+            
+            let currentDate = lastMessageDate;
+            let hasNewMessages = false;
+
+            data.messages.forEach(msg => {
+                const msgDate = new Date(msg.sent_at);
+    
+                if (!isInitialLoad && lastMessageTimestamp && msgDate <= lastMessageTimestamp) {
+                    return;
+                }
+
+                hasNewMessages = true;
+                const dateStr = formatMessageDate(msgDate);
+                
+              
+                if (currentDate !== dateStr) {
+                    currentDate = dateStr;
+                    const dateSeparator = document.createElement('div');
+                    dateSeparator.className = 'date-separator';
+                    dateSeparator.innerHTML = `<span>${dateStr}</span>`;
+                    chatMessages.appendChild(dateSeparator);
+                }
+
+                const isUser = msg.from_user_id == currentUserId;
+                const msgClass = isUser ? 'sent' : 'received';
+                const bubbleClass = isUser ? 'msg-bubble msg-sent' : 'msg-bubble msg-received';
+                const timeString = formatMessageTime(msgDate);
+
+                const messageContainer = document.createElement('div');
+                messageContainer.className = `message-container ${msgClass}`;
+                messageContainer.innerHTML = `
+                    <div class="${bubbleClass}">
+                        <div class="message-text">${escapeHtml(msg.message)}</div>
+                        <div class="message-time" data-timestamp="${msg.sent_at}">${timeString}</div>
+                    </div>
+                `;
+                chatMessages.appendChild(messageContainer);
+            });
+
+            
+            if (hasNewMessages) {
+                if (isInitialLoad) {
+                    // On initial load, scroll to bottom
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                } else {
+                    const newScrollHeight = chatMessages.scrollHeight;
+                    const heightDifference = newScrollHeight - scrollHeight;
+                    
+                    if (isAtBottom) {
+                        // If we were at bottom, stay at bottom
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                    } else {
+                        // If we were scrolled up, maintain relative position
+                        chatMessages.scrollTop = scrollPosition + heightDifference;
+                    }
+                }
+            }
+        } else if (isInitialLoad) {
+            chatMessages.innerHTML = '<div class="text-center p-3">Error loading messages</div>';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        if (isInitialLoad) {
+            chatMessages.innerHTML = '<div class="text-center p-3">Error loading messages</div>';
         }
     });
-});
-
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
 }
 
 function startPolling() {
     if (pollingInterval) clearInterval(pollingInterval);
+    if (contactsPollingInterval) clearInterval(contactsPollingInterval);
+    
+    // Poll for new messages in current chat
     pollingInterval = setInterval(() => {
         if (selectedUserId && selectedEventId) {
-            loadMessages(selectedUserId, selectedEventId);
+            loadMessages(selectedUserId, selectedEventId, false);
         }
-    }, 2000);
+    }, 500);
+    
+    // Poll for new messages in all chats
+    contactsPollingInterval = setInterval(() => {
+        updateContactsList();
+    }, 1000);
 }
 
 function sendMessage() {
     const msg = $('#chatInput').val().trim();
     if (!msg || !selectedUserId || !selectedEventId) return;
 
+    
+    const msgDate = new Date();
+    const timeString = formatMessageTime(msgDate);
+    const messageHtml = `
+        <div class="message-container sent">
+            <div class="msg-bubble msg-sent">
+                <div class="message-text">${escapeHtml(msg)}</div>
+                <div class="message-time" data-timestamp="${msgDate.toISOString()}">${timeString}</div>
+            </div>
+        </div>
+    `;
+    $('#chatMessages').append(messageHtml);
+    $('#chatMessages').scrollTop($('#chatMessages')[0].scrollHeight);
+    $('#chatInput').val('');
+
+    // Send message to server
     $.post('../functions/chat_functions.php', {
         action: 'send_message',
         from_user: currentUserId,
@@ -902,10 +928,13 @@ function sendMessage() {
         event_id: selectedEventId,
         message: msg
     }, function(response) {
-        const res = JSON.parse(response);
-        if (res.status === 'success') {
-            $('#chatInput').val('');
-            loadMessages(selectedUserId, selectedEventId);
+        try {
+            const res = JSON.parse(response);
+            if (res.status !== 'success') {
+                console.error('Error sending message:', res.message);
+            }
+        } catch (e) {
+            console.error('Error parsing response:', e);
         }
     });
 }
@@ -922,11 +951,88 @@ function updateChatHeader(contactElement) {
     $('#chatHeaderEvent').text(eventName);
     $('#chatHeaderPfp').attr('src', profilePic);
 
+    // Remove unread badge immediately
+    const unreadBadge = contactElement.find('.unread-badge');
+    if (unreadBadge.length) {
+        unreadBadge.remove();
+    }
+
+    // Mark messages as read
+    markMessagesAsRead(selectedUserId, currentUserId, selectedEventId);
+
     $('.chat-header').addClass('active');
     $('#chatInputWrapper').addClass('active');
     startPolling();
 }
 
+
+function markMessagesAsRead(fromUserId, toUserId, eventId) {
+    $.post('../functions/chat_functions.php', {
+        action: 'mark_as_read',
+        from_user: fromUserId,
+        to_user: toUserId,
+        event_id: eventId
+    });
+}
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    const chatToggle = document.querySelector('.chat-toggle');
+    const contacts = document.querySelector('.contacts');
+    const chatOverlay = document.querySelector('.chat-overlay');
+
+    function toggleChat() {
+        if (contacts.style.display === 'none' || contacts.style.display === '') {
+            contacts.style.display = 'flex';
+            chatOverlay.style.display = 'block';
+        } else {
+            contacts.style.display = 'none';
+            chatOverlay.style.display = 'none';
+        }
+    }
+
+    
+    document.querySelectorAll('.contact').forEach(contact => {
+        contact.addEventListener('click', function() {
+            const userId = this.getAttribute('data-user-id');
+            const eventId = this.getAttribute('data-event-id');
+            
+            // Load messages for this contact
+            loadMessages(userId, eventId);
+            
+            // Update active state
+            document.querySelectorAll('.contact').forEach(c => c.classList.remove('active'));
+            this.classList.add('active');
+            
+           
+            if (window.innerWidth <= 768) {
+                toggleChat();
+            }
+        });
+    });
+
+    chatToggle.addEventListener('click', toggleChat);
+    chatOverlay.addEventListener('click', toggleChat);
+
+    // Close chat when clicking outside on mobile
+    document.addEventListener('click', function(e) {
+        if (window.innerWidth <= 768) {
+            if (!contacts.contains(e.target) && 
+                !chatToggle.contains(e.target) && 
+                contacts.style.display === 'flex') {
+                toggleChat();
+            }
+        }
+    });
+
+    startPolling();
+});
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
 
 $('#contactList').on('click', '.contact', function() {
     const contactElement = $(this);
@@ -942,14 +1048,13 @@ $('#chatInput').on('keypress', function(e) {
     }
 });
 
-
 $('#chatInput').on('input', function() {
     this.style.height = 'auto';
     this.style.height = (this.scrollHeight) + 'px';
 });
+
 $('#contactSearch').on('input', function() {
     const query = $(this).val().toLowerCase().trim();
-
     
     const $contacts = $('#contactList .contact');
     const $matches = $contacts.filter(function() {
@@ -960,7 +1065,6 @@ $('#contactSearch').on('input', function() {
         const username = $(this).find('.fw-semibold').text().toLowerCase();
         return username.indexOf(query) === -1;
     });
-
     
     $('#contactList').empty().append($matches).append($nonMatches);
 });
@@ -975,14 +1079,14 @@ $(document).ready(function() {
         const scrollHeight = $(this)[0].scrollHeight;
         const clientHeight = $(this)[0].clientHeight;
         
-        // Show button when not at bottom (with some threshold)
+      
         if (scrollHeight - (scrollTop + clientHeight) > 100) {
             scrollToBottom.addClass('show');
         } else {
             scrollToBottom.removeClass('show');
         }
 
-        // Update last scroll position
+     
         lastScrollTop = scrollTop;
     });
 
@@ -993,6 +1097,50 @@ $(document).ready(function() {
     });
 });
 
+
+function updateContactsList() {
+    fetch('../functions/chat_functions.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'action=get_contacts&user_id=' + currentUserId
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            data.contacts.forEach(contact => {
+                const existingContact = document.querySelector(`.contact[data-user-id="${contact.ID_user}"][data-event-id="${contact.event_id}"]`);
+                if (existingContact) {
+                    // Update unread count
+                    const unreadBadge = existingContact.querySelector('.unread-badge');
+                    if (contact.unread_count > 0) {
+                        if (unreadBadge) {
+                            unreadBadge.textContent = contact.unread_count;
+                        } else {
+                            const badge = document.createElement('span');
+                            badge.className = 'unread-badge';
+                            badge.textContent = contact.unread_count;
+                            existingContact.querySelector('.d-flex.align-items-center').prepend(badge);
+                        }
+                    } else if (unreadBadge) {
+                        unreadBadge.remove();
+                    }
+                    
+                    // Update last message time
+                    const timeElement = existingContact.querySelector('.last-msg-time');
+                    if (timeElement) {
+                        timeElement.textContent = new Date(contact.last_msg).toLocaleTimeString('lv-LV', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        });
+                    }
+                }
+            });
+        }
+    })
+    .catch(error => console.error('Error updating contacts:', error));
+}
 </script>
 <!--  -->
 

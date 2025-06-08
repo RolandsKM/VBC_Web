@@ -1,7 +1,7 @@
 <?php 
 require_once '../functions/AdminController.php';
 checkAdminAccess();
-
+checkModeratorAccess();
 
 if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
     header('Content-Type: application/json');
@@ -13,17 +13,17 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
     $current_users_page = isset($_GET['users_page']) ? (int)$_GET['users_page'] : 1;
     $current_volunteers_page = isset($_GET['volunteers_page']) ? (int)$_GET['volunteers_page'] : 1;
 
-    // events data
+    // events 
     $recent_events = getPaginatedEvents($events_per_page, ($current_events_page - 1) * $events_per_page, 'created_at', 'DESC');
     $total_today_events = getEventsCountByDay()[0]['count'] ?? 0;
     $total_events_pages = ceil($total_today_events / $events_per_page);
 
-    // users data
+    // users 
     $recent_users = getTodaysUsers($users_per_page, ($current_users_page - 1) * $users_per_page, 'created_at', 'DESC');
     $total_today_users = getTodaysUsersCount();
     $total_users_pages = ceil($total_today_users / $users_per_page);
 
-    //Volunteers data
+    //Volunteers 
     $recent_volunteers = getTodaysVolunteers($volunteers_per_page, ($current_volunteers_page - 1) * $volunteers_per_page);
     $total_today_volunteers = getTodaysVolunteersCount();
     $total_volunteers_pages = ceil($total_today_volunteers / $volunteers_per_page);
@@ -91,28 +91,7 @@ $today_users = getTodaysUsersCount();
 $today_events = getEventsCountByDay()[0]['count'] ?? 0;
 $today_volunteers = getTodaysVolunteersCount();
 $today_banned = getTodaysBannedUsersCount();
-
-
-$events_per_page = 5;
-$users_per_page = 5;
-$volunteers_per_page = 5;
-$current_events_page = isset($_GET['events_page']) ? (int)$_GET['events_page'] : 1;
-$current_users_page = isset($_GET['users_page']) ? (int)$_GET['users_page'] : 1;
-$current_volunteers_page = isset($_GET['volunteers_page']) ? (int)$_GET['volunteers_page'] : 1;
-
-$recent_events = getPaginatedEvents($events_per_page, ($current_events_page - 1) * $events_per_page, 'created_at', 'DESC');
-$recent_users = getTodaysUsers($users_per_page, ($current_users_page - 1) * $users_per_page, 'created_at', 'DESC');
-$recent_volunteers = getTodaysVolunteers($volunteers_per_page, ($current_volunteers_page - 1) * $volunteers_per_page);
-
-
-$total_today_events = getEventsCountByDay()[0]['count'] ?? 0;
-$total_today_users = getTodaysUsersCount();
-$total_today_volunteers = getTodaysVolunteersCount();
-
-
-$total_events_pages = ceil($total_today_events / $events_per_page);
-$total_users_pages = ceil($total_today_users / $users_per_page);
-$total_volunteers_pages = ceil($total_today_volunteers / $volunteers_per_page);
+$total_active = getTotalActiveUsersCount();
 
 $today_events_data = getEventsCountByDay();
 $today_users_data = getNewUsersCountByPeriod('day');
@@ -128,8 +107,134 @@ $today_users_data = getNewUsersCountByPeriod('day');
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
+    <style>
+        /* ... existing styles ... */
+
+        .stat-card {
+            transition: transform 0.2s;
+            height: 100%;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card .text-xs {
+            font-size: 0.7rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+
+        .stat-card .h5 {
+            font-size: 1.25rem;
+            margin-top: 0.5rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Graph card specific styles */
+        .chart-card .card-header h6 {
+            white-space: normal;
+            overflow: visible;
+            text-overflow: clip;
+        }
+
+        .chart-card .card-body {
+            padding: 1.25rem;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+
+        /* Responsive styles */
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 0 -15px;
+        }
+
+        .col-xl-3, .col-md-6 {
+            padding: 0 15px;
+            margin-bottom: 1.5rem;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        @media (min-width: 768px) {
+            .col-md-6 {
+                width: 50%;
+            }
+        }
+
+        @media (min-width: 1200px) {
+            .col-xl-3 {
+                width: 25%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stat-card {
+                max-width: 100%;
+            }
+        }
+
+        .card {
+            height: 100%;
+            margin-bottom: 1.5rem;
+            border: none;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+            width: 100%;
+        }
+
+        .stat-card .card-body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .stat-card .row {
+            margin: 0;
+            width: 100%;
+        }
+
+        .stat-card .col {
+            padding: 0;
+        }
+
+        .stat-card .col-auto {
+            padding-left: 1rem;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .table td {
+            max-width: 200px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        @media (max-width: 768px) {
+            .table td {
+                max-width: 150px;
+            }
+        }
+    </style>
 </head>
 <body>
 <div class="admin-layout">
@@ -504,157 +609,21 @@ $today_users_data = getNewUsersCountByPeriod('day');
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
- 
-    const eventsCtx = document.getElementById('eventsChart').getContext('2d');
-    const usersCtx = document.getElementById('usersChart').getContext('2d');
-
-    
-    const eventsChart = new Chart(eventsCtx, {
-        type: 'line',
-    data: {
-            labels: <?= json_encode(array_map(function($item) { 
-                return date('H:i', strtotime($item['day'])); 
-            }, $today_events_data)) ?>,
-        datasets: [{
-                label: 'Sludinājumi pa stundām',
-                data: <?= json_encode(array_map(function($item) { 
-                    return $item['count']; 
-                }, $today_events_data)) ?>,
-                borderColor: 'rgba(78, 115, 223, 1)',
-                backgroundColor: 'rgba(78, 115, 223, 0.2)',
-                fill: true,
-                tension: 0.3
-        }]
-    },
-    options: {
-        responsive: true,
-            maintainAspectRatio: false,
-        scales: {
-            y: {
-                beginAtZero: true,
-                ticks: {
-                        precision: 0
-                    }
-                }
-            },
-            plugins: {
-                legend: {
-                    position: 'top',
-                }
-            }
-        }
-    });
-
-    
-    const usersChart = new Chart(usersCtx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Jauni', 'Bloķēti', 'Aktīvi'],
-            datasets: [{
-                data: [
-                    <?= $today_users ?>,
-                    <?= $today_banned ?>,
-                    <?= $today_users - $today_banned ?>
-                ],
-                backgroundColor: [
-                    'rgba(28, 200, 138, 0.8)',
-                    'rgba(231, 74, 59, 0.8)',
-                    'rgba(78, 115, 223, 0.8)'
-                ]
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom'
-                }
-            }
-        }
-    });
-
-    function fetchData(type, page) {
-        const url = new URL(window.location.href);
-        url.searchParams.set('ajax', '1');
-        url.searchParams.set(type + '_page', page);
-        
-        fetch(url)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    
-                    document.getElementById(type + '-body').innerHTML = data[type].html;
-                  
-                    updatePagination(type, data[type].currentPage, data[type].totalPages);
-                }
-            })
-            .catch(error => console.error('Error:', error));
-    }
-    // Pagination
-    function updatePagination(type, currentPage, totalPages) {
-        const paginationContainer = document.getElementById(type + '-pagination');
-        if (!paginationContainer) return;
-
-        let html = '';
-
-       
-        html += `<button class="pagination-btn" data-page="1" ${currentPage === 1 ? 'disabled' : ''}>First</button>`;
-        html += `<button class="pagination-btn" data-page="${currentPage - 1}" ${currentPage === 1 ? 'disabled' : ''}>Prev</button>`;
-
-        
-        let startPage = Math.max(1, currentPage - 2);
-        let endPage = Math.min(totalPages, startPage + 4);
-        if (endPage - startPage < 4) {
-            startPage = Math.max(1, endPage - 4);
-        }
-
-       
-        for (let i = startPage; i <= endPage; i++) {
-            html += `<button class="pagination-btn" data-page="${i}" ${i === currentPage ? 'disabled' : ''}>${i}</button>`;
-        }
-
-      
-        html += `<button class="pagination-btn" data-page="${currentPage + 1}" ${currentPage === totalPages ? 'disabled' : ''}>Next</button>`;
-        html += `<button class="pagination-btn" data-page="${totalPages}" ${currentPage === totalPages ? 'disabled' : ''}>Last</button>`;
-
-        paginationContainer.innerHTML = html;
-
-        
-        paginationContainer.querySelectorAll('button').forEach(button => {
-            button.addEventListener('click', function() {
-                if (!this.disabled) {
-                    const page = parseInt(this.dataset.page);
-                    fetchData(type, page);
-                }
-            });
-        });
-    }
-
-    
-    document.addEventListener('click', function(e) {
-        if (e.target.classList.contains('pagination-btn')) {
-            const type = e.target.closest('.pagination-container').id.replace('-pagination', '');
-            const page = parseInt(e.target.dataset.page);
-            if (!isNaN(page)) {
-                fetchData(type, page);
-            }
-        }
-    });
-
-   
-    if (document.getElementById('events-body')) {
-        fetchData('events', 1);
-    }
-    if (document.getElementById('users-body')) {
-        fetchData('users', 1);
-    }
-    if (document.getElementById('volunteers-body')) {
-        fetchData('volunteers', 1);
-    }
-});
+    // Pass chart data to JavaScript
+    window.eventsChartLabels = <?= json_encode(array_map(function($item) { 
+        return date('H:i', strtotime($item['day'])); 
+    }, $today_events_data)) ?>;
+    window.eventsChartData = <?= json_encode(array_map(function($item) { 
+        return $item['count']; 
+    }, $today_events_data)) ?>;
+    window.usersChartData = [
+        <?= $today_users ?>,
+        <?= $today_banned ?>,
+        <?= $total_active ?>
+    ];
 </script>
+<script src="../functions/admin_index_script.js"></script>
 </body>
 </html>

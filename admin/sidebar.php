@@ -12,7 +12,9 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 $pageAccess = [
     'index.php' => ['admin', 'mod', 'supper-admin'],
     'user_manager.php' => ['admin', 'supper-admin'],
-    'event_manager.php' => ['admin', 'supper-admin'],
+    'event_manager.php' => ['admin', 'mod', 'supper-admin'],
+    'event_edit.php' => ['admin', 'mod', 'supper-admin'],
+    'event_details.php' => ['admin', 'mod', 'supper-admin'],
     'admin_manager.php' => ['supper-admin'],
     'report_manager.php' => ['mod', 'admin', 'supper-admin']
 ];
@@ -38,21 +40,25 @@ if (isset($pageAccess[$currentPage]) && !hasRole($pageAccess[$currentPage])) {
             </a>
         <?php endif; ?>
 
-        <?php if (hasRole(['admin', 'supper-admin'])): ?>
-            <div class="dropdown-admin <?= in_array($currentPage, ['user_manager.php', 'event_manager.php', 'admin_manager.php']) ? 'open' : '' ?>">
-                <button class="dropdown-toggle-admin <?= in_array($currentPage, ['user_manager.php', 'event_manager.php', 'admin_manager.php']) ? 'active' : '' ?>">
+        <?php if (hasRole(['admin', 'mod', 'supper-admin'])): ?>
+            <div class="dropdown-admin <?= in_array($currentPage, ['user_manager.php', 'event_manager.php', 'admin_manager.php', 'user-details.php', 'event_details.php', 'event_edit.php']) ? 'open' : '' ?>">
+                <button class="dropdown-toggle-admin <?= in_array($currentPage, ['user_manager.php', 'event_manager.php', 'admin_manager.php', 'user-details.php', 'event_details.php', 'event_edit.php']) ? 'active' : '' ?>">
                     <i class="fas fa-cog"></i>
                     <span>Pārvaldība</span>
                 </button>
                 <div class="dropdown-content-admin">
-                    <a href="user_manager.php" class="<?= $currentPage === 'user_manager.php' ? 'active' : '' ?>">
-                        <i class="fas fa-users"></i>
-                        <span>Lietotāju pārvaldība</span>
-                    </a>
-                    <a href="event_manager.php" class="<?= $currentPage === 'event_manager.php' ? 'active' : '' ?>">
-                        <i class="fas fa-calendar-alt"></i>
-                        <span>Sludinājumu pārvaldība</span>
-                    </a>
+                    <?php if (hasRole(['admin', 'supper-admin'])): ?>
+                        <a href="user_manager.php" class="<?= in_array($currentPage, ['user_manager.php', 'user-details.php']) ? 'active' : '' ?>">
+                            <i class="fas fa-users"></i>
+                            <span>Lietotāju pārvaldība</span>
+                        </a>
+                    <?php endif; ?>
+                    <?php if (hasRole(['admin', 'mod', 'supper-admin'])): ?>
+                        <a href="event_manager.php" class="<?= in_array($currentPage, ['event_manager.php', 'event_details.php', 'event_edit.php']) ? 'active' : '' ?>">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>Sludinājumu pārvaldība</span>
+                        </a>
+                    <?php endif; ?>
                     <?php if (hasRole(['supper-admin'])): ?>
                         <a href="admin_manager.php" class="<?= $currentPage === 'admin_manager.php' ? 'active' : '' ?>">
                             <i class="fas fa-user-shield"></i>
@@ -95,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
             toggleBtn.classList.toggle('collapsed');
             mainContent.classList.toggle('expanded');
             
-            // Update toggle button icon
+            
             const icon = toggleBtn.querySelector('i');
             if (sidebar.classList.contains('collapsed')) {
                 icon.classList.remove('fa-bars');
@@ -109,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     toggleBtn.addEventListener('click', toggleSidebar);
     
-    // Close sidebar when clicking overlay
+   
     overlay.addEventListener('click', () => {
         if (window.innerWidth <= 768) {
             sidebar.classList.remove('show');
@@ -118,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Handle dropdowns
+  
     document.querySelectorAll('.dropdown-toggle-admin').forEach(toggle => {
         toggle.addEventListener('click', () => {
             const dropdown = toggle.closest('.dropdown-admin');
@@ -126,7 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Handle mobile responsiveness
+  
     function handleResize() {
         if (window.innerWidth <= 768) {
             sidebar.classList.remove('collapsed');
@@ -138,6 +144,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     window.addEventListener('resize', handleResize);
-    handleResize(); // Initial check
+    handleResize(); 
 });
 </script>

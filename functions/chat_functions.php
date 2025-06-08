@@ -51,6 +51,30 @@ function sendMessage($from_user_id, $to_user_id, $message, $event_id) {
     return $stmt->execute([$from_user_id, $to_user_id, $message, $event_id]);
 }
 
+function getContacts($userId) {
+    global $pdo;
+    $stmt = $pdo->prepare("
+        SELECT 
+            u.ID_user, 
+            u.username, 
+            u.profile_pic, 
+            MAX(m.sent_at) AS last_msg, 
+            m.event_id,
+            e.title AS event_title,
+            COUNT(CASE WHEN m.is_read = 0 AND m.to_user_id = ? THEN 1 END) as unread_count
+        FROM messages m
+        JOIN users u ON (u.ID_user = CASE 
+                                    WHEN m.from_user_id = ? THEN m.to_user_id 
+                                    ELSE m.from_user_id 
+                                  END)
+        JOIN Events e ON e.ID_Event = m.event_id
+        WHERE m.from_user_id = ? OR m.to_user_id = ?
+        GROUP BY u.ID_user, m.event_id, e.title
+        ORDER BY last_msg DESC
+    ");
+    $stmt->execute([$userId, $userId, $userId, $userId]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $action = $_POST['action'];
@@ -103,6 +127,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         try {
             sendMessage($fromUser, $toUser, $message, $eventId);
             echo json_encode(['status' => 'success']);
+        } catch (PDOException $e) {
+            echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+        }
+        exit;
+    }
+
+    if ($action === 'get_contacts') {
+        try {
+            $contacts = getContacts($userId);
+            echo json_encode(['status' => 'success', 'contacts' => $contacts]);
         } catch (PDOException $e) {
             echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
         }

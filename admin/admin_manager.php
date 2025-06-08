@@ -1,119 +1,6 @@
 <?php
-
 require_once '../functions/AdminController.php';
 checkSuperAdminAccess();
-
-if (isset($_POST['action']) && $_POST['action'] === 'delete_user') {
-    header('Content-Type: application/json');
-    $userId = $_POST['user_id'] ?? null;
-    if ($userId) {
-        try {
-            global $pdo;
-            $stmt = $pdo->prepare("UPDATE users SET deleted = 1 WHERE ID_user = ? AND role IN ('admin', 'mod')");
-            $success = $stmt->execute([$userId]);
-            echo json_encode(['success' => $success]);
-        } catch (PDOException $e) {
-            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
-        }
-    } else {
-        echo json_encode(['success' => false, 'message' => 'Nav norādīts lietotāja ID.']);
-    }
-    exit;
-}
-
-if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
-    header('Content-Type: application/json');
-
-    $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
-    $perPage = 5;
-    $offset = ($page - 1) * $perPage;
-    $role = isset($_GET['role']) ? $_GET['role'] : '';
-    $sortField = $_GET['sort'] ?? 'created_at';
-    $sortOrder = $_GET['order'] ?? 'DESC';
-
-    try {
-        if ($role === 'mod' || $role === 'admin') {
-            $total = getUsersCountByRole($role);
-            $users = getPaginatedUsersByRole($role, $perPage, $offset, $sortField, $sortOrder);
-            
-            echo json_encode([
-                'success' => true,
-                'users' => $users,
-                'total' => $total,
-                'page' => $page,
-                'perPage' => $perPage,
-                'role' => $role
-            ]);
-        } else {
-            echo json_encode(['success' => false, 'message' => 'Invalid role specified']);
-        }
-    } catch (PDOException $e) {
-        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
-    }
-    exit;
-}
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['username'], $_POST['password'], $_POST['confirm_password'], $_POST['name'], $_POST['surname'], $_POST['email'], $_POST['role'])) {
-    header('Content-Type: application/json');
-    require_once '../functions/AdminController.php';
-
-    $username = trim($_POST['username']);
-    $password = $_POST['password'];
-    $confirm_password = $_POST['confirm_password'];
-    $name = trim($_POST['name']);
-    $surname = trim($_POST['surname']);
-    $email = filter_var(trim($_POST['email']), FILTER_VALIDATE_EMAIL);
-    $role = $_POST['role'];
-
-
-    if (!in_array($role, ['mod', 'admin'])) {
-        echo json_encode(['success' => false, 'message' => 'Nederīga loma!']);
-        exit;
-    }
-    
-    if (empty($username) || empty($password) || empty($confirm_password) || empty($name) || empty($surname) || !$email) {
-        echo json_encode(['success' => false, 'message' => 'Lūdzu, aizpildiet visus laukus pareizi!']);
-        exit;
-    }
-    if ($password !== $confirm_password) {
-        echo json_encode(['success' => false, 'message' => 'Paroles nesakrīt!']);
-        exit;
-    }
-    if (!preg_match("/^[a-zA-Z0-9_]{3,20}$/", $username)) {
-        echo json_encode(['success' => false, 'message' => 'Lietotājvārds nav derīgs!']);
-        exit;
-    }
-    if (strlen($password) < 8) {
-        echo json_encode(['success' => false, 'message' => 'Parolei jābūt vismaz 8 simbolus garai!']);
-        exit;
-    }
-
-    try {
-        global $pdo;
-        
-        $stmt = $pdo->prepare("SELECT ID_user FROM users WHERE username = ? OR email = ?");
-        $stmt->execute([$username, $email]);
-        if ($stmt->fetch()) {
-            echo json_encode(['success' => false, 'message' => 'Lietotājvārds vai e-pasts jau ir reģistrēts!']);
-            exit;
-        }
-
-        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-
-        $insert = $pdo->prepare("INSERT INTO users (username, password, name, surname, email, profile_pic, location, role) VALUES (?, ?, ?, ?, ?, NULL, NULL, ?)");
-        $success = $insert->execute([$username, $hashed_password, $name, $surname, $email, $role]);
-
-        if ($success) {
-            echo json_encode(['success' => true]);
-        } else {
-            echo json_encode(['success' => false, 'message' => 'Neizdevās izveidot lietotāju!']);
-        }
-    } catch (PDOException $e) {
-        echo json_encode(['success' => false, 'message' => 'DB kļūda: ' . $e->getMessage()]);
-    }
-    exit;
-}
-
-
 ?>
 
 <!DOCTYPE html>
@@ -121,11 +8,158 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['username'], $_POST['p
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VBC Admin | Admin Pārvalde</title>
+    <title>VBC Admin | Admin/Mod Pārvaldība</title>
     <link rel="stylesheet" href="admin.css" defer>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4CAF50;
+            --secondary-color: #f8f9fc;
+            --text-color: #333;
+            --border-color: #e0e0e0;
+            --hover-color: #45a049;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --success-color: #28a745;
+            --info-color: #17a2b8;
+        }
+
+        .table-header-style {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+        }
+
+        .table-header-style th {
+            background-color: var(--primary-color);
+            transition: background-color 0.2s ease;
+        }
+
+        .table-header-style th:hover {
+            background-color: var(--hover-color);
+            cursor: pointer;
+        }
+        
+        .table {
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+        }
+        
+        .table th {
+            font-weight: 600;
+            padding: 1rem;
+            border-bottom: 2px solid rgba(0,0,0,0.1);
+        }
+        
+        .table td {
+            padding: 1rem;
+            vertical-align: middle;
+        }
+        
+        .table-hover tbody tr:hover {
+            background-color: rgba(76, 175, 80, 0.05);
+            transition: background-color 0.2s ease;
+        }
+
+        .pagination-container {
+            margin-top: 1.5rem;
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            padding: 0 1rem;
+        }
+        
+        .pagination-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            background-color: white;
+            color: var(--text-color);
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            min-width: 40px;
+            text-align: center;
+        }
+        
+        .pagination-btn:hover:not(:disabled) {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        .pagination-btn:disabled {
+            background-color: #f5f5f5;
+            color: #999;
+            cursor: not-allowed;
+        }
+
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            .pagination-container {
+                gap: 0.25rem;
+                padding: 0 0.5rem;
+            }
+            
+            .pagination-btn {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.9rem;
+            }
+
+            .table td, .table th {
+                padding: 0.75rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .pagination-container {
+                gap: 0.2rem;
+            }
+            
+            .pagination-btn {
+                padding: 0.3rem 0.6rem;
+                font-size: 0.85rem;
+                min-width: 35px;
+            }
+
+            .table td, .table th {
+                padding: 0.5rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .pagination-btn {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.8rem;
+                min-width: 30px;
+            }
+        }
+
+        .blocked-user {
+            background-color: #fff3cd !important;
+        }
+        
+        .blocked-user:hover {
+            background-color: #ffe7b3 !important;
+        }
+        
+        .blocked-badge {
+            background-color: #ffc107;
+            color: #000;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-left: 0.5rem;
+        }
+    </style>
 </head>
 <body>
 <div class="admin-layout">
@@ -136,15 +170,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['username'], $_POST['p
         
         <div class="container-fluid py-4">
             <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                <h1 class="h3 mb-0 text-gray-800">Admin Pārvalde</h1>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createUserModal">
+                <h1 class="h3 mb-0 text-gray-800">Admin/Mod Pārvaldība</h1>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createUserModal">
                     <i class="fas fa-plus"></i> Pievienot jaunu admin/mod
                 </button>
             </div>
 
             <div class="card shadow mb-4">
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold">Moderatori</h6>
+                    <h6 class="m-0 font-weight-bold">Moderatori (<?= $modCount ?>)</h6>
                     <div class="dropdown no-arrow">
                         <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" 
                            data-bs-toggle="dropdown" aria-expanded="false">
@@ -159,7 +193,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['username'], $_POST['p
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-bordered table-hover" width="100%" cellspacing="0">
-                            <thead>
+                            <thead class="table-header-style">
                                 <tr>
                                     <th>ID</th>
                                     <th>Lietotājvārds</th>
@@ -170,7 +204,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['username'], $_POST['p
                                     <th>Darbības</th>
                                 </tr>
                             </thead>
-                            <tbody id="mod-body"></tbody>
+                            <tbody id="mod-body">
+                                <?php foreach ($modUsers as $user): ?>
+                                <tr class="<?= $user['is_blocked'] ? 'blocked-user' : '' ?>">
+                                    <td><?= htmlspecialchars($user['ID_user']) ?></td>
+                                    <td>
+                                        <?= htmlspecialchars($user['username']) ?>
+                                        <?php if ($user['is_blocked']): ?>
+                                            <span class="blocked-badge">Bloķēts</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td><?= htmlspecialchars($user['name']) ?></td>
+                                    <td><?= htmlspecialchars($user['surname']) ?></td>
+                                    <td><?= htmlspecialchars($user['email']) ?></td>
+                                    <td><?= date('d.m.Y H:i', strtotime($user['created_at'])) ?></td>
+                                    <td>
+                                        <a href="admin-details.php?id=<?= $user['ID_user'] ?>" class="btn btn-sm btn-info">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <button onclick="deleteUser(<?= $user['ID_user'] ?>)" class="btn btn-sm btn-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
                         </table>
                         <div id="mod-pagination" class="pagination-container"></div>
                     </div>
@@ -179,7 +237,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['username'], $_POST['p
 
             <div class="card shadow mb-4">
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold">Administratori</h6>
+                    <h6 class="m-0 font-weight-bold">Administratori (<?= $adminCount ?>)</h6>
                     <div class="dropdown no-arrow">
                         <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" 
                            data-bs-toggle="dropdown" aria-expanded="false">
@@ -194,7 +252,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['username'], $_POST['p
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-bordered table-hover" width="100%" cellspacing="0">
-                            <thead>
+                            <thead class="table-header-style">
                                 <tr>
                                     <th>ID</th>
                                     <th>Lietotājvārds</th>
@@ -205,7 +263,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['username'], $_POST['p
                                     <th>Darbības</th>
                                 </tr>
                             </thead>
-                            <tbody id="admin-body"></tbody>
+                            <tbody id="admin-body">
+                                <?php foreach ($adminUsers as $user): ?>
+                                <tr class="<?= $user['is_blocked'] ? 'blocked-user' : '' ?>">
+                                    <td><?= htmlspecialchars($user['ID_user']) ?></td>
+                                    <td>
+                                        <?= htmlspecialchars($user['username']) ?>
+                                        <?php if ($user['is_blocked']): ?>
+                                            <span class="blocked-badge">Bloķēts</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td><?= htmlspecialchars($user['name']) ?></td>
+                                    <td><?= htmlspecialchars($user['surname']) ?></td>
+                                    <td><?= htmlspecialchars($user['email']) ?></td>
+                                    <td><?= date('d.m.Y H:i', strtotime($user['created_at'])) ?></td>
+                                    <td>
+                                        <a href="admin-details.php?id=<?= $user['ID_user'] ?>" class="btn btn-sm btn-info">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <button onclick="deleteUser(<?= $user['ID_user'] ?>)" class="btn btn-sm btn-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
                         </table>
                         <div id="admin-pagination" class="pagination-container"></div>
                     </div>

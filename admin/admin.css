@@ -18,9 +18,9 @@ body {
 
 .admin-sidebar {
     width: var(--sidebar-width);
-    background-color: #fff;
-    border-right: 1px solid #eee;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    background-color: #4CAF50;
+    border-right: 1px solid #45a049;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     transition: all 0.3s ease;
     position: fixed;
     height: 100vh;
@@ -68,8 +68,8 @@ body {
     padding: 20px;
     margin: 0;
     font-weight: 600;
-    color: var(--primary-color);
-    border-bottom: 1px solid #eee;
+    color: #ffffff;
+    border-bottom: 1px solid #45a049;
 }
 
 .admin-nav {
@@ -81,7 +81,7 @@ body {
 .dropdown-toggle-admin {
     padding: 12px 20px;
     text-decoration: none;
-    color: var(--dark-gray);
+    color: #ffffff;
     background-color: transparent;
     border: none;
     text-align: left;
@@ -95,9 +95,9 @@ body {
 .dropdown-toggle-admin:hover,
 .admin-nav a.active,
 .dropdown-toggle-admin.active {
-    color: var(--primary-color);
-    background-color: var(--light-gray);
-    border-left: 4px solid var(--secondary-color);
+    color: #ffffff;
+    background-color: #45a049;
+    border-left: 4px solid #ffffff;
     padding-left: 16px;
 }
 
@@ -124,13 +124,13 @@ h5{
 .dropdown-content-admin a {
     padding: 10px 20px;
     font-size: 0.95rem;
-    color: var(--dark-gray);
+    color: #ffffff;
 }
 
 .dropdown-content-admin a.active {
-    color: var(--primary-color);
-    background-color: var(--light-gray);
-    border-left: 4px solid var(--secondary-color);
+    color: #ffffff;
+    background-color: #45a049;
+    border-left: 4px solid #ffffff;
     padding-left: 16px;
 }
 
@@ -1112,7 +1112,8 @@ h6{
     left: var(--sidebar-width);
     top: 20px;
     z-index: 1001;
-    background: var(--primary-color);
+ 
+    background: #4CAF50;
     color: white;
     border: none;
     border-radius: 0 4px 4px 0;
@@ -1120,7 +1121,9 @@ h6{
     cursor: pointer;
     transition: left 0.3s ease;
 }
-
+.sidebar-toggle:hover {
+    background: #45a049;
+}
 .sidebar-toggle.collapsed {
     left: var(--sidebar-collapsed-width);
 }
@@ -1134,7 +1137,7 @@ h6{
         top: 0;
         height: 100vh;
         z-index: 1050;
-        background: white;
+        background: #4CAF50 !important; /* Force green background */
     }
     
     .admin-sidebar.show {

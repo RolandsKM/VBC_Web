@@ -8,9 +8,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
         <a href="account_info.php" class="<?= $current_page === 'account_info.php' ? 'active' : '' ?>">
             <i class="bi bi-person me-2"></i>Konta informācija
         </a>
-        <a href="change_password.php" class="<?= $current_page === 'change_password.php' ? 'active' : '' ?>">
-            <i class="bi bi-lock me-2"></i>Parole
-        </a>
+
         <!-- <a href="#" class="<?= $current_page === 'history.php' ? 'active' : '' ?>">
             <i class="bi bi-clock-history me-2"></i>Vēsture
         </a> -->

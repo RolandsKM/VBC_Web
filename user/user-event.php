@@ -171,7 +171,7 @@ include '../css/templates/header.php';
             <div class="modal-body">
                 <div class="row">
                     <div class="col-md-4 text-center">
-                        <img id="userProfilePic" src="../assets/default-profile.png" class="rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                        <img id="userProfilePic" src="../functions/assets/default-profile.png" class="rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
                         <h4 id="userName" class="mb-2"></h4>
                         <p id="userEmail" class="text-muted"></p>
                     </div>

@@ -176,6 +176,66 @@ function markReportsAsSolved($reportIds) {
     }
 }
 
+function getReportStatistics() {
+    global $pdo;
+    try {
+        // total unsolved reports
+        $stmt = $pdo->query("SELECT COUNT(*) FROM event_reports WHERE status = 'waiting'");
+        $totalReports = $stmt->fetchColumn();
+
+        //top 3 people with most reported events
+        $stmt = $pdo->prepare("
+            SELECT 
+                u.username,
+                COUNT(DISTINCT r.ID_event) as reported_events_count
+            FROM event_reports r
+            JOIN Events e ON r.ID_event = e.ID_Event
+            JOIN users u ON e.user_id = u.ID_user
+            WHERE r.status = 'waiting'
+            GROUP BY e.user_id
+            ORDER BY reported_events_count DESC
+            LIMIT 3
+        ");
+        $stmt->execute();
+        $topEventOwners = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        return [
+            'total_reports' => $totalReports,
+            'top_event_owners' => $topEventOwners
+        ];
+    } catch (PDOException $e) {
+        error_log("Error getting report statistics: " . $e->getMessage());
+        return false;
+    }
+}
+
+function getEventOwnerReportHistory($userId) {
+    global $pdo;
+    try {
+        $stmt = $pdo->prepare("
+            SELECT 
+                e.title as event_title,
+                e.date as event_date,
+                COUNT(r.ID_report) as report_count,
+                MAX(r.reported_at) as last_reported,
+                e.deleted as event_deleted,
+                GROUP_CONCAT(DISTINCT r.reason) as report_reasons
+            FROM Events e
+            JOIN event_reports r ON e.ID_Event = r.ID_event
+            WHERE e.user_id = :userId 
+            AND r.status = 'solved'
+            GROUP BY e.ID_Event
+            ORDER BY last_reported DESC
+            LIMIT 5
+        ");
+        $stmt->execute([':userId' => $userId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log("Error getting event owner report history: " . $e->getMessage());
+        return false;
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax'])) {
     header('Content-Type: application/json');
     
@@ -207,6 +267,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax'])) {
                 if ($reportId) {
                     $report = getReportDetails($reportId);
                     if ($report) {
+                        // Get event owner's report history
+                        $ownerHistory = getEventOwnerReportHistory($report['creator_id']);
+                        $report['owner_history'] = $ownerHistory;
                         echo json_encode(['success' => true, 'report' => $report]);
                     } else {
                         echo json_encode(['success' => false, 'message' => 'Report not found']);
@@ -261,6 +324,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax'])) {
                     echo json_encode(['success' => true]);
                 } else {
                     echo json_encode(['success' => false, 'message' => 'Failed to mark reports as solved']);
+                }
+                break;
+
+            case 'get_report_statistics':
+                $stats = getReportStatistics();
+                if ($stats) {
+                    echo json_encode(['success' => true, 'statistics' => $stats]);
+                } else {
+                    echo json_encode(['success' => false, 'message' => 'Failed to get statistics']);
                 }
                 break;
 

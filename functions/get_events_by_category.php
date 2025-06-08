@@ -1,5 +1,6 @@
 <?php
 require_once '../config/con_db.php';
+session_start();
 
 $category_id = isset($_GET['category_id']) ? (int)$_GET['category_id'] : 0;
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
@@ -8,10 +9,11 @@ $date_from = isset($_GET['date_from']) ? $_GET['date_from'] : '';
 $date_to = isset($_GET['date_to']) ? $_GET['date_to'] : '';
 $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 12;
 $offset = isset($_GET['offset']) ? (int)$_GET['offset'] : 0;
+$current_user_id = isset($_SESSION['ID_user']) ? (int)$_SESSION['ID_user'] : 0;
 
 try {
     $query = "
-       SELECT 
+       SELECT DISTINCT
     e.ID_Event, e.title, e.description, e.date, e.created_at, e.city,
     u.username, u.profile_pic
 FROM Events e
@@ -19,10 +21,10 @@ INNER JOIN Event_Categories ec ON e.ID_Event = ec.event_id
 LEFT JOIN users u ON e.user_id = u.ID_user
 WHERE e.deleted = 0 
 AND DATE(e.date) >= CURDATE()
-
+AND e.user_id != :current_user_id
     ";
 
-    $params = [];
+    $params = [':current_user_id' => $current_user_id];
 
     if ($category_id > 0) {
         $query .= " AND ec.category_id = :category_id";
@@ -47,7 +49,7 @@ if ($search !== '') {
 }
 
 
-    $query .= " ORDER BY e.date ASC LIMIT :limit OFFSET :offset";
+    $query .= " GROUP BY e.ID_Event ORDER BY e.date ASC LIMIT :limit OFFSET :offset";
 
     $stmt = $pdo->prepare($query);
     

@@ -1,6 +1,5 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+
 
 require_once '../functions/AdminController.php';
 checkAdminAccess();
@@ -149,32 +148,188 @@ $popularEvent = getMostPopularEvent();
             transition: background-color 0.2s ease;
         }
 
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 0 -15px;
+        }
+
+        .col-xl-3, .col-md-6 {
+            padding: 0 15px;
+            margin-bottom: 1.5rem;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        @media (min-width: 768px) {
+            .col-md-6 {
+                width: 50%;
+            }
+        }
+
+        @media (min-width: 1200px) {
+            .col-xl-3 {
+                width: 25%;
+            }
+        }
+
         .pagination-container {
-            margin-top: 1.5rem;
             display: flex;
             justify-content: center;
             gap: 0.5rem;
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: #f8f9fc;
+            border-top: 1px solid #e3e6f0;
+            flex-wrap: wrap;
         }
         
         .pagination-btn {
-            padding: 0.5rem 1rem;
-            border: 1px solid var(--border-color);
-            background-color: white;
-            color: var(--text-color);
-            border-radius: 6px;
-            transition: all 0.2s ease;
+            padding: 0.375rem 0.75rem;
+            border: 1px solid #e3e6f0;
+            background: #fff;
+            cursor: pointer;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+            color: #4CAF50;
+            transition: all 0.2s ease-in-out;
+            margin: 0.25rem;
+        }
+        
+        @media (max-width: 576px) {
+            .pagination-btn {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.8rem;
+            }
+
+            .pagination-container {
+                padding: 0.5rem;
+                gap: 0.25rem;
+            }
         }
         
         .pagination-btn:hover:not(:disabled) {
-            background-color: var(--primary-color);
-            color: white;
-            border-color: var(--primary-color);
+            background: #4CAF50;
+            color: #fff;
+            border-color: #4CAF50;
         }
         
         .pagination-btn:disabled {
-            background-color: #f5f5f5;
-            color: #999;
+            background: #f8f9fc;
+            color: #858796;
             cursor: not-allowed;
+            border-color: #e3e6f0;
+        }
+
+        .pagination-btn.active {
+            background: #1cc88a;
+            color: #fff;
+            border-color: #1cc88a;
+        }
+
+        .card {
+            height: 100%;
+            margin-bottom: 1.5rem;
+            border: none;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+            width: 100%;
+        }
+
+        .card-header {
+            background-color: #f8f9fc;
+            border-bottom: 1px solid #e3e6f0;
+            padding: 1rem 1.25rem;
+        }
+
+        .card-header h6 {
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+
+        .card-body {
+            padding: 1.25rem;
+        }
+
+        .table td {
+            max-width: 200px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        @media (max-width: 768px) {
+            .table td {
+                max-width: 150px;
+            }
+            .stat-card {
+                max-width: 100%;
+            }
+        }
+
+        .badge {
+            white-space: nowrap;
+        }
+
+        .stat-card {
+            width: 100%;
+            max-width: 300px;
+            transition: transform 0.2s;
+            height: 100%;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card .text-xs {
+            font-size: 0.7rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .stat-card .h5 {
+            font-size: 1.25rem;
+            margin-top: 0.5rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+
+        .stat-card .card-body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .stat-card .row {
+            margin: 0;
+            width: 100%;
+        }
+
+        .stat-card .col {
+            padding: 0;
+        }
+
+        .stat-card .col-auto {
+            padding-left: 1rem;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
     </style>
 </head>
@@ -241,32 +396,10 @@ $popularEvent = getMostPopularEvent();
                     </div>
                 </div>
 
-                <div class="col-xl-3 col-md-6 mb-4">
-                    <div class="card stat-card border-left-warning shadow h-100 py-2">
-                        <div class="card-body">
-                            <div class="row no-gutters align-items-center">
-                                <div class="col mr-2">
-                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                        Populārākais Pasākums</div>
-                                    <div class="h5 mb-0 font-weight-bold text-gray-800"><?= $popularEvent ? $popularEvent['title'] : 'Nav' ?></div>
-                                </div>
-                                <div class="col-auto">
-                                    <i class="fas fa-star fa-2x text-gray-300"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+               
             </div>
 
-            <div class="d-flex justify-content-end mb-3">
-                <select id="filter-period" class="form-select form-select-sm me-2 filter-control">
-                    <option value="all" <?= $filterPeriod === 'all' ? 'selected' : '' ?>>Visi</option>
-                    <option value="week" <?= $filterPeriod === 'week' ? 'selected' : '' ?>>Šonedēļ</option>
-                    <option value="month" <?= $filterPeriod === 'month' ? 'selected' : '' ?>>Šomēnes</option>
-                    <option value="year" <?= $filterPeriod === 'year' ? 'selected' : '' ?>>Šogad</option>
-                </select>
-            </div>
+
 
             <div class="row">
                 <div class="col-12">
@@ -282,147 +415,6 @@ $popularEvent = getMostPopularEvent();
                     </div>
                 </div>
             </div>
-
-            <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                    const filterPeriodSelect = document.getElementById('filter-period');
-                    const eventsByDayCtx = document.getElementById('eventsByDayChart');
-                    
-                    if (eventsByDayCtx) {
-                        const eventsByDayChart = new Chart(eventsByDayCtx, {
-                            type: 'line',
-                            data: {
-                                labels: [],
-                                datasets: [
-                                    {
-                                        label: 'Pasākumi dienā',
-                                        data: [],
-                                        borderColor: 'rgba(78, 115, 223, 1)',
-                                        backgroundColor: 'rgba(78, 115, 223, 0.2)',
-                                        fill: true,
-                                        tension: 0.3,
-                                        yAxisID: 'y'
-                                    },
-                                    {
-                                        label: 'Pasākumi nedēļā',
-                                        data: [],
-                                        borderColor: 'rgba(28, 200, 138, 1)',
-                                        backgroundColor: 'rgba(28, 200, 138, 0.2)',
-                                        fill: true,
-                                        tension: 0.3,
-                                        yAxisID: 'y'
-                                    },
-                                    {
-                                        label: 'Pasākumi mēnesī',
-                                        data: [],
-                                        borderColor: 'rgba(231, 74, 59, 1)',
-                                        backgroundColor: 'rgba(231, 74, 59, 0.2)',
-                                        fill: true,
-                                        tension: 0.3,
-                                        yAxisID: 'y'
-                                    }
-                                ]
-                            },
-                            options: {
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                scales: {
-                                    y: {
-                                        beginAtZero: true,
-                                        ticks: {
-                                            precision: 0
-                                        }
-                                    }
-                                },
-                                plugins: {
-                                    legend: {
-                                        position: 'top',
-                                    }
-                                }
-                            }
-                        });
-
-                        function updateEventStatistics(period = 'all') {
-                            console.log('Updating statistics for period:', period);
-                            
-                            // Daily statistics
-                            fetch(`event_manager.php?ajax=1&stats=daily&period=${period}`)
-                                .then(response => {
-                                    if (!response.ok) {
-                                        throw new Error(`HTTP error! status: ${response.status}`);
-                                    }
-                                    return response.json();
-                                })
-                                .then(data => {
-                                    console.log('Daily stats response:', data);
-                                    if (data.success && Array.isArray(data.data)) {
-                                        const dailyData = data.data;
-                                        eventsByDayChart.data.labels = dailyData.map(item => item.day);
-                                        eventsByDayChart.data.datasets[0].data = dailyData.map(item => item.count);
-                                        eventsByDayChart.update();
-                                    } else {
-                                        console.error('Invalid daily stats data format:', data);
-                                    }
-                                })
-                                .catch(err => console.error('Error fetching daily stats:', err));
-
-                            // Weekly statistics
-                            fetch(`event_manager.php?ajax=1&stats=weekly&period=${period}`)
-                                .then(response => {
-                                    if (!response.ok) {
-                                        throw new Error(`HTTP error! status: ${response.status}`);
-                                    }
-                                    return response.json();
-                                })
-                                .then(data => {
-                                    console.log('Weekly stats response:', data);
-                                    if (data.success && Array.isArray(data.data)) {
-                                        const weeklyData = data.data;
-                                        eventsByDayChart.data.datasets[1].data = weeklyData.map(item => item.count);
-                                        eventsByDayChart.update();
-                                    } else {
-                                        console.error('Invalid weekly stats data format:', data);
-                                    }
-                                })
-                                .catch(err => console.error('Error fetching weekly stats:', err));
-
-                            // Monthly statistics
-                            fetch(`event_manager.php?ajax=1&stats=monthly&period=${period}`)
-                                .then(response => {
-                                    if (!response.ok) {
-                                        throw new Error(`HTTP error! status: ${response.status}`);
-                                    }
-                                    return response.json();
-                                })
-                                .then(data => {
-                                    console.log('Monthly stats response:', data);
-                                    if (data.success && Array.isArray(data.data)) {
-                                        const monthlyData = data.data;
-                                        eventsByDayChart.data.datasets[2].data = monthlyData.map(item => item.count);
-                                        eventsByDayChart.update();
-                                    } else {
-                                        console.error('Invalid monthly stats data format:', data);
-                                    }
-                                })
-                                .catch(err => console.error('Error fetching monthly stats:', err));
-                        }
-
-                        // Initial update
-                        updateEventStatistics(filterPeriodSelect.value);
-
-                        // Update when filter changes
-                        filterPeriodSelect.addEventListener('change', function() {
-                            console.log('Filter period changed to:', this.value); // Debug log
-                            updateEventStatistics(this.value);
-                        });
-
-                        // Update every 5 minutes
-                        setInterval(() => {
-                            updateEventStatistics(filterPeriodSelect.value);
-                        }, 300000);
-                    }
-                });
-            </script>
 
             <div class="card shadow mb-4">
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
@@ -455,8 +447,9 @@ $popularEvent = getMostPopularEvent();
                             <tbody id="todays-events-body">
                             </tbody>
                         </table>
-                        <div class="pagination-container" id="todays-events-pagination"></div>
+                        
                     </div>
+                    <div class="pagination-container" id="todays-events-pagination"></div>
                 </div>
             </div>
 
@@ -500,8 +493,9 @@ $popularEvent = getMostPopularEvent();
                             <tbody id="events-body">
                             </tbody>
                         </table>
-                        <div class="pagination-container" id="events-pagination"></div>
+                       
                     </div>
+                    <div class="pagination-container" id="events-pagination"></div>
                 </div>
             </div>
         </div>
@@ -509,6 +503,14 @@ $popularEvent = getMostPopularEvent();
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="../functions/admin_script.js" defer></script>
+<script src="../functions/admin_script.js"></script>
+<script>
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        if (document.getElementById('eventsByDayChart')) {
+            initializeEventManager();
+        }
+    });
+</script>
 </body>
 </html>

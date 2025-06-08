@@ -434,7 +434,6 @@ function paginateData(dataArray, containerId, tableId, rowsPerPage = 10) {
             let valueA = a[column];
             let valueB = b[column];
 
-            // Handle special cases
             if (column === 'username') {
                 valueA = a.username;
                 valueB = b.username;
@@ -485,14 +484,13 @@ function paginateData(dataArray, containerId, tableId, rowsPerPage = 10) {
     }
 
     function renderPage(page) {
-        // Filter data based on search term
+       
         let filteredData = filterData(dataArray);
         
         const start = (page - 1) * rowsPerPage;
         const end = start + rowsPerPage;
         let paginatedData = filteredData;
 
-        // Apply sorting if a column is selected
         if (currentSort.column) {
             paginatedData = sortData(paginatedData, currentSort.column, currentSort.direction);
         }
@@ -525,7 +523,7 @@ function paginateData(dataArray, containerId, tableId, rowsPerPage = 10) {
 
         $(`#${tableId}-table tbody`).html(tableHtml);
 
-        // Pagination controls
+       
         const totalPages = Math.ceil(filteredData.length / rowsPerPage);
         let paginationHtml = '';
 
@@ -544,7 +542,7 @@ function paginateData(dataArray, containerId, tableId, rowsPerPage = 10) {
         $(`#${containerId}`).html(paginationHtml);
     }
 
-    // Add search input to the table header only if it doesn't exist
+    // Add search input to the table header (if not existing)
     if (!$(`#${tableId}-search`).length) {
         const searchHtml = `
             <div class="search-container mb-3">
@@ -560,19 +558,19 @@ function paginateData(dataArray, containerId, tableId, rowsPerPage = 10) {
         $(`#${tableId}-table`).before(searchHtml);
     }
 
-    // Handle search input for this specific table
+    // Handle search input for table
     $(`#${tableId}-search`).on('input', function() {
         searchTerm = $(this).val().trim();
-        currentPage = 1; // Reset to first page when searching
+        currentPage = 1; 
         renderPage(currentPage);
     });
 
-    // Initialize sorting headers
+    
     const table = document.getElementById(`${tableId}-table`);
     if (table) {
         const headers = table.querySelectorAll('th');
         headers.forEach((header, index) => {
-            if (index > 0 && index < 4) { // Skip checkbox column and action column
+            if (index > 0 && index < 4) { 
                 header.style.cursor = 'pointer';
                 header.addEventListener('click', () => {
                     const column = index === 1 ? 'rowNumber' : 
@@ -587,7 +585,6 @@ function paginateData(dataArray, containerId, tableId, rowsPerPage = 10) {
                             currentSort.direction = 'asc';
                         }
 
-                        // Update header indicators
                         headers.forEach(h => {
                             h.innerHTML = h.innerHTML.replace(/ [↑↓]/, '');
                         });
@@ -600,10 +597,10 @@ function paginateData(dataArray, containerId, tableId, rowsPerPage = 10) {
         });
     }
 
-    // Initial render
+   
     renderPage(currentPage);
 
-    // Handle pagination
+  
     $(`#${containerId}`).on('click', '.pagination-btn', function() {
         const selectedPage = parseInt($(this).data('page'));
         if (!isNaN(selectedPage)) {
@@ -616,7 +613,7 @@ function paginateData(dataArray, containerId, tableId, rowsPerPage = 10) {
    
     loadJoinedUsers();
 
-    // Handle view user button click
+    
     $(document).on('click', '.view-user', function() {
         const userId = $(this).data('id');
         showUserDetails(userId);
@@ -645,14 +642,14 @@ function paginateData(dataArray, containerId, tableId, rowsPerPage = 10) {
                     return;
                 }
                 
-                // Update modal content
-                $('#userProfilePic').attr('src', data.profile_pic || '../assets/default-profile.png');
+              
+                $('#userProfilePic').attr('src', data.profile_pic ? '../functions/assets/' + data.profile_pic : '../functions/assets/default-profile.png');
                 $('#userName').text(data.name + ' ' + data.surname);
                 $('#userEmail').text(data.email);
                 $('#userLocation').text(data.location || 'Nav norādīts');
                 $('#userCreatedAt').text(new Date(data.created_at).toLocaleDateString('lv-LV'));
                 
-                // Update statistics
+                
                 $('#createdEvents').text(data.created_events || 0);
                 $('#completedEvents').text(data.completed_events || 0);
                 
@@ -1446,31 +1443,59 @@ $(document).ready(function() {
                 data.notifications.forEach(notification => {
                     let icon, statusClass, statusText;
                     
-                    switch(notification.status) {
-                        case 'accepted':
-                            icon = 'bi-check-lg';
-                            statusClass = 'accepted';
-                            statusText = 'Apstiprināts';
-                            break;
-                        case 'denied':
-                            icon = 'bi-x-lg';
-                            statusClass = 'denied';
-                            statusText = 'Noraidīts';
-                            break;
+                    if (notification.type === 'volunteer') {
+                        switch(notification.status) {
+                            case 'accepted':
+                                icon = 'bi-check-lg';
+                                statusClass = 'accepted';
+                                statusText = 'Apstiprināts';
+                                break;
+                            case 'denied':
+                                icon = 'bi-x-lg';
+                                statusClass = 'denied';
+                                statusText = 'Noraidīts';
+                                break;
+                        }
+                        
+                        html += `
+                            <div class="notification-item ${notification.seen ? '' : 'unread'}">
+                                <div class="notification-icon ${statusClass}">
+                                    <i class="bi ${icon}"></i>
+                                </div>
+                                <div class="notification-content">
+                                    <div class="notification-title">${notification.event_title}</div>
+                                    <div class="notification-text">Jūsu pieteikums ir ${statusText}</div>
+                                    <div class="notification-time">${notification.changed_at}</div>
+                                </div>
+                            </div>
+                        `;
+                    } else if (notification.type === 'deleted') {
+                        html += `
+                            <div class="notification-item ${notification.seen ? '' : 'unread'}">
+                                <div class="notification-icon deleted">
+                                    <i class="bi bi-trash"></i>
+                                </div>
+                                <div class="notification-content">
+                                    <div class="notification-title">${notification.event_title}</div>
+                                    <div class="notification-text">Jūsu sludinājums ir dzēsts. Iemesls: ${notification.reason}</div>
+                                    <div class="notification-time">${notification.changed_at}</div>
+                                </div>
+                            </div>
+                        `;
+                    } else if (notification.type === 'undeleted') {
+                        html += `
+                            <div class="notification-item ${notification.seen ? '' : 'unread'}">
+                                <div class="notification-icon undeleted">
+                                    <i class="bi bi-arrow-counterclockwise"></i>
+                                </div>
+                                <div class="notification-content">
+                                    <div class="notification-title">${notification.event_title}</div>
+                                    <div class="notification-text">Jūsu sludinājums ir atjaunots</div>
+                                    <div class="notification-time">${notification.changed_at}</div>
+                                </div>
+                            </div>
+                        `;
                     }
-                    
-                    html += `
-                        <div class="notification-item ${notification.seen ? '' : 'unread'}">
-                            <div class="notification-icon ${statusClass}">
-                                <i class="bi ${icon}"></i>
-                            </div>
-                            <div class="notification-content">
-                                <div class="notification-title">${notification.event_title}</div>
-                                <div class="notification-text">Jūsu pieteikums ir ${statusText}</div>
-                                <div class="notification-time">${notification.changed_at}</div>
-                            </div>
-                        </div>
-                    `;
                 });
                 
                 $('#notificationsList').html(html || '<div class="text-center p-3">Nav jaunu notifikāciju</div>');
@@ -1496,7 +1521,7 @@ $(document).ready(function() {
         $('#notificationsOverlay').addClass('active');
         loadNotifications();
         
-        // Mark notifications as seen when opening the sidebar
+        // Mark notifications as seen
         $.ajax({
             url: '../functions/event_functions.php',
             method: 'POST',
@@ -1518,10 +1543,10 @@ $(document).ready(function() {
         $('#notificationsOverlay').removeClass('active');
     });
 
-    // Load notifications every 30 seconds
-    setInterval(loadNotifications, 30000);
     
-    // Initial load of notifications
+    setInterval(loadNotifications, 10000);
+    
+   
     loadNotifications();
 });
 

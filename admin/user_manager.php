@@ -166,6 +166,8 @@ try {
             display: flex;
             justify-content: center;
             gap: 0.5rem;
+            flex-wrap: wrap;
+            padding: 0 1rem;
         }
         
         .pagination-btn {
@@ -175,6 +177,8 @@ try {
             color: var(--text-color);
             border-radius: 6px;
             transition: all 0.2s ease;
+            min-width: 40px;
+            text-align: center;
         }
         
         .pagination-btn:hover:not(:disabled) {
@@ -187,6 +191,129 @@ try {
             background-color: #f5f5f5;
             color: #999;
             cursor: not-allowed;
+        }
+
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            .pagination-container {
+                gap: 0.25rem;
+                padding: 0 0.5rem;
+            }
+            
+            .pagination-btn {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.9rem;
+            }
+
+            .table td, .table th {
+                padding: 0.75rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .pagination-container {
+                gap: 0.2rem;
+            }
+            
+            .pagination-btn {
+                padding: 0.3rem 0.6rem;
+                font-size: 0.85rem;
+                min-width: 35px;
+            }
+
+            .table td, .table th {
+                padding: 0.5rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .pagination-btn {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.8rem;
+                min-width: 30px;
+            }
+        }
+
+        .stat-card {
+            transition: transform 0.2s;
+            height: 100%;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card .text-xs {
+            font-size: 0.7rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+
+        .stat-card .h5 {
+            font-size: 1.25rem;
+            margin-top: 0.5rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Graph card specific styles */
+        .chart-card .card-header h6 {
+            white-space: normal;
+            overflow: visible;
+            text-overflow: clip;
+        }
+
+        .chart-card .card-body {
+            padding: 1.25rem;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+
+        /* Responsive styles */
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 0 -15px;
+        }
+
+        .col-xl-3, .col-md-6 {
+            padding: 0 15px;
+            margin-bottom: 1.5rem;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        @media (min-width: 768px) {
+            .col-md-6 {
+                width: 50%;
+            }
+        }
+
+        @media (min-width: 1200px) {
+            .col-xl-3 {
+                width: 25%;
+            }
+        }
+
+        .stat-card {
+            width: 100%;
+            max-width: 300px;
+        }
+
+        @media (max-width: 768px) {
+            .stat-card {
+                max-width: 100%;
+            }
         }
     </style>
 </head>
@@ -327,6 +454,7 @@ try {
                         <table class="table table-bordered table-hover" width="100%" cellspacing="0">
                             <thead>
                                 <tr class="table-header-style">
+                                    <th>Profila Attēls</th>
                                     <th>Lietotājvārds</th>
                                     <th>E-pasts</th>
                                     <th>Reģistrācijas Laiks</th>
@@ -338,8 +466,9 @@ try {
                               
                             </tbody>
                         </table>
-                        <div class="pagination-container" id="todays-users-pagination"></div>
+                       
                     </div>
+                    <div class="pagination-container" id="todays-users-pagination"></div>
                 </div>
             </div>
             <div class="d-flex justify-content-end mb-3">
@@ -371,6 +500,7 @@ try {
                         <table class="table table-bordered table-hover" width="100%" cellspacing="0">
                             <thead>
                                 <tr class="table-header-style">
+                                    <th>Profila Attēls</th>
                                     <th>Lietotājvārds</th>
                                     <th>E-pasts</th>
                                     <th>Reģistrācijas Datums</th>
@@ -382,8 +512,9 @@ try {
                                
                             </tbody>
                         </table>
-                        <div class="pagination-container" id="all-users-pagination"></div>
+                       
                     </div>
+                    <div class="pagination-container" id="all-users-pagination"></div>
                 </div>
             </div>
 

@@ -11,22 +11,22 @@ checkModeratorAccess();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VBC Admin | Ziņojumu Pārvaldība</title>
     <link rel="stylesheet" href="admin.css" defer>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600&display=swap">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600&display=swap" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" />
     <style>
         :root {
-            --primary-color: #4e73df;
+            --primary-color: #4CAF50;
             --secondary-color: #f8f9fc;
-            --accent-color: #2e59d9;
-            --danger-color: #e74a3b;
-            --success-color: #1cc88a;
-            --text-color: #5a5c69;
-            --border-color: #e3e6f0;
-            --hover-color: #2e59d9;
-            --warning-color: #f6c23e;
-            --info-color: #36b9cc;
+            --text-color: #333;
+            --border-color: #e0e0e0;
+            --hover-color: #45a049;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --success-color: #28a745;
+            --info-color: #17a2b8;
         }
+
         
         body {
             font-family: 'Quicksand', sans-serif;
@@ -155,10 +155,28 @@ checkModeratorAccess();
             cursor: pointer;
             position: relative;
             padding-right: 1.5rem;
+            transition: background-color 0.2s ease;
         }
         
         .sortable:hover {
-            background-color: rgba(255,255,255,0.1);
+            background-color: var(--primary-color);
+        }
+
+        .sortable i {
+            position: absolute;
+            right: 0.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.7);
+            transition: color 0.2s ease;
+        }
+
+        .sortable:hover i {
+            color: white;
+        }
+
+        .sortable.active i {
+            color: white;
         }
         
         .modal-body {
@@ -225,53 +243,109 @@ checkModeratorAccess();
         }
         
         .stat-card {
-            background: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+            transition: transform 0.2s;
             height: 100%;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            min-width: 280px;
         }
         
         .stat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+            transform: translateY(-5px);
         }
         
         .stat-card .text-xs {
-            font-size: 0.9rem;
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            font-size: 0.7rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+        
+        .stat-card .h5 {
+            font-size: 1.25rem;
+            margin-top: 0.5rem;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
         
-        .stat-card .h5 {
-            font-size: 1.8rem;
-            font-weight: 600;
-            margin: 0.5rem 0 0;
-            white-space: nowrap;
-        }
-        
-        .stat-card .col-auto i {
-            font-size: 2rem;
-            opacity: 0.8;
-            margin-left: 1rem;
+        .border-left-primary {
+            border-left: 0.25rem solid var(--primary-color) !important;
         }
 
-        .stat-card .row {
-            flex-wrap: nowrap;
+        .border-left-success {
+            border-left: 0.25rem solid #1cc88a !important;
         }
 
-        .stat-card .col {
-            min-width: 0;
+        .border-left-info {
+            border-left: 0.25rem solid #36b9cc !important;
         }
 
-        .stat-card .col-auto {
-            flex-shrink: 0;
+        .border-left-warning {
+            border-left: 0.25rem solid #f6c23e !important;
+        }
+
+        .border-left-danger {
+            border-left: 0.25rem solid #e74a3b !important;
+        }
+
+        .text-gray-300 {
+            color: #dddfeb !important;
+        }
+
+        .text-gray-800 {
+            color: #5a5c69 !important;
+        }
+
+        .text-primary {
+            color: var(--primary-color) !important;
+        }
+
+        .text-success {
+            color: #1cc88a !important;
+        }
+
+        .text-info {
+            color: #36b9cc !important;
+        }
+
+        .text-warning {
+            color: #f6c23e !important;
+        }
+
+        .text-danger {
+            color: #e74a3b !important;
+        }
+
+        /* Responsive styles */
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            margin: 0 -15px;
+        }
+
+        .col-xl-3, .col-md-6 {
+            padding: 0 15px;
+            margin-bottom: 1.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .col-md-6 {
+                width: 50%;
+            }
+        }
+
+        @media (min-width: 1200px) {
+            .col-xl-3 {
+                width: 25%;
+            }
+        }
+
+        .table-header-style {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
         }
     </style>
 </head>
@@ -285,17 +359,63 @@ checkModeratorAccess();
             <div class="container-fluid py-4">
                 <div class="d-sm-flex align-items-center justify-content-between mb-4">
                     <h1 class="h3 mb-0 text-gray-800">Ziņojumu Pārvaldība</h1>
-                    <div class="d-flex align-items-center">
+                </div>
+
+                <!-- Statistics  -->
+                <div class="row mb-4">
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card stat-card border-left-primary shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                            Kopējais ziņojumu skaits</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalReports">0</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-flag fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Reported -->
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold">Top 3 pasākumu veidotāji ar visvairāk ziņojumiem</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered" width="100%" cellspacing="0">
+                                <thead>
+                                    <tr class="table-header-style">
+                                        <th>Vieta</th>
+                                        <th>Lietotājvārds</th>
+                                        <th>Ziņojumu skaits</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="topReportedTable">
+                                  
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+               
+                <div class="d-flex justify-content-end mb-4">
                         <div class="input-group" style="width: 300px;">
                             <input type="text" id="searchReports" class="form-control form-control-sm rounded-pill" placeholder="Meklēt pēc pasākuma vai veidotāja...">
                             <button class="btn btn-sm btn-outline-secondary rounded-pill ms-2" type="button" id="clearReportSearch">
                                 <i class="fas fa-times"></i>
                             </button>
-                        </div>
                     </div>
                 </div>
 
                 <div class="card shadow mb-4">
+                    
                     <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                         <h6 class="m-0 font-weight-bold">Ziņojumu Saraksts</h6>
                         <div class="dropdown drop-table no-arrow">
@@ -317,15 +437,12 @@ checkModeratorAccess();
                                         <th>Nr.</th>
                                         <th class="sortable" data-sort="title">
                                             Pasākuma nosaukums
-                                            <i class="fas fa-sort"></i>
                                         </th>
                                         <th class="sortable" data-sort="creator_username">
                                             Pasākuma veidotājs
-                                            <i class="fas fa-sort"></i>
                                         </th>
                                         <th class="sortable" data-sort="reported_at">
                                             Ziņojuma datums
-                                            <i class="fas fa-sort"></i>
                                         </th>
                                         <th>Status</th>
                                         <th>Darbības</th>

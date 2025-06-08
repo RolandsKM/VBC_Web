@@ -127,7 +127,7 @@ let eventsByDayChart = eventsByDayCtx ? new Chart(eventsByDayCtx, {
         labels: [],
         datasets: [
             {
-                label: 'Events per Day',
+                label: 'Pasākumi dienā',
                 data: [],
                 borderColor: 'rgba(78, 115, 223, 1)',
                 backgroundColor: 'rgba(78, 115, 223, 0.2)',
@@ -136,7 +136,7 @@ let eventsByDayChart = eventsByDayCtx ? new Chart(eventsByDayCtx, {
                 yAxisID: 'y'
             },
             {
-                label: 'Events per Week',
+                label: 'Pasākumi nedēļā',
                 data: [],
                 borderColor: 'rgba(28, 200, 138, 1)',
                 backgroundColor: 'rgba(28, 200, 138, 0.2)',
@@ -145,7 +145,7 @@ let eventsByDayChart = eventsByDayCtx ? new Chart(eventsByDayCtx, {
                 yAxisID: 'y'
             },
             {
-                label: 'Events per Month',
+                label: 'Pasākumi mēnesī',
                 data: [],
                 borderColor: 'rgba(231, 74, 59, 1)',
                 backgroundColor: 'rgba(231, 74, 59, 0.2)',
@@ -208,19 +208,26 @@ function renderUsers(tableId, users) {
     }
 
     tbody.innerHTML = users.map(user => `
-        <tr class="${user.banned ? 'table-danger' : ''}">
+        <tr>
+            <td>
+                <img src="${user.profile_pic ? '../functions/assets/' + user.profile_pic : '../functions/assets/default-profile.png'}" 
+                     alt="${user.username}'s profile" 
+                     class="rounded-circle"
+                     style="width: 40px; height: 40px; object-fit: cover;">
+            </td>
             <td>${escapeHtml(user.username)}</td>
             <td>${escapeHtml(user.email)}</td>
-            <td>${escapeHtml(formatDate(user.created_at || user.registration_date))}</td>
+            <td>${formatDate(user.created_at)}</td>
             <td>
-                ${user.banned ? 
-                    '<span class="badge bg-danger">Bloķēts</span>' : 
-                    '<span class="badge bg-success">Aktīvs</span>'}
+                <span class="badge ${user.banned ? 'bg-danger' : 'bg-success'}">
+                    ${user.banned ? 'Bloķēts' : 'Aktīvs'}
+                </span>
             </td>
             <td class="text-center">
-                <a href="user-details.php?id=${user.ID_user}" class="btn btn-sm btn-primary">
-                    <i class="fas fa-eye"></i> Apskatīt
+                <a href="user-details.php?id=${user.ID_user}" class="btn btn-sm btn-info me-1">
+                    <i class="fas fa-eye"></i>
                 </a>
+
             </td>
         </tr>
     `).join('');
@@ -261,14 +268,14 @@ function renderUsers(tableId, users) {
     }
 }
 
-function renderPagination(containerId, currentPage, totalPages, table = null) {
+function renderPagination(containerId, currentPage, totalPages, tableType) {
     const container = document.getElementById(containerId);
     if (!container) return;
 
     let html = '';
     
-    html += `<button ${currentPage === 1 ? 'disabled' : ''} data-page="1" data-table="${table}" class="pagination-btn btn btn-sm me-1">First</button>`;
-    html += `<button ${currentPage === 1 ? 'disabled' : ''} data-page="${currentPage - 1}" data-table="${table}" class="pagination-btn btn btn-sm me-1">Prev</button>`;
+    html += `<button ${currentPage === 1 ? 'disabled' : ''} data-page="1" class="pagination-btn btn btn-sm me-1">First</button>`;
+    html += `<button ${currentPage === 1 ? 'disabled' : ''} data-page="${currentPage - 1}" class="pagination-btn btn btn-sm me-1">Prev</button>`;
 
     let startPage = Math.max(1, currentPage - 2);
     let endPage = Math.min(totalPages, currentPage + 2);
@@ -282,13 +289,27 @@ function renderPagination(containerId, currentPage, totalPages, table = null) {
     }
 
     for (let i = startPage; i <= endPage; i++) {
-        html += `<button ${i === currentPage ? 'disabled' : ''} data-page="${i}" data-table="${table}" class="pagination-btn btn btn-sm me-1">${i}</button>`;
+        html += `<button ${i === currentPage ? 'disabled' : ''} data-page="${i}" class="pagination-btn btn btn-sm me-1">${i}</button>`;
     }
 
-    html += `<button ${currentPage === totalPages ? 'disabled' : ''} data-page="${currentPage + 1}" data-table="${table}" class="pagination-btn btn btn-sm me-1">Next</button>`;
-    html += `<button ${currentPage === totalPages ? 'disabled' : ''} data-page="${totalPages}" data-table="${table}" class="pagination-btn btn btn-sm">Last</button>`;
+    html += `<button ${currentPage === totalPages ? 'disabled' : ''} data-page="${currentPage + 1}" class="pagination-btn btn btn-sm me-1">Next</button>`;
+    html += `<button ${currentPage === totalPages ? 'disabled' : ''} data-page="${totalPages}" class="pagination-btn btn btn-sm">Last</button>`;
 
     container.innerHTML = html;
+
+    // Add click event listeners to pagination buttons
+    container.querySelectorAll('.pagination-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            if (this.disabled) return;
+            const page = parseInt(this.dataset.page);
+            if (tableType === 'todays' || tableType === 'all') {
+                fetchUsers(tableType, page, filterPeriodSelect?.value || 'all', currentUserSortField, currentUserSortOrder);
+            } else if (tableType === 'events-todays' || tableType === 'events-all') {
+                const table = tableType === 'events-todays' ? 'todays' : 'all';
+                fetchEvents(page, currentSortField, currentSortOrder, table);
+            }
+        });
+    });
 }
 
 
@@ -587,17 +608,23 @@ function renderAdminModUsers(tableId, users) {
     }
 
     tbody.innerHTML = users.map(user => `
-        <tr>
+        <tr class="${user.is_blocked ? 'blocked-user' : ''}">
             <td>${user.ID_user}</td>
-            <td>${escapeHtml(user.username)}</td>
+            <td>
+                ${escapeHtml(user.username)}
+                ${user.is_blocked ? '<span class="blocked-badge">Bloķēts</span>' : ''}
+            </td>
             <td>${escapeHtml(user.name)}</td>
             <td>${escapeHtml(user.surname)}</td>
             <td>${escapeHtml(user.email)}</td>
             <td>${formatDate(user.created_at)}</td>
             <td class="text-center">
                 <a href="admin-details.php?id=${user.ID_user}" class="btn btn-sm btn-info">
-                    <i class="fas fa-eye"></i> Apskatīt
+                    <i class="fas fa-eye"></i>
                 </a>
+                <button onclick="deleteUser(${user.ID_user})" class="btn btn-sm btn-danger">
+                    <i class="fas fa-trash"></i>
+                </button>
             </td>
         </tr>
     `).join('');
@@ -638,7 +665,13 @@ function renderAdminModUsers(tableId, users) {
                         currentAdminSortOrder = newOrder;
                     }
                     
-                    fetchAdminModUsers(role, 1, sortField, newOrder);
+                    // Get current page from pagination
+                    const paginationId = role === 'mod' ? 'mod-pagination' : 'admin-pagination';
+                    const paginationContainer = document.getElementById(paginationId);
+                    const currentPageButton = paginationContainer?.querySelector('.pagination-btn:disabled');
+                    const currentPage = currentPageButton ? parseInt(currentPageButton.dataset.page) : 1;
+                    
+                    fetchAdminModUsers(role, currentPage, sortField, newOrder);
                 });
             }
         });
@@ -820,7 +853,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
         
-        // click  pagination
+      
         document.body.addEventListener('click', function(e) {
             if (e.target.classList.contains('pagination-btn')) {
                 const page = parseInt(e.target.getAttribute('data-page'));
@@ -860,4 +893,422 @@ document.getElementById('clearEventSearch')?.addEventListener('click', function(
     const searchInput = document.getElementById('searchEvents');
     searchInput.value = '';
     fetchEvents(1, currentSortField, currentSortOrder, 'all');
+});
+
+// Event Manager Functions
+function initializeEventManager() {
+    const filterPeriodSelect = document.getElementById('filter-period');
+    const eventsByDayCtx = document.getElementById('eventsByDayChart');
+    
+    if (eventsByDayCtx) {
+        const eventsByDayChart = new Chart(eventsByDayCtx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: 'Pasākumi dienā',
+                        data: [],
+                        borderColor: 'rgba(78, 115, 223, 1)',
+                        backgroundColor: 'rgba(78, 115, 223, 0.2)',
+                        fill: true,
+                        tension: 0.3,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Pasākumi nedēļā',
+                        data: [],
+                        borderColor: 'rgba(28, 200, 138, 1)',
+                        backgroundColor: 'rgba(28, 200, 138, 0.2)',
+                        fill: true,
+                        tension: 0.3,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Pasākumi mēnesī',
+                        data: [],
+                        borderColor: 'rgba(231, 74, 59, 1)',
+                        backgroundColor: 'rgba(231, 74, 59, 0.2)',
+                        fill: true,
+                        tension: 0.3,
+                        yAxisID: 'y'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                }
+            }
+        });
+
+        
+        updateEventStatistics(filterPeriodSelect.value);
+
+        filterPeriodSelect.addEventListener('change', function() {
+            updateEventStatistics(this.value);
+        });
+
+        // Update every 5 minutes
+        setInterval(() => {
+            updateEventStatistics(filterPeriodSelect.value);
+        }, 100000);
+    }
+}
+
+function updateEventStatistics(period = 'all') {
+    const eventsByDayChart = Chart.getChart('eventsByDayChart');
+    if (!eventsByDayChart) return;
+
+    
+    eventsByDayChart.data.labels = [];
+    eventsByDayChart.data.datasets.forEach(dataset => {
+        dataset.data = [];
+    });
+    
+    // Daily statistics
+    fetch(`event_manager.php?ajax=1&stats=daily&period=${period}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && Array.isArray(data.data)) {
+                const dailyData = data.data;
+                eventsByDayChart.data.labels = dailyData.map(item => {
+                    const date = new Date(item.day);
+                    return date.toLocaleDateString('lv-LV', { day: '2-digit', month: '2-digit' });
+                });
+                eventsByDayChart.data.datasets[0].data = dailyData.map(item => item.count);
+                eventsByDayChart.update();
+            }
+        })
+        .catch(err => console.error('Error fetching daily stats:', err));
+
+    // Weekly statistics
+    fetch(`event_manager.php?ajax=1&stats=weekly&period=${period}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && Array.isArray(data.data)) {
+                const weeklyData = data.data;
+                eventsByDayChart.data.datasets[1].data = weeklyData.map(item => item.count);
+                eventsByDayChart.update();
+            }
+        })
+        .catch(err => console.error('Error fetching weekly stats:', err));
+
+    // Monthly statistics
+    fetch(`event_manager.php?ajax=1&stats=monthly&period=${period}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && Array.isArray(data.data)) {
+                const monthlyData = data.data;
+                eventsByDayChart.data.datasets[2].data = monthlyData.map(item => item.count);
+                eventsByDayChart.update();
+            }
+        })
+        .catch(err => console.error('Error fetching monthly stats:', err));
+}
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    if (document.getElementById('eventsByDayChart')) {
+        initializeEventManager();
+    }
+});
+
+// Event Details Functions
+function initializeEventDetails() {
+    let currentEventId = null;
+    let currentVolunteerPage = 1;
+    const volunteersPerPage = 2;
+    let currentVolunteerSortField = 'created_at';
+    let currentVolunteerSortOrder = 'DESC';
+
+    
+    const volunteersContainer = document.getElementById('volunteers-table-container');
+    if (volunteersContainer) {
+        fetchVolunteers(currentVolunteerPage);
+    }
+
+    
+    const paginationContainer = document.getElementById('volunteers-pagination');
+    if (paginationContainer) {
+        paginationContainer.addEventListener('click', function(e) {
+            if (e.target.classList.contains('pagination-btn')) {
+                const page = parseInt(e.target.dataset.page);
+                if (!isNaN(page)) {
+                    currentVolunteerPage = page;
+                    fetchVolunteers(page);
+                }
+            }
+        });
+    }
+
+
+    document.querySelectorAll('.sortable').forEach(header => {
+        header.addEventListener('click', function() {
+            const field = this.dataset.sort;
+            if (field === currentVolunteerSortField) {
+                currentVolunteerSortOrder = currentVolunteerSortOrder === 'ASC' ? 'DESC' : 'ASC';
+            } else {
+                currentVolunteerSortField = field;
+                currentVolunteerSortOrder = 'ASC';
+            }
+            fetchVolunteers(currentVolunteerPage);
+        });
+    });
+
+    // Delete reason select
+    const deleteReasonSelect = document.getElementById('delete_reason');
+    if (deleteReasonSelect) {
+        deleteReasonSelect.addEventListener('change', function() {
+            const customReasonContainer = document.getElementById('custom_reason_container');
+            if (customReasonContainer) {
+                customReasonContainer.style.display = this.value === 'Cits' ? 'block' : 'none';
+            }
+        });
+    }
+}
+
+function showAlert(message, type) {
+    const alertContainer = document.getElementById('alert-container');
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type} mb-4`;
+    alert.textContent = message;
+    alertContainer.innerHTML = '';
+    alertContainer.appendChild(alert);
+    
+    setTimeout(() => {
+        alert.remove();
+    }, 3000);
+}
+
+function showDeleteModal(eventId) {
+    window.currentEventId = eventId;
+    const modal = new bootstrap.Modal(document.getElementById('deleteEventModal'));
+    modal.show();
+    
+    
+    const deleteReasonSelect = document.getElementById('delete_reason');
+    const customReasonContainer = document.getElementById('custom_reason_container');
+    if (deleteReasonSelect && customReasonContainer) {
+        deleteReasonSelect.value = '';
+        customReasonContainer.style.display = 'none';
+    }
+}
+
+function confirmDelete() {
+    const reasonSelect = document.getElementById('delete_reason');
+    let reason = reasonSelect.value;
+
+    if (!reason) {
+        alert('Lūdzu, izvēlies iemeslu dzēšanai');
+        return;
+    }
+
+    if (reason === 'Cits') {
+        const customReason = document.getElementById('custom_reason').value.trim();
+        if (!customReason) {
+            alert('Lūdzu, ievadi iemeslu');
+            return;
+        }
+        reason = customReason;
+    }
+
+    fetch('../functions/AdminController.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `action=delete_event&event_id=${window.currentEventId}&reason=${encodeURIComponent(reason)}&ajax=1`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('Sludinājums veiksmīgi dzēsts!', 'success');
+            updateUIAfterDelete(window.currentEventId);
+            bootstrap.Modal.getInstance(document.getElementById('deleteEventModal')).hide();
+        } else {
+            showAlert('Kļūda dzēšot sludinājumu!', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Kļūda dzēšot sludinājumu!', 'danger');
+    });
+}
+
+function updateUIAfterDelete(eventId) {
+    const buttonContainer = document.querySelector('.d-flex.gap-2');
+    buttonContainer.innerHTML = `
+        <button onclick="undeleteEvent(${eventId})" class="btn btn-success">
+            <i class="fas fa-undo me-2"></i>Atjaunot
+        </button>
+    `;
+    const statusBadge = document.querySelector('.status-badge');
+    if (statusBadge) {
+        statusBadge.className = 'badge bg-danger status-badge';
+        statusBadge.textContent = 'Dzēsts';
+    }
+}
+
+function undeleteEvent(eventId) {
+    if (!confirm('Vai tiešām vēlaties atjaunot šo sludinājumu?')) {
+        return;
+    }
+
+    fetch('../functions/AdminController.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `action=undelete_event&event_id=${eventId}&ajax=1`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('Sludinājums veiksmīgi atjaunots!', 'success');
+            updateUIAfterUndelete(eventId);
+        } else {
+            showAlert('Kļūda atjaunojot sludinājumu!', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Kļūda atjaunojot sludinājumu!', 'danger');
+    });
+}
+
+function updateUIAfterUndelete(eventId) {
+    const buttonContainer = document.querySelector('.d-flex.gap-2');
+    buttonContainer.innerHTML = `
+        <a href="event_edit.php?id=${eventId}" class="btn btn-primary-style">
+            <i class="fas fa-edit me-2"></i>Rediģēt
+        </a>
+        <button onclick="showDeleteModal(${eventId})" class="btn btn-danger">
+            <i class="fas fa-trash me-2"></i>Dzēst
+        </button>
+    `;
+    const statusBadge = document.querySelector('.status-badge');
+    if (statusBadge) {
+        statusBadge.className = 'badge bg-success status-badge';
+        statusBadge.textContent = 'Aktīvs';
+    }
+}
+
+function renderVolunteersTable(volunteers) {
+    const tableBody = document.getElementById('volunteersTableBody');
+    if (!tableBody) return;
+
+    if (!volunteers || volunteers.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="6" class="text-center">Nav brīvprātīgo</td></tr>';
+        return;
+    }
+
+    tableBody.innerHTML = volunteers.map(volunteer => `
+        <tr>
+            <td>${escapeHtml(volunteer.name)}</td>
+            <td>${escapeHtml(volunteer.surname)}</td>
+            <td>${escapeHtml(volunteer.username)}</td>
+            <td>${escapeHtml(volunteer.email)}</td>
+            <td>${formatDate(volunteer.created_at)}</td>
+            <td><span class="badge ${getStatusBadgeClass(volunteer.status)}">${getStatusText(volunteer.status)}</span></td>
+        </tr>
+    `).join('');
+}
+
+function getStatusBadgeClass(status) {
+    switch(status) {
+        case 'accepted':
+            return 'bg-success';
+        case 'denied':
+            return 'bg-danger';
+        case 'waiting':
+            return 'bg-warning';
+        case 'left':
+            return 'bg-secondary';
+        default:
+            return 'bg-warning';
+    }
+}
+
+function getStatusText(status) {
+    switch(status) {
+        case 'accepted':
+            return 'Apstiprināts';
+        case 'denied':
+            return 'Noraidīts';
+        case 'waiting':
+            return 'Gaida';
+        case 'left':
+            return 'Izstājies';
+        default:
+            return status;
+    }
+}
+
+function updateSortIcons() {
+    document.querySelectorAll('.sortable').forEach(header => {
+        const field = header.dataset.sort;
+        const headerText = header.textContent.replace(/[↑↓]/, '').trim();
+        
+        if (field === currentVolunteerSortField) {
+            header.innerHTML = headerText + (currentVolunteerSortOrder === 'ASC' ? ' ↑' : ' ↓');
+        } else {
+            header.innerHTML = headerText;
+        }
+    });
+}
+
+function fetchVolunteers(page = 1) {
+    const eventId = new URLSearchParams(window.location.search).get('id');
+    if (!eventId) return;
+
+    const perPage = 2;
+    const sortField = 'created_at';
+    const sortOrder = 'DESC';
+
+    fetch(`event_details.php?action=get_volunteers&event_id=${eventId}&page=${page}&per_page=${perPage}&sort_field=${sortField}&sort_order=${sortOrder}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                renderVolunteersTable(data.volunteers);
+                const totalPages = Math.ceil(data.total / perPage);
+                renderPagination('volunteersPagination', page, totalPages);
+            } else {
+                console.error('Error fetching volunteers:', data.message);
+                showAlert('Neizdevās ielādēt brīvprātīgos', 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('Neizdevās ielādēt brīvprātīgos', 'danger');
+        });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    
+    initializeEventDetails();
+    
+    
+    fetchVolunteers(1);
+
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('pagination-btn')) {
+            const page = parseInt(e.target.getAttribute('data-page'));
+            if (!isNaN(page)) {
+                fetchVolunteers(page);
+            }
+        }
+    });
 }); 

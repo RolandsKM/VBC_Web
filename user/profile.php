@@ -238,6 +238,16 @@ $unreadCount = $unreadQuery->fetch()['unread_count'];
             color: white;
         }
 
+        .notification-icon.deleted {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .notification-icon.undeleted {
+            background-color: #28a745;
+            color: white;
+        }
+
         .notification-content {
             flex-grow: 1;
         }

@@ -51,6 +51,39 @@ function loadReports() {
     });
 }
 
+function loadReportStatistics() {
+    $.ajax({
+        url: '../functions/ReportController.php',
+        method: 'POST',
+        data: {
+            ajax: true,
+            action: 'get_report_statistics'
+        },
+        success: function(response) {
+            if (response.success) {
+                const stats = response.statistics;
+                // Update reports count
+                $('#totalReports').text(stats.total_reports);
+                
+                // Update top reported table
+                const topReportedHtml = stats.top_event_owners.map((owner, index) => `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${owner.username}</td>
+                        <td>${owner.reported_events_count}</td>
+                    </tr>
+                `).join('');
+                $('#topReportedTable').html(topReportedHtml);
+            } else {
+                console.error('Failed to load statistics:', response.message);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Error loading statistics:', error);
+        }
+    });
+}
+
 // reports table
 function renderReportsTable(reports) {
     const tbody = document.getElementById('reports-body');
@@ -204,7 +237,7 @@ function showReportDetails(reportId) {
                         </div>
 
                         <!-- User Information Section -->
-                        <div class="section">
+                        <div class="section mb-4">
                             <div class="row">
                                 <!-- Reporter Information -->
                                 <div class="col-md-6">
@@ -243,6 +276,52 @@ function showReportDetails(reportId) {
                                             </span>
                                         </p>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Event Owner's Report History Section -->
+                        <div class="section">
+                            <div class="section-header bg-danger text-white p-3 rounded-top">
+                                <h5 class="mb-0"><i class="fas fa-history me-2"></i>Iepriekšējie atrisinātie ziņojumi par pasākumu veidotāju</h5>
+                            </div>
+                            <div class="section-body p-3 border border-top-0 rounded-bottom">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-hover">
+                                        <thead class="table-header-style">
+                                            <tr>
+                                                <th>Pasākums</th>
+                                                <th>Datums</th>
+                                                <th>Ziņojumu skaits</th>
+                                                <th>Iemesli</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${report.owner_history && report.owner_history.length > 0 ? 
+                                                report.owner_history.map(event => `
+                                                    <tr>
+                                                        <td>${event.event_title}</td>
+                                                        <td>${formatDate(event.event_date)}</td>
+                                                        <td>${event.report_count}</td>
+                                                        <td>
+                                                            <div class="small">
+                                                                ${event.report_reasons.split(',').map(reason => 
+                                                                    `<span class="badge bg-secondary me-1 mb-1">${reason}</span>`
+                                                                ).join('')}
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <span class="badge ${event.event_deleted ? 'bg-danger' : 'bg-success'}">
+                                                                ${event.event_deleted ? 'Dzēsts' : 'Aktīvs'}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                `).join('') : 
+                                                '<tr><td colspan="5" class="text-center">Nav iepriekšējo atrisināto ziņojumu</td></tr>'
+                                            }
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </div>
@@ -425,6 +504,7 @@ function showDeleteConfirmation(eventId) {
 $(document).ready(function() {
   
     loadReports();
+    loadReportStatistics();
 
    
     $('#reportsTable thead tr').prepend(`
@@ -509,6 +589,9 @@ $(document).ready(function() {
     $(document).on('click', '.sortable', function() {
         const sortField = $(this).data('sort');
         
+        // Remove active class and arrows from all headers
+        $('.sortable').removeClass('active').find('i').remove();
+        
         if (currentSortField === sortField) {
             currentSortOrder = currentSortOrder === 'ASC' ? 'DESC' : 'ASC';
         } else {
@@ -516,8 +599,8 @@ $(document).ready(function() {
             currentSortOrder = 'ASC';
         }
         
-        $('.sortable').find('i').removeClass('fa-sort-up fa-sort-down').addClass('fa-sort');
-        $(this).find('i').removeClass('fa-sort').addClass(currentSortOrder === 'ASC' ? 'fa-sort-up' : 'fa-sort-down');
+        // Add active class and arrow to current header
+        $(this).addClass('active').append(`<i>${currentSortOrder === 'ASC' ? '↑' : '↓'}</i>`);
         
         currentPage = 1;
         loadReports();
@@ -613,5 +696,10 @@ $(document).ready(function() {
         currentReportSearch = '';
         currentPage = 1;
         loadReports();
+    });
+
+    // Update statistics when reports are solved or deleted
+    $(document).on('click', '.solve-report, .delete-event, #solveSelectedReports', function() {
+        setTimeout(loadReportStatistics, 500); // Reload statistics after action
     });
 }); 

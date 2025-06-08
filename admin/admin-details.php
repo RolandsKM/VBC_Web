@@ -1,82 +1,5 @@
 <?php
 require_once '../functions/AdminController.php';
-checkSuperAdminAccess();
-session_start();
-
-if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
-    header('Content-Type: application/json');
-    
-    if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
-        echo json_encode(['success' => false, 'message' => 'Invalid user ID']);
-        exit;
-    }
-
-    $id = (int)$_GET['id'];
-    $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
-    $perPage = 5;
-    $offset = ($page - 1) * $perPage;
-    $sortField = $_GET['sort'] ?? 'deleted_at';
-    $sortOrder = $_GET['order'] ?? 'DESC';
-
-    try {
-        $actions = getAdminModActions($id, $perPage, $offset, $sortField, $sortOrder);
-        $total = getAdminModActionsCount($id);
-        
-        echo json_encode([
-            'success' => true,
-            'actions' => $actions,
-            'total' => $total,
-            'page' => $page,
-            'perPage' => $perPage
-        ]);
-    } catch (PDOException $e) {
-        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
-    }
-    exit;
-}
-
-if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
-    header("Location: admin_manager.php");
-    exit();
-}
-
-$id = (int)$_GET['id'];
-$user = getAdminModDetails($id);
-
-if (!$user) {
-    echo "<div class='alert alert-danger m-4'>Lietotājs nav atrasts.</div>";
-    exit();
-}
-
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $currentUserRole = $_SESSION['role'] ?? '';
-    $targetUserRole = $user['role'];
-    
-    if (canManageUser($currentUserRole, $targetUserRole)) {
-        if (isset($_POST['ban'])) {
-            banAdminMod($id);
-            header("Location: admin-details.php?id=" . $id);
-            exit();
-        }
-        if (isset($_POST['unban'])) {
-            unbanAdminMod($id);
-            header("Location: admin-details.php?id=" . $id);
-            exit();
-        }
-        if (isset($_POST['delete'])) {
-            deleteAdminMod($id);
-            header("Location: admin_manager.php");
-            exit();
-        }
-    } else {
-        echo "<div class='alert alert-danger m-4'>Jums nav tiesību veikt šo darbību.</div>";
-    }
-}
-
-$actions = getAdminModActions($id, 5, 0);
-$totalActions = getAdminModActionsCount($id);
-$totalPages = ceil($totalActions / 5);
 ?>
 
 <!DOCTYPE html>
@@ -283,7 +206,29 @@ $totalPages = ceil($totalActions / 5);
                         </div>
                         <div class="col-md-6">
                             <p><strong>E-pasts:</strong> <?= htmlspecialchars($user['email']) ?></p>
-                            <p><strong>Loma:</strong> <?= htmlspecialchars($user['role']) ?></p>
+                            <p><strong>Loma:</strong> 
+                                <?php 
+                                $currentUserRole = $_SESSION['role'] ?? '';
+                                $canManage = canManageUser($currentUserRole, $user['role']);
+                                ?>
+                                <!-- Debug info -->
+                                <small class="text-muted">
+                                    (Current role: <?= htmlspecialchars($currentUserRole) ?>, 
+                                    Target role: <?= htmlspecialchars($user['role']) ?>, 
+                                    Can manage: <?= $canManage ? 'Yes' : 'No' ?>)
+                                </small>
+                                <?php if ($canManage): ?>
+                                    <form method="POST" class="d-inline">
+                                        <select name="new_role" class="form-select d-inline-block w-auto" onchange="this.form.submit()">
+                                            <option value="admin" <?= $user['role'] === 'admin' ? 'selected' : '' ?>>Admin</option>
+                                            <option value="mod" <?= $user['role'] === 'mod' ? 'selected' : '' ?>>Moderator</option>
+                                        </select>
+                                        <input type="hidden" name="change_role" value="1">
+                                    </form>
+                                <?php else: ?>
+                                    <span class="badge bg-info"><?= htmlspecialchars($user['role']) ?></span>
+                                <?php endif; ?>
+                            </p>
                             <p><strong>Reģistrācijas datums:</strong> <?= date('d.m.Y H:i', strtotime($user['created_at'])) ?></p>
                             <p><strong>Statuss:</strong> 
                                 <?php if ($user['banned']): ?>
