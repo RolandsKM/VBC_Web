@@ -1,6 +1,6 @@
 <?php
 require_once '../functions/AdminController.php';
-checkSuperAdminAccess();
+if (!isSuperAdmin()) die('Access denied');
 ?>
 
 <!DOCTYPE html>
@@ -281,9 +281,7 @@ checkSuperAdminAccess();
                                         <a href="admin-details.php?id=<?= $user['ID_user'] ?>" class="btn btn-sm btn-info">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        <button onclick="deleteUser(<?= $user['ID_user'] ?>)" class="btn btn-sm btn-danger">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
+                                       
                                     </td>
                                 </tr>
                                 <?php endforeach; ?>

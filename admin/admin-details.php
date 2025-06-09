@@ -1,5 +1,6 @@
 <?php
 require_once '../functions/AdminController.php';
+if (!isModerator()) die('Access denied');
 ?>
 
 <!DOCTYPE html>

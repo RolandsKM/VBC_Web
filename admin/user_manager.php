@@ -1,6 +1,6 @@
 <?php
 require_once '../functions/AdminController.php';
-checkAdminAccess();
+if (!isAdmin()) die('Access denied');
 
 if (isset($_GET['chart']) && $_GET['chart'] === 'bannedActive' && isset($_GET['period'])) {
     $period = htmlspecialchars($_GET['period']);

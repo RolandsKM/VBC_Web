@@ -1,7 +1,6 @@
 <?php
 require_once '../functions/AdminController.php';
-checkAdminAccess();
-
+if (!isModerator()) die('Access denied');
 // Validate and sanitize event ID
 $eventId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 if (!$eventId) {

@@ -1,7 +1,6 @@
 <?php 
 require_once '../functions/AdminController.php';
-checkAdminAccess();
-checkModeratorAccess();
+if (!isModerator()) die('Access denied');
 
 if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
     header('Content-Type: application/json');

@@ -1,6 +1,6 @@
 <?php
 require_once '../functions/ReportController.php';
-checkModeratorAccess();
+if (!isModerator()) die('Access denied');
 
 ?>
 

@@ -274,39 +274,57 @@ function renderPagination(containerId, currentPage, totalPages, tableType) {
 
     let html = '';
     
-    html += `<button ${currentPage === 1 ? 'disabled' : ''} data-page="1" class="pagination-btn btn btn-sm me-1">First</button>`;
-    html += `<button ${currentPage === 1 ? 'disabled' : ''} data-page="${currentPage - 1}" class="pagination-btn btn btn-sm me-1">Prev</button>`;
+    // Previous button
+    html += `
+        <button class="pagination-btn" data-page="${currentPage - 1}" data-table="${tableType}" 
+                ${currentPage === 1 ? 'disabled' : ''}>
+            <i class="fas fa-chevron-left"></i>
+        </button>
+    `;
 
-    let startPage = Math.max(1, currentPage - 2);
-    let endPage = Math.min(totalPages, currentPage + 2);
-
-    if (endPage - startPage < 4) {
-        if (startPage === 1) {
-            endPage = Math.min(totalPages, startPage + 4);
-        } else if (endPage === totalPages) {
-            startPage = Math.max(1, endPage - 4);
+    // Page numbers
+    for (let i = 1; i <= totalPages; i++) {
+        if (
+            i === 1 || // First page
+            i === totalPages || // Last page
+            (i >= currentPage - 1 && i <= currentPage + 1) // Pages around current
+        ) {
+            html += `
+                <button class="pagination-btn ${i === currentPage ? 'active' : ''}" 
+                        data-page="${i}" data-table="${tableType}"
+                        ${i === currentPage ? 'disabled' : ''}>
+                    ${i}
+                </button>
+            `;
+        } else if (
+            i === currentPage - 2 || // Before current page range
+            i === currentPage + 2 // After current page range
+        ) {
+            html += '<span class="pagination-ellipsis">...</span>';
         }
     }
 
-    for (let i = startPage; i <= endPage; i++) {
-        html += `<button ${i === currentPage ? 'disabled' : ''} data-page="${i}" class="pagination-btn btn btn-sm me-1">${i}</button>`;
-    }
-
-    html += `<button ${currentPage === totalPages ? 'disabled' : ''} data-page="${currentPage + 1}" class="pagination-btn btn btn-sm me-1">Next</button>`;
-    html += `<button ${currentPage === totalPages ? 'disabled' : ''} data-page="${totalPages}" class="pagination-btn btn btn-sm">Last</button>`;
+    // Next button
+    html += `
+        <button class="pagination-btn" data-page="${currentPage + 1}" data-table="${tableType}"
+                ${currentPage === totalPages ? 'disabled' : ''}>
+            <i class="fas fa-chevron-right"></i>
+        </button>
+    `;
 
     container.innerHTML = html;
 
-    // Add click event listeners to pagination buttons
-    container.querySelectorAll('.pagination-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            if (this.disabled) return;
-            const page = parseInt(this.dataset.page);
-            if (tableType === 'todays' || tableType === 'all') {
-                fetchUsers(tableType, page, filterPeriodSelect?.value || 'all', currentUserSortField, currentUserSortOrder);
-            } else if (tableType === 'events-todays' || tableType === 'events-all') {
-                const table = tableType === 'events-todays' ? 'todays' : 'all';
-                fetchEvents(page, currentSortField, currentSortOrder, table);
+    // Add click handlers
+    container.querySelectorAll('.pagination-btn:not(:disabled)').forEach(button => {
+        button.addEventListener('click', () => {
+            const page = parseInt(button.dataset.page);
+            const tableType = button.dataset.table;
+            
+            if (tableType === 'mod' || tableType === 'admin') {
+                const sortHeader = document.querySelector(`#${tableType}-body`).closest('table').querySelector('th[data-order]');
+                const sortField = sortHeader ? sortHeader.dataset.sort : 'created_at';
+                const sortOrder = sortHeader ? sortHeader.dataset.order : 'DESC';
+                fetchAdminModUsers(tableType, page, sortField, sortOrder);
             }
         });
     });

@@ -1,7 +1,7 @@
 <?php
 
 require_once '../functions/AdminController.php';
-checkAdminAccess();
+if (!isModerator()) die('Access denied');
 
 if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
     header("Location: event_manager.php?error=invalid_id");

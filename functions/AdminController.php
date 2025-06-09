@@ -18,7 +18,7 @@ function validateCSRFToken($token) {
 }
 
 function isAdmin() {
-    return isset($_SESSION['role']) && ($_SESSION['role'] === 'admin' || $_SESSION['role'] === 'supper-admin' || $_SESSION['role'] === 'mod');
+    return isset($_SESSION['role']) && ($_SESSION['role'] === 'admin' || $_SESSION['role'] === 'supper-admin');
 }
 
 function isModerator() {

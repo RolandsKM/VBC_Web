@@ -1,7 +1,7 @@
 <?php
 
 require_once '../functions/AdminController.php';
-checkAdminAccess();
+if (!isAdmin()) die('Access denied');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['update_user_info'])) {

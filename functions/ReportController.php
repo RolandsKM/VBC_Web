@@ -2,12 +2,10 @@
 require_once '../config/con_db.php';
 session_start();
 
-function checkModeratorAccess() {
-    if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['mod', 'admin', 'supper-admin'])) {
-        die('Access denied');
-    }
-}
 
+function isModerator() {
+    return isset($_SESSION['role']) && ($_SESSION['role'] === 'mod' || $_SESSION['role'] === 'admin' || $_SESSION['role'] === 'supper-admin');
+}
 function getTotalReportsCount($search = '') {
     global $pdo;
     $query = "SELECT COUNT(*) FROM event_reports r
